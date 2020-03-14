@@ -1,6 +1,9 @@
 # jetbrains
 *.idea
 
+#misc
+*.DS_Store
+
 # Prerequisites
 *.d
 
