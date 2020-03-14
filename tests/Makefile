@@ -1,18 +1,74 @@
+test:
+	- make runDataStructure
+	#- make runBench
+	- make runDataframe
+
+#===========================================================================================================
+#Data structure tests
+
+runDataStructure:
+	- make testArray
+	- make cleanArray
+	- make testQueue
+	- make cleanQueue
+	- make testMap
+	- make cleanMap
+	- make testAdditionalMap
+	- make cleanMap
+
+testArray:
+	g++ -std=c++11 -o array test-array.cpp
+	#---------------Array Tests----------------#
+	./array
+	#-------------End Array Tests--------------#
+
+testQueue:
+	g++ -std=c++11 -o queue test-queue.cpp
+	#---------------Queue Tests----------------#
+	./queue
+	#-------------End Queue Tests--------------#
+
+testMap:
+	g++ -std=c++11 -o map test-map.cpp
+	#----------------Map Tests-----------------#
+	./map
+	#--------------End Map Tests---------------#
+
+testAdditionalMap:
+	g++ -std=c++11 -o map test-additional-map.cpp
+	#-----------Additional Map Tests-----------#
+	./map
+	#---------End Additional Map Tests---------#
+
+cleanArray:
+	rm array
+
+cleanQueue:
+	rm queue
+
+cleanMap:
+	rm map
+
+#===============================================================================================================
+# Dataframe Time Map/PMap tests
 REPO = https://github.com/mlanotte1998/SoftDevA5Public.git
 
-run: clean pull build
+runBench: pullBench buildBench
 	- make thousandth
 	- make hundredth
 	- make tenth
 	- make full
+	- make cleanBench
 
-build: 
+buildBench:
 	g++ bench.cpp -o bench -pthread -std=c++11
 
-clean:
+cleanBench:
 	rm -rf bench
+	rm -r __MACOSX
+	rm -rf datafile.txt
 
-pull:
+pullBench:
 	git clone $(REPO) ./temp
 	cp temp/datafile.zip .
 	rm -rf temp
@@ -110,3 +166,19 @@ full-sumall-pmap:
 full-sumall-map:
 	# All Column Sum on Full File Using MAP
 	./bench datafile.txt sumall map
+
+#===============================================================================================================
+# Dataframe Accuracy Tests
+
+runDataframe: buildDataframe
+	- make testDataframe
+	- make cleanDataframe
+
+buildDataframe:
+	g++ dataframe-test-suite.cpp -o dataframe -std=c++11
+
+testDataframe:
+	./dataframe
+
+cleanDataframe:
+	rm -rf dataframe

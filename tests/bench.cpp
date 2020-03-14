@@ -1,7 +1,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
-#include "modified_dataframe.h"
+#include "../src/dataframe/modified_dataframe.h"
 
 void test_thread_sum_rower_larger() {
   Schema s("II");

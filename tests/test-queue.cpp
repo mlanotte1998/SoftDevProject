@@ -1,9 +1,10 @@
 // Lang::cpp
 
-#include "object.h"
-#include "string.h"
-#include "queue.h"
 #include <stdio.h>
+#include "../src/utility-classes/object.h"
+#include "../src/utility-classes/string.h"
+#include "../src/utility-classes/queue.h"
+
 
 void FAIL() { exit(1); }
 void OK(const char* m) { printf("Test %s passed\n", m); }

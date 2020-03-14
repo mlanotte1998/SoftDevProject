@@ -1,6 +1,6 @@
 #include <iostream>
-#include "map.h"
-#include "string.h"
+#include "../src/utility-classes/map.h"
+#include "../src/utility-classes/string.h"
 
 
 void FAIL() {   exit(1);    }
