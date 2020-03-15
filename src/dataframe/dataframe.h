@@ -11,6 +11,15 @@
 #include "row.h"
 #include "rower.h"
 
+char* col_index_out_of_bounds = (char*)"Col Index out of Bounds";
+char* row_index_out_of_bounds = (char*)"Row Index out of Bounds";
+char* invalid_col_size = (char*)"Invalid Column Size";
+char* non_int_col =  (char*)"Non-Integer Column";
+char* non_float_col =  (char*)"Non-Float Column";
+char* non_string_col =  (char*)"Non-String Column";
+char* non_bool_col =  (char*)"Non-Boolean Column";
+char* malformed_schema = (char*)"Given Malformed Schema";
+
 /***
 * DataFrame::
 *
@@ -40,7 +49,7 @@ public:
         } else if (other_schema.types_[i] == 'S') {
           add_column(new StringColumn(), other_schema.col_name(i));
         } else {
-          pln("Given Malformed Schema");
+          pln(malformed_schema);
           exit(-1);
         }
       }
@@ -63,7 +72,7 @@ public:
         } else if (schema.types_[i] == 'S') {
           cols_[i] = new StringColumn();
         } else {
-          pln("Given Malformed Schema");
+          pln(malformed_schema);
           exit(-1);
         }
       }
@@ -86,7 +95,7 @@ public:
       * name is optional and external. A nullptr colum is undefined. */
     void add_column(Column* col, String* name) {
       bool valid = col->size() == nrows() || nrows() == 0;
-      exit_if_not(valid, "Invalid Column Size");
+      exit_if_not(valid, invalid_col_size);
       if (nrows() == 0) length_ = col->size();
       // add column data to dataframe
       Column** grow_cols_ = new Column*[schema_.width() + 1];
@@ -103,34 +112,34 @@ public:
     /** Return the value at the given column and row. Accessing rows or
      *  columns out of bounds, or request the wrong type is undefined.*/
     int get_int(size_t col, size_t row) {
-      exit_if_not(col < ncols(), "Col Index out of Bounds");
+      exit_if_not(col < ncols(), col_index_out_of_bounds);
       IntColumn* column = cols_[col]->as_int();
-      exit_if_not(column != nullptr, "Non-Integer Column");
-      exit_if_not(row < column->size(), "Row Index out of Bounds");
+      exit_if_not(column != nullptr, non_int_col);
+      exit_if_not(row < column->size(), row_index_out_of_bounds);
       return column->get(row);
     }
 
     bool get_bool(size_t col, size_t row) {
-      exit_if_not(col < ncols(), "Col Index out of Bounds");
+      exit_if_not(col < ncols(), col_index_out_of_bounds);
       BoolColumn* column = cols_[col]->as_bool();
-      exit_if_not(column != nullptr, "Non-Boolean Column");
-      exit_if_not(row < column->size(), "Row Index out of Bounds");
+      exit_if_not(column != nullptr, non_bool_col);
+      exit_if_not(row < column->size(), row_index_out_of_bounds);
       return column->get(row);
     }
 
     float get_float(size_t col, size_t row) {
-      exit_if_not(col < ncols(), "Col Index out of Bounds");
+      exit_if_not(col < ncols(), col_index_out_of_bounds);
       FloatColumn* column = cols_[col]->as_float();
-      exit_if_not(column != nullptr, "Non-Float Column");
-      exit_if_not(row < column->size(), "Row Index out of Bounds");
+      exit_if_not(column != nullptr, non_float_col);
+      exit_if_not(row < column->size(), row_index_out_of_bounds);
       return column->get(row);
     }
 
     String*  get_string(size_t col, size_t row) {
-      exit_if_not(col < ncols(), "Col Index out of Bounds");
+      exit_if_not(col < ncols(), col_index_out_of_bounds);
       StringColumn* column = cols_[col]->as_string();
-      exit_if_not(column != nullptr, "Non-String Column");
-      exit_if_not(row < column->size(), "Row Index out of Bounds");
+      exit_if_not(column != nullptr, non_string_col);
+      exit_if_not(row < column->size(), row_index_out_of_bounds);
       return column->get(row);
     }
 
