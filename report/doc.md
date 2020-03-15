@@ -30,12 +30,23 @@ information on how to access the other nodes in the system. This allows each nod
 communication with the other nodes. 
 
 ## Implementation 
-There are 
-Registrar 
-Node
-Dataframe
-Sorer
-Application 
+Classes:  
+  
+Application: 
+The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.  
+  
+Registrar:  
+The main node that all other nodes connect to and register their addresses along with learning the addresses of the other nodes in the system.  
+  
+Node:  
+For connecting to the registrar so that it can learn about other nodes in its network and message directly to them in the network.  
+  
+Dataframe:  
+The top level class for data storage in the application. The dataframe will store data in row/column format.  
+  
+Sorer:  
+The class responsible for reading in data from a .sor file into a dataframe.  
+
 
 
 ## Use Cases  
