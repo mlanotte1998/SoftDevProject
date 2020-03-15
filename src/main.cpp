@@ -270,6 +270,7 @@ int main(int argc, char* argv[]) {
         SumColumnRower* sum_rower = new SumColumnRower(1);
         df.map(*sum_rower);
         std::cout << sum_rower->sum_ << std::endl;
+        delete sum_rower;
     }
 
     fclose(file);

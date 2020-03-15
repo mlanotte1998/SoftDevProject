@@ -1,0 +1,44 @@
+ARRAYSPECREPO = https://github.com/chris-gomes/cs4500-a1-part2.git
+ARRAYSPECHASH = eab8e1b91f73e3bf9f4bd94e9e6eeb47bad91725
+QUEUESPECREPO = https://github.com/arthurarmani/software-dev-steven-arthur-public.git
+QUEUESPECHASH = c6ae95f77c637b2019ba2ef089881590fea6de8d
+MAPSPECREPO = https://github.com/TomPeng19971208/CS4500_A1_Part2.git
+MAPSPECHASH = 4d54993368d88ee3267af74567cd507c4404f44f
+
+run: dircheck
+	- make first
+	- make second
+	- make third
+
+first:
+	docker build -t cs4500:0.1 .
+	- rm -rf ./part1/test-array
+	git clone $(ARRAYSPECREPO) ./part1/test-array
+	cd ./part1/test-array; git checkout $(ARRAYSPECHASH)
+	cd ./part1; cp array.h queue.h map.h string.h object.h Makefile ./test-array
+	- docker run -ti -v `pwd`:/test cs4500:0.1 bash -c "cd /test/part1/test-array ; make testArray"
+
+second:
+	docker build -t cs4500:0.1 .
+	- rm -rf ./part1/test-queue
+	git clone $(QUEUESPECREPO) ./part1/test-queue
+	cd ./part1/test-queue; git checkout $(QUEUESPECHASH)
+	cd ./part1; cp array.h queue.h map.h string.h object.h queue_node.h Makefile ./test-queue
+	- docker run -ti -v `pwd`:/test cs4500:0.1 bash -c "cd /test/part1/test-queue ; make testQueue"
+
+third:
+	docker build -t cs4500:0.1 .
+	- rm -rf ./part1/test-map
+	git clone $(MAPSPECREPO) ./part1/test-map
+	cd ./part1/test-map; git checkout $(MAPSPECHASH)
+	cd ./part1; cp array.h queue.h map.h string.h object.h map_node.h Makefile ./test-map
+	- docker run -ti -v `pwd`:/test cs4500:0.1 bash -c "cd /test/part1/test-map ; make testMap"
+
+dircheck: ./part1 ./part1/array.h ./part1/queue.h ./part1/map.h ./part1/string.h ./part1/object.h ./part1/Makefile ./part1/MEMO.md ./part2 ./part2/REPO.md
+	echo "Directory structure looks OK"
+	- rm -rf dirtest-dir
+	wc -l < ./part2/REPO.md | xargs test 2 -gt
+	echo "REPO.md file is 0 or 1 lines"
+	cat ./part2/REPO.md | xargs -n 1 -I{} git clone -q {} dirtest-dir
+	echo "REPO.md file contains a valid git clone URL"
+	rm -rf dirtest-dir

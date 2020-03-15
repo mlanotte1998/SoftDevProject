@@ -101,6 +101,9 @@ public:
       rows_capacity_ = 1;
     }
 
+    ~Schema() {
+    }
+
     /** Add a column of the given type and name (can be nullptr), name
       * is external. Names are expectd to be unique, duplicates result
       * in undefined behavior. */
