@@ -32,7 +32,7 @@ communication with the other nodes.
 ## Implementation 
 Classes:  
   
-Application: 
+Application:  
 The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.  
   
 Registrar:  
@@ -79,12 +79,12 @@ dframe.add_row(r);
 
 
 ## Open Questions
-What are the sum-dataframes used for?
-Are entire dataframes supposed to be serialized and stored in the KV store? 
-If dataframes cannot be updated then why would we possibly allow K/V pairs to be overwritten?
-What did the assignment mean by saying the distributed array is a list of keys and a cache? 
-What does the fromScalar function do?
-What are some example queries? 
+What are the sum-dataframes used for?  
+Are entire dataframes supposed to be serialized and stored in the KV store?  
+If dataframes cannot be updated then why would we possibly allow K/V pairs to be overwritten?  
+What did the assignment mean by saying the distributed array is a list of keys and a cache?  
+What does the fromScalar function do?  
+What are some example queries?  
 
 
 ## Status
