@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "parser.h"
+#include "../src/sorer/parser.h"
 
 /**
  * Enum representing different states of parsing command line arguments.
