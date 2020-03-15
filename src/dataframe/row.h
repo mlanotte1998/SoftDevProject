@@ -104,7 +104,7 @@ public:
       exit_if_not(col < width(), duplicate("Int Col Index out of Bounds"));
       IntColumn* column = cols_[col]->as_int();
       exit_if_not(column != nullptr, duplicate("Non-Integer Column"));
-      exit_if_not(column->size() != 0, duplicate("Int Col Index out of Bounds"));
+      exit_if_not(column->size() != 0, duplicate("Int Col is empty"));
       return column->get(0);
     }
 
@@ -112,7 +112,7 @@ public:
       exit_if_not(col < width(), duplicate("Bool Col Index out of Bounds"));
       BoolColumn* column = cols_[col]->as_bool();
       exit_if_not(column != nullptr, duplicate("Non-Boolean Column"));
-      exit_if_not(column->size() != 0, duplicate("Bool Col Index out of Bounds"));
+      exit_if_not(column->size() != 0, duplicate("Bool Col is empty"));
       return column->get(0);
     }
 
@@ -128,7 +128,7 @@ public:
       exit_if_not(col < width(), duplicate("String Col Index out of Bounds"));
       StringColumn* column = cols_[col]->as_string();
       exit_if_not(column != nullptr, duplicate("Non-String Column"));
-      exit_if_not(column->size() != 0, duplicate("String Col Index out of Bounds"));
+      exit_if_not(column->size() != 0, duplicate("String Col is empty"));
       return column->get(0);
     }
 

@@ -388,16 +388,16 @@ class SorParser : public Object {
             case ColumnType::STRING:
                 slice.trim(STRING_QUOTE);
                 assert(slice.getLength() <= MAX_STRING);
-                dynamic_cast<StringColumn*>(column)->append(slice.toCString());
+                dynamic_cast<SorerStringColumn*>(column)->append(slice.toCString());
                 break;
             case ColumnType::INTEGER:
-                dynamic_cast<IntegerColumn*>(column)->append(slice.toInt());
+                dynamic_cast<SorerIntegerColumn*>(column)->append(slice.toInt());
                 break;
             case ColumnType::FLOAT:
-                dynamic_cast<FloatColumn*>(column)->append(slice.toFloat());
+                dynamic_cast<SorerFloatColumn*>(column)->append(slice.toFloat());
                 break;
             case ColumnType::BOOL:
-                dynamic_cast<BoolColumn*>(column)->append(slice.toInt() == 1);
+                dynamic_cast<SorerBoolColumn*>(column)->append(slice.toInt() == 1);
                 break;
             default:
                 assert(false);

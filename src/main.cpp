@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../src/sorer/parser.h"
+#include "./sorer/parser.h"
+#include "./dataframe/dataframe.h"
 
 /**
  * Enum representing different states of parsing command line arguments.
@@ -204,23 +205,71 @@ int main(int argc, char* argv[]) {
         parser.guessSchema();
         parser.parseFile();
         ColumnSet* set = parser.getColumnSet();
+        char* schema_string = new char[set->getLength() + 1];
+        int height;
 
-        // Print requested query
-        if (col_type != -1) {
-            ColumnType type = getColumnChecked(set, (size_t)col_type)->getType();
-            printf("%s\n", columnTypeToString(type));
-        } else if (col_idx_col != -1) {
-            BaseColumn* col = getColumnChecked(set, (size_t)col_idx_col);
-            checkColumnEntry(col, (size_t)col_idx_off);
-            col->printEntry((size_t)col_idx_off);
-        } else if (missing_idx_col != -1) {
-            BaseColumn* col = getColumnChecked(set, (size_t)missing_idx_col);
-            checkColumnEntry(col, (size_t)missing_idx_off);
-            bool present = col->isEntryPresent((size_t)missing_idx_off);
-            printf("%d\n", !present);
-        } else {
-            printf("Must provide a command line query\n");
+        for(int i = 0; i < set->getLength(); i++) {
+            BaseColumn* col = set->getColumn(i);
+            if (i == 0) {
+                height = col->getLength();
+            }
+            if (col->getType() == ColumnType::STRING) {
+                schema_string[i] = 'S';
+            } else if (col->getType() == ColumnType::INTEGER) {
+                schema_string[i] = 'I';
+            } else if (col->getType() == ColumnType ::FLOAT) {
+                schema_string[i] = 'F';
+            } else if (col->getType() == ColumnType ::BOOL) {
+                schema_string[i] = 'B';
+            }
         }
+
+        schema_string[set->getLength()] = '\0';
+        Schema s(schema_string);
+        DataFrame df(s);
+
+
+        for(int i = 0; i < height; i++) {
+            Row r(df.get_schema());
+            for (int j = 0; j < set->getLength(); j++) {
+                if (df.get_schema().col_type(j) == 'S') {
+                    SorerStringColumn* sc = dynamic_cast<SorerStringColumn*>(set->getColumn(j));
+                    if (sc->isEntryPresent(i)) {
+                        String* s = new String(sc->getEntry(i));
+                        r.set(j, s);
+                    } else {
+                        String* s = new String("");
+                        r.set(j, s);
+                    }
+                } else if (df.get_schema().col_type(j) == 'I') {
+                    SorerIntegerColumn* ic = dynamic_cast<SorerIntegerColumn*>(set->getColumn(j));
+                    if (ic->isEntryPresent(i)) {
+                        r.set(j, ic->getEntry(i));
+                    } else {
+                        r.set(j, 0);
+                    }
+                } else if (df.get_schema().col_type(j) == 'B') {
+                    SorerBoolColumn* bc = dynamic_cast<SorerBoolColumn*>(set->getColumn(j));
+                    if (bc->isEntryPresent(i)) {
+                        r.set(j, bc->getEntry(i));
+                    } else {
+                        r.set(j, 0);
+                    }
+                } else if (df.get_schema().col_type(j) == 'F') {
+                    SorerFloatColumn* fc = dynamic_cast<SorerFloatColumn*>(set->getColumn(j));
+                    if (fc->isEntryPresent(i)) {
+                        r.set(j, fc->getEntry(i));
+                    } else {
+                        r.set(j, (float)0.0);
+                    }
+                }
+            }
+            df.add_row(r);
+        }
+
+        SumColumnRower* sum_rower = new SumColumnRower(1);
+        df.map(*sum_rower);
+        std::cout << sum_rower->sum_ << std::endl;
     }
 
     fclose(file);

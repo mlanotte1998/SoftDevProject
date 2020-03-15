@@ -146,17 +146,17 @@ class BaseColumn : public Object {
 
 /**
  * Subclass of BaseColumn holding strings.
- * Expects ownership of each appended string to be transferred to the StringColumn.
+ * Expects ownership of each appended string to be transferred to the SorerStringColumn.
  * Frees contained strings in the destructor.
  */
-class StringColumn : public BaseColumn {
+class SorerStringColumn : public BaseColumn {
    public:
     const char** _entries;
-    StringColumn() : BaseColumn(ColumnType::STRING, DEFAULT_CAPACITY) {
+    SorerStringColumn() : BaseColumn(ColumnType::STRING, DEFAULT_CAPACITY) {
         _entries = new const char*[_capacity];
     }
 
-    virtual ~StringColumn() {
+    virtual ~SorerStringColumn() {
         for (size_t i = 0; i < _length; i++) {
             if (_entries[i] != nullptr) {
                 delete[] _entries[i];
@@ -208,13 +208,13 @@ class StringColumn : public BaseColumn {
 /**
  * Subclass of BaseColumn holding integers.
  */
-class IntegerColumn : public BaseColumn {
+class SorerIntegerColumn : public BaseColumn {
    public:
     int* _entries;
-    IntegerColumn() : BaseColumn(ColumnType::INTEGER, DEFAULT_CAPACITY) {
+    SorerIntegerColumn() : BaseColumn(ColumnType::INTEGER, DEFAULT_CAPACITY) {
         _entries = new int[_capacity];
     }
-    virtual ~IntegerColumn() { delete[] _entries; }
+    virtual ~SorerIntegerColumn() { delete[] _entries; }
 
     virtual void _resize_entries(size_t new_cap) {
         _resize_entry_present(new_cap);
@@ -252,13 +252,13 @@ class IntegerColumn : public BaseColumn {
 /**
  * Subclass of BaseColumn holding floats.
  */
-class FloatColumn : public BaseColumn {
+class SorerFloatColumn : public BaseColumn {
    public:
     float* _entries;
-    FloatColumn() : BaseColumn(ColumnType::FLOAT, DEFAULT_CAPACITY) {
+    SorerFloatColumn() : BaseColumn(ColumnType::FLOAT, DEFAULT_CAPACITY) {
         _entries = new float[_capacity];
     }
-    virtual ~FloatColumn() { delete[] _entries; }
+    virtual ~SorerFloatColumn() { delete[] _entries; }
 
     virtual void _resize_entries(size_t new_cap) {
         _resize_entry_present(new_cap);
@@ -296,13 +296,13 @@ class FloatColumn : public BaseColumn {
 /**
  * Subclass of BaseColumn holding booleans.
  */
-class BoolColumn : public BaseColumn {
+class SorerBoolColumn : public BaseColumn {
    public:
     bool* _entries;
-    BoolColumn() : BaseColumn(ColumnType::BOOL, DEFAULT_CAPACITY) {
+    SorerBoolColumn() : BaseColumn(ColumnType::BOOL, DEFAULT_CAPACITY) {
         _entries = new bool[_capacity];
     }
-    virtual ~BoolColumn() { delete[] _entries; }
+    virtual ~SorerBoolColumn() { delete[] _entries; }
 
     virtual void _resize_entries(size_t new_cap) {
         _resize_entry_present(new_cap);
@@ -345,13 +345,13 @@ class BoolColumn : public BaseColumn {
 BaseColumn* makeColumnFromType(ColumnType type) {
     switch (type) {
         case ColumnType::STRING:
-            return new StringColumn();
+            return new SorerStringColumn();
         case ColumnType::INTEGER:
-            return new IntegerColumn();
+            return new SorerIntegerColumn();
         case ColumnType::FLOAT:
-            return new FloatColumn();
+            return new SorerFloatColumn();
         case ColumnType::BOOL:
-            return new BoolColumn();
+            return new SorerBoolColumn();
         default:
             assert(false);
     }
