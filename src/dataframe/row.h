@@ -10,7 +10,7 @@
 #include "int_column.h"
 #include "float_column.h"
 #include "string_column.h"
-#include "helper.h"
+#include "../utility-classes/helper.h"
 
 /**
  * Row::

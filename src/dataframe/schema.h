@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "string.h"
-#include "helper.h"
+#include "../utility-classes/string.h"
+#include "../utility-classes/helper.h"
 
 /***
  * Schema::

@@ -5,7 +5,7 @@
 #pragma once
 
 #include "column.h"
-#include "string.h"
+#include "../utility-classes/string.h"
 
 /***
  * StringColumn::

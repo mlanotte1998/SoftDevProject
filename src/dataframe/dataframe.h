@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "../schema.h"
-#include "../fielder.h"
-#include "../row.h"
-#include "../rower.h"
+#include "schema.h"
+#include "fielder.h"
+#include "row.h"
+#include "rower.h"
 
 /***
 * DataFrame::

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "object.h"
+#include "../utility-classes/object.h"
 #include <stdio.h>
 #include <stdarg.h>
 
