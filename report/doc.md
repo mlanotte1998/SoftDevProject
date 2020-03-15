@@ -38,7 +38,33 @@ Sorer
 Application 
 
 
-## Use Cases
+## Use Cases  
+  
+Creation of Dataframe:  
+```
+Schema builder("IFFSB");  
+builder.add_row(nullptr);  
+builder.add_row(nullptr);  
+  
+DataFrame dframe(builder);  
+dframe.print();  
+  
+Row r(builder);  
+r.set(0, 1);  
+r.set(1, (float)1.0);  
+r.set(2, (float)2.0);  
+r.set(3, new String("Hi"));  
+r.set(4, true);  
+dframe.add_row(r);  
+  
+r.set(0, 2);  
+r.set(1, (float)2.0);  
+r.set(2, (float)4.0);  
+r.set(3, new String("Hey"));  
+r.set(4, false);  
+dframe.add_row(r);  
+
+```
 
 
 ## Open Questions
