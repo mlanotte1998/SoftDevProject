@@ -10,6 +10,7 @@
 #include "schema.h"
 #include "row.h"
 #include "rower.h"
+#include "../store/kdstore.h"
 
 
 /***

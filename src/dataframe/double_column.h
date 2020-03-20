@@ -53,6 +53,7 @@ public:
             // but the log2(8) is still 3, which is why it is ceil(log2(n + 1).
             binary_column_array_ = new double *[int(ceil(log2(n + 1)))];
             double *cur_array = new double[1];
+
             int cur_hor = 0;
             int cur_ver = 0;
             int cur_power = int(pow(2, cur_hor));
@@ -97,6 +98,7 @@ public:
      * @param ser The serialized string for a Double Column
      */
     DoubleColumn(char* ser) {
+
         // Set initial members
         double *first_array = new double[1];
         binary_column_array_ = new double *[1];
@@ -144,6 +146,9 @@ public:
         for (unsigned int i = 0; i < array_length_; i++) {
             delete[] binary_column_array_[i];
         }
+        if (size_ == 0) {
+          delete [] binary_column_array_[0];
+        }
         delete[] binary_column_array_;
     }
 
@@ -159,7 +164,7 @@ public:
         // of 9 in binary (where the leading 1 is), and then 9 - (2 to the power of (4 - 1)) gets 1
         // which is the remaining amount of the binary without the leading 1.
         // Also return an error if the idx is greater than the size.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, double_col_index_out_of_bounds);
         int binary_array_index = int(ceil(log2(idx + 2)));
         int inner_array_index = idx + 1 - int(pow(2, binary_array_index - 1));
         return binary_column_array_[binary_array_index - 1][inner_array_index];
@@ -184,12 +189,11 @@ public:
             binary_column_array_[0][0] = val;
             size_++;
             array_length_++;
-        }
+        } else if (int(ceil(log2(size_ + 1))) == int(floor(log2(size_ + 1)))) {
             // Else if the array is at capacity meaning that the floor and log of the
             // size + 1 is the same (for example size 3 array has an array of 1 and 2 that are full,
             // 3 + 1 is 4, the log of 4 for both ceiling and floor is the same meaning this
             // is a power of 2.
-        else if (int(ceil(log2(size_ + 1))) == int(floor(log2(size_ + 1)))) {
             double **new_binary_array = new double *[int(ceil(log2((size_ + 1) + 1)))];
             // Create a new outer array and add the sub arrays to it
             for (unsigned int i = 0; i < array_length_; i++) {
@@ -225,7 +229,7 @@ public:
             binary_column_array_[binary_array_index - 1][inner_array_index] = val;
         }
         // out of bounds we throw an error.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, double_col_index_out_of_bounds);
     }
 
     /***
