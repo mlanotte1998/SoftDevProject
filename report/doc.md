@@ -58,7 +58,6 @@ builder.add_row(nullptr);
 builder.add_row(nullptr);  
   
 DataFrame dframe(builder);  
-dframe.print();  
   
 Row r(builder);  
 r.set(0, 1);  

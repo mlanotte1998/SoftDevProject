@@ -10,7 +10,6 @@
 #include <math.h>
 
 #include "schema.h"
-#include "fielder.h"
 #include "row.h"
 #include "rower.h"
 
@@ -243,16 +242,6 @@ public:
             }
         }
         return nd;
-    }
-
-    /** Print the dataframe in SoR format to standard output. */
-    void print() {
-        Row *iterator_row = new Row(schema_);
-        for (unsigned int i = 0; i < nrows(); i++) {
-            fill_row(i, *iterator_row);
-            PrintFielder *pf = new PrintFielder();
-            iterator_row->visit(i, *pf);
-        }
     }
 };
 

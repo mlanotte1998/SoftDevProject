@@ -319,11 +319,6 @@ void test_row() {
     t_true(r.col_type(2) == 'F');
     t_true(r.col_type(3) == 'S');
 
-    // test visit with print fielder
-    PrintFielder* print_fielder = new PrintFielder();
-    r.visit(0, *print_fielder);
-
-    delete print_fielder;
     delete goodbye;
     delete hello;
 
@@ -890,7 +885,6 @@ void test_print() {
     builder.add_row(row4);
 
     DataFrame dframe(builder);
-    dframe.print();
 
     Row r(builder);
     r.set(0, 1);
@@ -927,8 +921,6 @@ void test_print() {
     r.set(3, hej);
     r.set(4, true);
     dframe.add_row(r);
-
-    dframe.print();
 
     delete hey;
     delete hi;
