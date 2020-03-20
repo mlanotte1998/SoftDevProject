@@ -492,7 +492,7 @@ public:
         // Create a new string for this ip and store it.
         char* new_ip_from_message = get_ip_from_client_message(buffer);
         char *new_ip = store_client_ip(new_ip_from_message, IS_ip_list_, IS_total_socket_count_);
-        delete new_ip_from_message;
+        delete [] new_ip_from_message;
         printf("Other client accepted: %s\n", new_ip);
         printf("%s\n", buffer);
     }
