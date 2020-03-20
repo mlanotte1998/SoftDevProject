@@ -206,7 +206,7 @@ int main(int argc, char* argv[]) {
         parser.parseFile();
         ColumnSet* set = parser.getColumnSet();
         char* schema_string = new char[set->getLength() + 1];
-        int height;
+        int height = 0;
 
         for(int i = 0; i < set->getLength(); i++) {
             BaseColumn* col = set->getColumn(i);
