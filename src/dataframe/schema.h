@@ -119,7 +119,7 @@ public:
           grow_types_[col_idx] = types_[col_idx];
         }
         grow_types_[cols_] = typ;
-        delete types_;
+        delete [] types_;
         types_ = grow_types_;
         // add name to col_names
         String** grow_names = new String*[cols_capacity_ * 2];
@@ -127,7 +127,7 @@ public:
           grow_names[name_idx] = col_names_[name_idx];
         }
         grow_names[cols_] = name;
-        delete col_names_;
+        delete [] col_names_;
         col_names_ = grow_names;
         cols_capacity_ *= 2;
       } else {
@@ -144,15 +144,17 @@ public:
     void add_row(String* name) {
       // add name to row_names
       if (rows_ >= rows_capacity_) {
+          std::cout << "Huh" << std::endl;
         String** grow_names = new String*[rows_capacity_ * 2];
         for (size_t name_idx = 0; name_idx < rows_; name_idx++) {
           grow_names[name_idx] = row_names_[name_idx];
         }
         grow_names[rows_] = name;
-        delete row_names_;
+        delete [] row_names_;
         row_names_ = grow_names;
         rows_capacity_ *= 2;
       } else {
+
         row_names_[rows_] = name;
       }
 

@@ -116,7 +116,7 @@ public:
         // of 9 in binary (where the leading 1 is), and then 9 - (2 to the power of (4 - 1)) gets 1
         // which is the remaining amount of the binary without the leading 1.
         // Also return an error if the idx is greater than the size.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, int_col_index_out_of_bounds);
         int binary_array_index = int(ceil(log2(idx + 2)));
         int inner_array_index = idx + 1 - int(pow(2, binary_array_index - 1));
         return binary_column_array_[binary_array_index - 1][inner_array_index];
@@ -181,7 +181,7 @@ public:
             binary_column_array_[binary_array_index - 1][inner_array_index] = val;
         }
         // out of bounds we throw an error.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, int_col_index_out_of_bounds );
     }
 
     /***

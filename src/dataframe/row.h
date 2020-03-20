@@ -12,6 +12,7 @@
 #include "string_column.h"
 #include "../utility-classes/helper.h"
 
+
 /**
  * Row::
  *
@@ -24,15 +25,16 @@ class Row : public Object {
 public:
     String* name;
     size_t row_idx_;
-    Schema schema_;
+    Schema* schema_;
+    size_t cols_count_;
     Column** cols_;
 
     /** Build a row following a schema. */
     Row(Schema& scm) {
       name = nullptr;
       row_idx_ = 0;
-      schema_ = scm;
-      size_t cols_count_ = scm.width();
+      schema_ = new Schema(scm);
+      cols_count_ = scm.width();
       cols_ = new Column*[cols_count_];
       for (size_t col_idx = 0; col_idx < cols_count_; col_idx++) {
         if (scm.types_[col_idx] == 'B') cols_[col_idx] = new BoolColumn();
@@ -40,7 +42,7 @@ public:
         else if (scm.types_[col_idx] == 'F') cols_[col_idx] = new FloatColumn();
         else if (scm.types_[col_idx] == 'S') cols_[col_idx] = new StringColumn();
         else {
-          pln("Given Malformed Schema");
+          pln(given_malformed_schema);
           exit(-1);
         }
       }
@@ -49,8 +51,12 @@ public:
     ~Row() {
       delete name;
       row_idx_ = 0;
-      schema_ = nullptr;
+
+      for (int i = 0; i < cols_count_; i++) {
+          delete cols_[i];
+      }
       delete[] cols_;
+      delete schema_;
     }
 
     /** Setters: set the given column with the given value. Setting a column with
@@ -101,46 +107,47 @@ public:
     /** Getters: get the value at the given column. If the column is not
       * of the requested type, the result is undefined. */
     int get_int(size_t col) {
-      exit_if_not(col < width(), duplicate("Int Col Index out of Bounds"));
+      exit_if_not(col < width(), int_col_index_out_of_bounds);
       IntColumn* column = cols_[col]->as_int();
-      exit_if_not(column != nullptr, duplicate("Non-Integer Column"));
-      exit_if_not(column->size() != 0, duplicate("Int Col is empty"));
+      exit_if_not(column != nullptr, non_int_col);
+      exit_if_not(column->size() != 0, int_col_emtpy);
       return column->get(0);
     }
 
     bool get_bool(size_t col) {
-      exit_if_not(col < width(), duplicate("Bool Col Index out of Bounds"));
+      exit_if_not(col < width(), bool_col_index_out_of_bounds);
       BoolColumn* column = cols_[col]->as_bool();
-      exit_if_not(column != nullptr, duplicate("Non-Boolean Column"));
-      exit_if_not(column->size() != 0, duplicate("Bool Col is empty"));
+      exit_if_not(column != nullptr, non_bool_col);
+      exit_if_not(column->size() != 0, bool_col_emtpy);
       return column->get(0);
     }
 
     float get_float(size_t col) {
-      exit_if_not(col < width(), duplicate("Float Col Index out of Bounds"));
+      exit_if_not(col < width(), float_col_index_out_of_bounds);
       FloatColumn* column = cols_[col]->as_float();
-      exit_if_not(column != nullptr, duplicate("Non-Float Column"));
-      exit_if_not(column->size() != 0, duplicate("Float Col Is Empty"));
+      exit_if_not(column != nullptr, non_float_col);
+      exit_if_not(column->size() != 0, float_col_emtpy);
       return column->get(0);
     }
 
     String* get_string(size_t col) {
-      exit_if_not(col < width(), duplicate("String Col Index out of Bounds"));
+
+      exit_if_not(col < width(), string_col_index_out_of_bounds);
       StringColumn* column = cols_[col]->as_string();
-      exit_if_not(column != nullptr, duplicate("Non-String Column"));
-      exit_if_not(column->size() != 0, duplicate("String Col is empty"));
+      exit_if_not(column != nullptr, non_string_col);
+      exit_if_not(column->size() != 0, string_col_emtpy);
       return column->get(0);
     }
 
     /** Number of fields in the row. */
     size_t width() {
-      return schema_.width();
+      return cols_count_;
     }
 
     /** Type of the field at the given position. An idx >= width is  undefined. */
     char col_type(size_t idx) {
-      exit_if_not(idx < width(), duplicate("Col Index out of Bounds"));
-      return schema_.col_type(idx);
+      exit_if_not(idx < width(), col_index_out_of_bounds);
+      return schema_->col_type(idx);
     }
 
     /** Given a Fielder, visit every field of this row. The first argument is
@@ -148,7 +155,7 @@ public:
       * Calling this method before the row's fields have been set is undefined. */
     void visit(size_t idx, Fielder& f) {
       f.start(idx);
-      for (size_t index = 0; index < schema_.width(); index++) {
+      for (size_t index = 0; index < schema_->width(); index++) {
         if (col_type(index) == 'B') f.accept(get_bool(index));
         else if (col_type(index) == 'I') f.accept(get_int(index));
         else if (col_type(index) == 'F') f.accept(get_float(index));

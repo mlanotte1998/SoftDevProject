@@ -12,7 +12,7 @@ char* cwc_strdup(const char* src) {
 }
 
 void test_stringColumn() {
-    StringColumn* col = new StringColumn();
+    SorerStringColumn* col = new SorerStringColumn();
     // Basic tests
     assert(col->getType() == ColumnType::STRING);
     col->append(cwc_strdup("test1"));
@@ -36,7 +36,7 @@ void test_stringColumn() {
 }
 
 void test_intColumn() {
-    IntegerColumn* col = new IntegerColumn();
+    SorerIntegerColumn* col = new SorerIntegerColumn();
     // Basic int tests
     assert(col->getType() == ColumnType::INTEGER);
     col->appendMissing();
@@ -51,7 +51,7 @@ void test_intColumn() {
 }
 
 void test_floatColumn() {
-    FloatColumn* col = new FloatColumn();
+    SorerFloatColumn* col = new SorerFloatColumn();
     // Basic float tests
     assert(col->getType() == ColumnType::FLOAT);
     col->append(4500.0);
@@ -65,7 +65,7 @@ void test_floatColumn() {
 }
 
 void test_boolColumn() {
-    BoolColumn* col = new BoolColumn();
+    SorerBoolColumn* col = new SorerBoolColumn();
     // Basic bool tests
     assert(col->getType() == ColumnType::BOOL);
     col->append(true);

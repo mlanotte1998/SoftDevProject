@@ -96,6 +96,8 @@ public:
      * Destructor for the BoolColumn
      */
     ~StringColumn() {
+
+        std::cout << "StringCol  " << std::endl;
         size_t cur_index = 0;
         size_t cur_power = 1;
 
@@ -103,16 +105,23 @@ public:
         // Also need to delete the strings inside since they were cloned
         for (unsigned int i = 0; i < array_length_; i++) {
             for (unsigned int j = 0; j < cur_power; j++) {
+                std::cout <<  i  << " " << j  << std::endl;
                 if (cur_index < size_) {
-                    delete binary_column_array_[i][j];
+                    if (binary_column_array_ != nullptr) {
+                        std::cout <<  binary_column_array_[i][j]->c_str() << std::endl;
+                        delete binary_column_array_[i][j];
+                    }
                 }
+                std::cout <<  i  << " " << std::endl;
                 cur_index++;
             }
             cur_power *= 2;
+            std::cout <<  i  << " " << std::endl;
             delete[] binary_column_array_[i];
 
         }
         delete[] binary_column_array_;
+        std::cout << "StringCol2  " << std::endl;
     }
 
     StringColumn *as_string() {
@@ -132,7 +141,7 @@ public:
         // of 9 in binary (where the leading 1 is), and then 9 - (2 to the power of (4 - 1)) gets 1
         // which is the remaining amount of the binary without the leading 1.
         // Also return an error if the idx is greater than the size.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, string_col_index_out_of_bounds);
         int binary_array_index = int(ceil(log2(idx + 2)));
         int inner_array_index = idx + 1 - int(pow(2, binary_array_index - 1));
         return binary_column_array_[binary_array_index - 1][inner_array_index];
@@ -191,7 +200,7 @@ public:
             binary_column_array_[binary_array_index - 1][inner_array_index] = val->clone();
         }
         // out of bounds we throw an error.
-        exit_if_not(idx < size_, duplicate("Index out of Bounds"));
+        exit_if_not(idx < size_, string_col_index_out_of_bounds);
     }
 
     /***
