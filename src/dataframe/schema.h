@@ -102,6 +102,19 @@ public:
     }
 
     ~Schema() {
+      delete [] types_;
+      for (int i = 0; i < cols_; i++) {
+        if (col_names_[i] != nullptr){
+          delete col_names_[i];
+        }
+      }
+      for (int i = 0; i < rows_; i++) {
+        if (row_names_[i] != nullptr){
+          delete row_names_[i];
+        }
+      }
+      delete [] col_names_;
+      delete [] row_names_;
     }
 
     /** Add a column of the given type and name (can be nullptr), name
@@ -114,6 +127,9 @@ public:
       }
       // add type to types_
       if (cols_ >= cols_capacity_) {
+        if (cols_capacity_ == 0) {
+          cols_capacity_ = 1; 
+        }
         char* grow_types_ = new char[cols_capacity_ * 2];
         for (size_t col_idx = 0; col_idx < cols_; col_idx++) {
           grow_types_[col_idx] = types_[col_idx];
@@ -144,7 +160,9 @@ public:
     void add_row(String* name) {
       // add name to row_names
       if (rows_ >= rows_capacity_) {
-          std::cout << "Huh" << std::endl;
+        if (rows_capacity_ == 0) {
+          rows_capacity_ = 1;
+        }
         String** grow_names = new String*[rows_capacity_ * 2];
         for (size_t name_idx = 0; name_idx < rows_; name_idx++) {
           grow_names[name_idx] = row_names_[name_idx];
@@ -154,7 +172,6 @@ public:
         row_names_ = grow_names;
         rows_capacity_ *= 2;
       } else {
-
         row_names_[rows_] = name;
       }
 

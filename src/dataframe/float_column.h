@@ -99,6 +99,9 @@ public:
         for (unsigned int i = 0; i < array_length_; i++) {
             delete[] binary_column_array_[i];
         }
+        if (size_ == 0) {
+          delete [] binary_column_array_[0];
+        }
         delete[] binary_column_array_;
     }
 

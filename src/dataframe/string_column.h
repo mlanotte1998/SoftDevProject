@@ -97,7 +97,6 @@ public:
      */
     ~StringColumn() {
 
-        std::cout << "StringCol  " << std::endl;
         size_t cur_index = 0;
         size_t cur_power = 1;
 
@@ -105,23 +104,21 @@ public:
         // Also need to delete the strings inside since they were cloned
         for (unsigned int i = 0; i < array_length_; i++) {
             for (unsigned int j = 0; j < cur_power; j++) {
-                std::cout <<  i  << " " << j  << std::endl;
                 if (cur_index < size_) {
                     if (binary_column_array_ != nullptr) {
-                        std::cout <<  binary_column_array_[i][j]->c_str() << std::endl;
                         delete binary_column_array_[i][j];
                     }
                 }
-                std::cout <<  i  << " " << std::endl;
                 cur_index++;
             }
             cur_power *= 2;
-            std::cout <<  i  << " " << std::endl;
             delete[] binary_column_array_[i];
 
         }
+        if (size_ == 0) {
+          delete [] binary_column_array_[0];
+        }
         delete[] binary_column_array_;
-        std::cout << "StringCol2  " << std::endl;
     }
 
     StringColumn *as_string() {

@@ -1,8 +1,8 @@
 test:
-	#- make runDataStructure
-	#- make runBench
+	- make runDataStructure
+	# make runBench
 	- make runDataframe
-	#- make runSorer
+	- make runSorer
 
 #===========================================================================================================
 #Data structure tests

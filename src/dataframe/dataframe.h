@@ -25,7 +25,6 @@ public:
     size_t length_;
     Schema *schema_;
     Column **cols_;
-    Schema *schema_pointer;
 
     /** Create a data frame with the same columns as the given df but with no rows or rownmaes */
     DataFrame(DataFrame &df) {
@@ -33,15 +32,15 @@ public:
         Schema other_schema = df.get_schema();
         cols_ = new Column *[other_schema.width()];
         schema_ = new Schema(other_schema);
-        for (size_t i = 0; i < other_schema.width(); i++) {
+        for (size_t i = 0; i < schema_->width(); i++) {
             if (other_schema.types_[i] == 'B') {
-                add_column(new BoolColumn(), other_schema.col_name(i));
+                cols_[i] = new BoolColumn();
             } else if (other_schema.types_[i] == 'I') {
-                add_column(new IntColumn(), other_schema.col_name(i));
+                cols_[i] = new IntColumn();
             } else if (other_schema.types_[i] == 'F') {
-                add_column(new FloatColumn(), other_schema.col_name(i));
+                cols_[i] = new FloatColumn();
             } else if (other_schema.types_[i] == 'S') {
-                add_column(new StringColumn(), other_schema.col_name(i));
+                cols_[i] = new StringColumn();
             } else {
                 pln(given_malformed_schema);
                 exit(-1);
@@ -56,7 +55,6 @@ public:
         length_ = 0;
         schema_ = new Schema(schema);
         cols_ = new Column *[schema_->width()];
-        std::cout << "width " << schema_->width() << std::endl;
         for (size_t i = 0; i < schema_->width(); i++) {
             if (schema_->types_[i] == 'B') {
                 cols_[i] = new BoolColumn();
@@ -75,17 +73,11 @@ public:
 
     ~DataFrame() {
 
-        std::cout << ncols() << std::endl;
         for (int i = 0; i < ncols(); i++) {
-            std::cout << "BBBBB" << std::endl;
             delete cols_[i];
         }
-        std::cout << "CCCCC" << std::endl;
         delete[] cols_;
-        std::cout << "BBBBB" << std::endl;
         delete schema_;
-
-        std::cout << "BBBBB" << std::endl;
 
     }
 
@@ -213,7 +205,6 @@ public:
             else if (schema_->col_type(col) == 'S') cols_[col]->as_string()->push_back(row.get_string(col));
         }
         if (length_ >= schema_->length()) {
-            std::cout << "What the fuck" << std::endl;
             schema_->add_row(nullptr);
         }
         length_++;
@@ -261,6 +252,8 @@ public:
             fill_row(i, *iterator_row);
             PrintFielder *pf = new PrintFielder();
             iterator_row->visit(i, *pf);
+            delete pf;
         }
+        delete iterator_row;
     }
 };

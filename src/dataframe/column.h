@@ -35,6 +35,7 @@ public:
     }
 
     virtual BoolColumn*  as_bool() {
+        std::cout << "oh shit" << std::endl; 
         return nullptr;
     }
 
