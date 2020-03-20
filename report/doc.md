@@ -18,7 +18,7 @@ the node on which it is made knows which node it needs to communicate with to re
 node be known for keys speeds up the system in the long run because then if a node does not have the key in it's
 own KV store then it would have to wait to hear back from every other node to see if they have the data. 
 
-Above that is abstraction of data in the form of dataframes and distributed arrays. 
+Above that is abstraction of data in the form of DataFrames and distributed arrays. 
 These data structures build up their data by calling for data from the bottom layer which then accesses it's KV store. 
 
 The top layer above that is where the application code lies so that their can be interactions with the users. What this
@@ -30,23 +30,44 @@ information on how to access the other nodes in the system. This allows each nod
 communication with the other nodes. 
 
 ## Implementation 
-Classes:  
-  
-Application:  
+
+#### Application:  
 The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.  
   
-Registrar:  
-The main node that all other nodes connect to and register their addresses along with learning the addresses of the other nodes in the system.  
+#### RendezvousServer and Node:  
+These two classes have the network code needed for the application. The Rendezvous Server is essentially a server meant
+to sync up all Nodes in the system. Another way of describing it is by calling it a Registrar. 
+When a Node is created, it needs to know the IP of the Registrar to connect to
+so that the Node can learn the IP's of other Nodes in the system. When the Registrar has a new Node connect to it, 
+it sends a list of the IP addresses of the other Nodes to the new one along with sending the received new IP address 
+to all of the other Nodes in the system. This allows all of the Nodes to be fully aware of each other. Once a Node is
+integrated in the system, it will have the IP addresses of the other Nodes so it can then send and receive messages
+to/from them. 
+There are also two lower level classes for abstracting the actual network behavior even more, these are the Server 
+and Client classes. A Server object is used by the Registrar so that the Nodes can connect to it. The Nodes use both
+Clients to send a message to the Registrar along with sending messages to other Nodes. For Nodes to be able to 
+receive their messages from other Nodes they also need their own Server object also listening. Since the Nodes 
+need to be simultaneously connected to the Registrar along with being able to receive/send messages, threading is 
+needed to run both of these functions at the same time. 
   
-Node:  
-For connecting to the registrar so that it can learn about other nodes in its network and message directly to them in the network.  
+#### DataFrame:  
+The top level class for data storage in the application. The DataFrame will store data in row/column format. 
+There are column classes specific to being used for the DataFrame, one for each of the main four data types (Boolean,
+Float, Integer, and String). A DataFrame also has a Schema object inside of it that is meant to know the format
+of the data along with the name of any of the rows/columns if they exist. Data can be added to a DataFrame by
+inserting entire Rows or entire Columns but the data being added must stay consistent with the format of the
+current data. 
   
-Dataframe:  
-The top level class for data storage in the application. The dataframe will store data in row/column format.  
-  
-Sorer:  
-The class responsible for reading in data from a .sor file into a dataframe.  
-
+#### Parser and Sorer Columns:  
+These classes make up the Sorer functionality used to read in data from .sor files. A parser object
+is created with the file to be read from, starting location, byte length, and the total file size. This object
+then has functions for guessing the schema of the given file and for handling the full parsing. Once these two 
+are used, the Parser object will be holding Sorer Columns that contain all of the data. These columns are aware of
+missing data and are different from the columns used in the DataFrame. The data can be accessed by reading through
+the columns. For this application, the data is read by first seeing how long the columns are by checking the length
+of the first one (the length of all columns should be the same). Once this is found, it can be used along with the 
+length of the set of columns to read the data row by row. Each column can be casted to figure out whether the data
+inside is a Boolean, Float, Integer, or String. The data that is read can then be added to a DataFrame.  
 
 
 ## Use Cases  
@@ -76,7 +97,6 @@ dframe.add_row(r);
 
 ```
 
-
 ## Open Questions
 What are the sum-dataframes used for?  
 Are entire dataframes supposed to be serialized and stored in the KV store?  
@@ -87,6 +107,15 @@ What are some example queries?
 
 
 ## Status
-So far the only implementation completed is setting up the code to reuse. This includes the Object,
-String, Arrays, Dataframe classes, and another group's Sorer. All of these classes have tests brought over 
-as well along with a test suite for testing everything working together. 
+All of the code to be reused has been brought over into the directory along with the tests for all of them.
+The tests are all together in one file and can be run together with the Makefile in the directory. The code
+to be reused can be split up into a few different types of classes. The first is utility classes; these include
+Object, String, Array, and the other common data structure classes. The next group of classes are the classes
+that are used by the DataFrame; this folder has all of the classes that were new for the DataFrame assignment.
+Lastly there is a folder for sorer code that came from the group 45000NE. There is one main.cpp file in the top 
+level project directory that tests out reading in a file and creating a DataFrame with it along with running
+a simple map function on it. The tests have been run with valgrind to ensure that any memory issues that
+were in the code for the previous assignments have been fixed. When running the main executable with valgrind
+and the megabyte.sor file there is no memory leaks or memory errors. 
+
+#TODO ADD IN ASSIGNMENT 2 Status Update and Implementation Update

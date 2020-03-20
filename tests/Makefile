@@ -3,6 +3,7 @@ test:
 	# make runBench
 	- make runDataframe
 	- make runSorer
+	- make runNetwork
 
 #===========================================================================================================
 #Data structure tests
@@ -227,3 +228,25 @@ testSorerUnitTests:
 cleanSorer:
 	rm -rf sorer
 	rm -rf test-sorer
+
+#===================================================================================================================
+
+runNetwork: buildNetwork
+	- make testNetwork
+	- make cleanNetwork
+
+buildNetwork:
+	g++ -std=c++11 -pthread -o server server.cpp
+	g++ -std=c++11 -pthread -o client client.cpp
+
+testNetwork: server client
+
+	# start the server and the clients
+	./server -ip 127.0.0.1 &
+	(./client -ip 127.0.0.2 &) > file1.txt
+	(./client -ip 127.0.0.3 &) > file2.txt
+	pkill -f ./server
+
+
+cleanNetwork:
+	-rm *.o $(objects) *.txt server client
