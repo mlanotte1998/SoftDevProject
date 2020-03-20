@@ -237,9 +237,11 @@ int main(int argc, char* argv[]) {
                     if (sc->isEntryPresent(i)) {
                         String* s = new String(sc->getEntry(i));
                         r.set(j, s);
+                        delete s;
                     } else {
                         String* s = new String("");
                         r.set(j, s);
+                        delete s;
                     }
                 } else if (df.get_schema().col_type(j) == 'I') {
                     SorerIntegerColumn* ic = dynamic_cast<SorerIntegerColumn*>(set->getColumn(j));
@@ -271,6 +273,7 @@ int main(int argc, char* argv[]) {
         df.map(*sum_rower);
         std::cout << sum_rower->sum_ << std::endl;
         delete sum_rower;
+        delete [] schema_string;
     }
 
     fclose(file);
