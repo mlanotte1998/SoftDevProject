@@ -11,6 +11,7 @@
 class IntColumn;
 class BoolColumn;
 class FloatColumn;
+class DoubleColumn;
 class StringColumn;
 
 /***
@@ -42,6 +43,10 @@ public:
         return nullptr;
     }
 
+    virtual DoubleColumn* as_double() {
+        return nullptr;
+    }
+
     virtual StringColumn* as_string() {
         return nullptr;
     }
@@ -51,6 +56,7 @@ public:
     virtual void push_back(int val) {}
     virtual void push_back(bool val) {}
     virtual void push_back(float val) {}
+    virtual void push_back(double val) {}
     virtual void push_back(String* val) {}
 
     /** Returns the number of elements in the column. */
@@ -69,6 +75,8 @@ public:
             return 'F';
         } else if (this->as_int() != nullptr) {
             return 'I';
+        } else if (this->as_double() != nullptr) {
+            return 'D';
         } else if (this->as_string() != nullptr) {
             return 'S';
         } else {

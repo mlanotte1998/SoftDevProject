@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
+#include "constants.h"
 
 /***
  * IntColumn::
@@ -35,7 +36,7 @@ public:
     /***
     * Constructor for passing any number of arguments
     * @param n number of arguments
-    * @param ... bool values to be added in the array.
+    * @param ... int values to be added in the array.
     */
     IntColumn(int n, ...) {
         int i;
@@ -90,6 +91,50 @@ public:
             array_length_ = cur_hor + 1;
             size_ = n;
             va_end(vl);
+        }
+    }
+
+    /**
+     * Constructor for building a int column from a serialized string.
+     * @param ser The serialized string for a Int Column
+     */
+    IntColumn(char* ser) {
+        // Set initial members
+        int *first_array = new int[1];
+        binary_column_array_ = new int *[1];
+        binary_column_array_[0] = first_array;
+        array_length_ = 0;
+        size_ = 0;
+
+        // Split up the message by spaces.
+        char* ser_token = strtok(ser, " ");
+        // Loop through until reaching the p1 that represents the inner array.
+        while(ser_token != NULL) {
+            if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
+                int key_len = strlen("-p1_val::");
+                int arr_len = strlen("arr(");
+                char arr_value[MAX_ARRAY_SIZE_BYTES];
+                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES);
+                // Copy the array elements to a new string.
+                strncpy(
+                    arr_value, 
+                    ser_token + key_len + arr_len, 
+                    strlen(ser_token) - key_len - arr_len - 1
+                );
+                // Tokenize the string representing the inner array by the commas
+                // that separate the values.
+                char* arr_token = strtok(arr_value, ",");
+                while(arr_token != NULL) {
+                    int index_value = 0;
+                    sscanf(arr_token, "%i", &index_value);
+                    // Push back each value in the string to build up the entire Int Column.
+                    // No need to parse out the other information from the message because the
+                    // values like the length of the array will be build by the push backs.
+                    push_back(index_value);
+                    arr_token = strtok(NULL, ",");
+                }
+            }
+            ser_token = strtok(NULL, " ");
         }
     }
 

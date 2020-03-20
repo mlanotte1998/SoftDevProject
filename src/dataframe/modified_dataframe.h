@@ -39,6 +39,8 @@ public:
                 add_column(new IntColumn(), other_schema.col_name(i));
             } else if (other_schema.types_[i] == 'F') {
                 add_column(new FloatColumn(), other_schema.col_name(i));
+            } else if (other_schema.types_[i] == 'D') {
+                add_column(new DoubleColumn(), other_schema.col_name(i));
             } else if (other_schema.types_[i] == 'S') {
                 add_column(new StringColumn(), other_schema.col_name(i));
             } else {
@@ -61,6 +63,8 @@ public:
                 cols_[i] = new IntColumn();
             } else if (schema.types_[i] == 'F') {
                 cols_[i] = new FloatColumn();
+            } else if (schema.types_[i] == 'D') {
+                cols_[i] = new DoubleColumn();
             } else if (schema.types_[i] == 'S') {
                 cols_[i] = new StringColumn();
             } else {
@@ -117,6 +121,14 @@ public:
         return column->get(row);
     }
 
+    bool get_double(size_t col, size_t row) {
+        exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
+        DoubleColumn *column = cols_[col]->as_double();
+        exit_if_not(column != nullptr, duplicate("Non-Double Column"));
+        exit_if_not(row < column->size(), duplicate("Row Index out of Bounds"));
+        return column->get(row);
+    }
+
     float get_float(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
         FloatColumn *column = cols_[col]->as_float();
@@ -167,6 +179,13 @@ public:
         else column->set(row, val);
     }
 
+    void set(size_t col, size_t row, double val) {
+        if (col >= ncols() || row >= nrows()) return;
+        DoubleColumn *column = cols_[col]->as_double();
+        if (column == nullptr) return;
+        else column->set(row, val);
+    }
+
     void set(size_t col, size_t row, String *val) {
         if (col >= ncols() || row >= nrows()) return;
         StringColumn *column = cols_[col]->as_string();
@@ -184,6 +203,7 @@ public:
             if (schema_.col_type(col) == 'B') row.set(col, get_bool(col, idx));
             else if (schema_.col_type(col) == 'I') row.set(col, get_int(col, idx));
             else if (schema_.col_type(col) == 'F') row.set(col, get_float(col, idx));
+            else if (schema_.col_type(col) == 'D') row.set(col, get_double(col, idx));
             else if (schema_.col_type(col) == 'S') row.set(col, get_string(col, idx));
         }
     }
@@ -195,6 +215,7 @@ public:
             if (schema_.col_type(col) == 'B') cols_[col]->as_bool()->push_back(row.get_bool(col));
             else if (schema_.col_type(col) == 'I') cols_[col]->as_int()->push_back(row.get_int(col));
             else if (schema_.col_type(col) == 'F') cols_[col]->as_float()->push_back(row.get_float(col));
+            else if (schema_.col_type(col) == 'D') cols_[col]->as_double()->push_back(row.get_double(col));
             else if (schema_.col_type(col) == 'S') cols_[col]->as_string()->push_back(row.get_string(col));
         }
         if (length_ >= schema_.length()) {

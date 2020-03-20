@@ -38,6 +38,8 @@ public:
                 cols_[i] = new IntColumn();
             } else if (other_schema.types_[i] == 'F') {
                 cols_[i] = new FloatColumn();
+            } else if (other_schema.types_[i] == 'D') {
+                cols_[i] = new DoubleColumn();
             } else if (other_schema.types_[i] == 'S') {
                 cols_[i] = new StringColumn();
             } else {
@@ -61,6 +63,8 @@ public:
                 cols_[i] = new IntColumn();
             } else if (schema_->types_[i] == 'F') {
                 cols_[i] = new FloatColumn();
+            } else if (schema_->types_[i] == 'D') {
+                cols_[i] = new DoubleColumn();
             } else if (schema_->types_[i] == 'S') {
                 cols_[i] = new StringColumn();
             } else {
@@ -68,6 +72,10 @@ public:
                 exit(-1);
             }
         }
+    }
+
+    static DataFrame* fromArray(Key* key, KDStore* kdstore, size_t size, double* vals) {
+
     }
 
     ~DataFrame() {
@@ -123,6 +131,14 @@ public:
         return column->get(row);
     }
 
+    bool get_double(size_t col, size_t row) {
+        exit_if_not(col < ncols(), col_index_out_of_bounds);
+        DoubleColumn *column = cols_[col]->as_double();
+        exit_if_not(column != nullptr, non_double_col);
+        exit_if_not(row < column->size(), row_index_out_of_bounds);
+        return column->get(row);
+    }
+
     float get_float(size_t col, size_t row) {
         exit_if_not(col < ncols(), col_index_out_of_bounds);
         FloatColumn *column = cols_[col]->as_float();
@@ -166,6 +182,13 @@ public:
         else column->set(row, val);
     }
 
+    void set(size_t col, size_t row, double val) {
+        if (col >= ncols() || row >= nrows()) return;
+        DoubleColumn *column = cols_[col]->as_double();
+        if (column == nullptr) return;
+        else column->set(row, val);
+    }
+
     void set(size_t col, size_t row, float val) {
         if (col >= ncols() || row >= nrows()) return;
         FloatColumn *column = cols_[col]->as_float();
@@ -189,6 +212,7 @@ public:
         for (size_t col = 0; col < ncols(); col++) {
             if (schema_->col_type(col) == 'B') row.set(col, get_bool(col, idx));
             else if (schema_->col_type(col) == 'I') row.set(col, get_int(col, idx));
+            else if (schema_->col_type(col) == 'D') row.set(col, get_double(col, idx));
             else if (schema_->col_type(col) == 'F') row.set(col, get_float(col, idx));
             else if (schema_->col_type(col) == 'S') row.set(col, get_string(col, idx));
         }
@@ -200,6 +224,7 @@ public:
         for (size_t col = 0; col < ncols(); col++) {
             if (schema_->col_type(col) == 'B') cols_[col]->as_bool()->push_back(row.get_bool(col));
             else if (schema_->col_type(col) == 'I') cols_[col]->as_int()->push_back(row.get_int(col));
+            else if (schema_->col_type(col) == 'D') cols_[col]->as_double()->push_back(row.get_double(col));
             else if (schema_->col_type(col) == 'F') cols_[col]->as_float()->push_back(row.get_float(col));
             else if (schema_->col_type(col) == 'S') cols_[col]->as_string()->push_back(row.get_string(col));
         }

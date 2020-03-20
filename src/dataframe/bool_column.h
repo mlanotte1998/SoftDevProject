@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <math.h>
+#include "constants.h"
 
 /*************************************************************************
  * BoolColumn::
@@ -93,6 +94,51 @@ public:
         }
     }
 
+    /**
+     * Constructor for building a column from a serialized string.
+     * @param ser The serialized string for a Bool Column
+     */
+    BoolColumn(char* ser) {
+
+        // Set initial column members.
+        bool *first_array = new bool[1];
+        binary_column_array_ = new bool *[1];
+        binary_column_array_[0] = first_array;
+        array_length_ = 0;
+        size_ = 0;
+
+        // Start tokenizing on spaces.
+        char* ser_token = strtok(ser, " ");
+        // Loop through the tokens.
+        while(ser_token != NULL) {
+            // Get to where the bool values are.
+            // No need to read other items since we can just push back the list to build
+            // up the entire array.
+            if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
+                int key_len = strlen("-p1_val::");
+                int arr_len = strlen("arr(");
+                // Create a char* for copying over the array values.
+                char arr_value[MAX_ARRAY_SIZE_BYTES];
+                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES);
+                strncpy(
+                    arr_value, 
+                    ser_token + key_len + arr_len, 
+                    strlen(ser_token) - key_len - arr_len - 1
+                );
+                // Go through tokens of the values that make up the array that are
+                // separated by commas.
+                char* arr_token = strtok(arr_value, ",");
+                while(arr_token != NULL) {
+                    // If the value is a 0 then add a false, else add true.
+                    if (strncmp(arr_token, "0", 1) == 0) push_back(false);
+                    else push_back(true);
+                    arr_token = strtok(NULL, ",");
+                }
+            }
+            ser_token = strtok(NULL, " ");
+        }
+    }
+
     /***
      * Destructor for the BoolColumn
      */
@@ -106,7 +152,6 @@ public:
         }
         delete[] binary_column_array_;
     }
-
 
     /**
      * Gets the element at the given index.

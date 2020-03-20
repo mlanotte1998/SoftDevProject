@@ -9,9 +9,9 @@
 #include "bool_column.h"
 #include "int_column.h"
 #include "float_column.h"
+#include "double_column.h"
 #include "string_column.h"
 #include "../utility-classes/helper.h"
-
 
 /**
  * Row::
@@ -40,6 +40,7 @@ public:
         if (scm.types_[col_idx] == 'B') cols_[col_idx] = new BoolColumn();
         else if (scm.types_[col_idx] == 'I') cols_[col_idx] = new IntColumn();
         else if (scm.types_[col_idx] == 'F') cols_[col_idx] = new FloatColumn();
+        else if (scm.types_[col_idx] == 'D') cols_[col_idx] = new DoubleColumn();
         else if (scm.types_[col_idx] == 'S') cols_[col_idx] = new StringColumn();
         else {
           pln(given_malformed_schema);
@@ -80,6 +81,14 @@ public:
     void set(size_t col, bool val) {
       if (col >= width()) return;
       BoolColumn* column = cols_[col]->as_bool();
+      if (column == nullptr) return;
+      if (column->size() == 0) column->push_back(val);
+      else column->set(0, val);
+    }
+
+    void set(size_t col, double val) {
+      if (col >= width()) return;
+      DoubleColumn* column = cols_[col]->as_double();
       if (column == nullptr) return;
       if (column->size() == 0) column->push_back(val);
       else column->set(0, val);
@@ -130,8 +139,15 @@ public:
       return column->get(0);
     }
 
-    String* get_string(size_t col) {
+    double get_double(size_t col) {
+      exit_if_not(col < width(), double_col_index_out_of_bounds);
+      DoubleColumn* column = cols_[col]->as_double();
+      exit_if_not(column != nullptr, non_double_col);
+      exit_if_not(column->size() != 0, double_col_emtpy);
+      return column->get(0);
+    }
 
+    String* get_string(size_t col) {
       exit_if_not(col < width(), string_col_index_out_of_bounds);
       StringColumn* column = cols_[col]->as_string();
       exit_if_not(column != nullptr, non_string_col);
