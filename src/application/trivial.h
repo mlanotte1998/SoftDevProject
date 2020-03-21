@@ -12,10 +12,14 @@ class Trivial : public Application {
     for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;
     Key key("triv",0);
     DataFrame* df = DataFrame::fromArray(&key, &kv, SZ, vals);
+    // printf("df rows: %zu\n", df->nrows());
+    // printf("df cols: %zu\n", df->ncols());
     assert(df->get_double(0,1) == 1);
     DataFrame* df2 = kv.get(key);
-    for (size_t i = 0; i < SZ; ++i) sum -= df2->get_double(0,i);
-    assert(sum==0);
-    delete df; delete df2;
+    printf("df2 rows: %zu\n", df2->nrows());
+    printf("df2 cols: %zu\n", df2->ncols());
+    // for (size_t i = 0; i < SZ; ++i) sum -= df2->get_double(0,i);
+    // assert(sum==0);
+    // delete df; delete df2;
   }
 };
