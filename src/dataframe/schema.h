@@ -6,6 +6,7 @@
 
 #include "../utility-classes/string.h"
 #include "../utility-classes/helper.h"
+#include "constants.h"
 
 /***
  * Schema::
@@ -82,11 +83,11 @@ public:
       size_t schema_length = strlen(types);
       types_ = new char[schema_length];
       for (int i = 0; i < schema_length; i++) {
-        if (types[i] == 'B' || types[i] == 'I' || types[i] == 'F' || types[i] == 'S') {
+        if (types[i] == 'B' || types[i] == 'I' || types[i] == 'F' || types[i] == 'D' || types[i] == 'S') {
           types_[i] = types[i];
         } else {
           delete[] types_;
-          pln("Given Malformed Schema");
+          pln(given_malformed_schema);
           exit(-1);
         }
       }
