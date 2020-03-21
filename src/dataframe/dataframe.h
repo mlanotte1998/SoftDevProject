@@ -76,7 +76,15 @@ public:
     }
 
     static DataFrame* fromArray(Key* key, KDStore* kdstore, size_t size, double* vals) {
-
+        Schema schm("D");
+        DataFrame* df = new DataFrame(schm);
+        for(size_t i = 0; i < size; i++) {
+            Row* row = new Row(schm);
+            row->set(0, vals[i]);
+            df->add_row(*row);
+        }
+        kdstore->put(*key, *df);
+        return df;
     }
 
     ~DataFrame() {

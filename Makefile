@@ -2,7 +2,7 @@ main: build
 	# - make p1test
 	# - make p1valgrind
 	- make test
-	- make valgrind
+	# - make valgrind
 	- make clean
 
 build:
