@@ -1,3 +1,7 @@
+#pragma once
+
+#include "../utility-classes/object.h"
+
 class Key : public Object {
 	public:
 		const char* name_;

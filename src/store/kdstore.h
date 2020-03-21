@@ -1,6 +1,7 @@
+#pragma once
+
 #include "key.h"
 #include "value.h"
-#include "../dataframe/dataframe.h"
 
 class DataFrame;
 

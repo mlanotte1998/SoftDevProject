@@ -1,6 +1,6 @@
 #include "application.h"
-#include "dataframe/dataframe.h"
-#include "store/kdstore.h"
+#include "../dataframe/dataframe.h"
+#include "../store/kdstore.h"
 
 class Trivial : public Application {
  public:
