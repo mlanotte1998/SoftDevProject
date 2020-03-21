@@ -123,7 +123,7 @@ public:
       * in undefined behavior. */
     void add_column(char typ, String* name) {
       // return if invalid type
-      if (typ != 'B' && typ != 'I' && typ != 'F' && typ != 'S') {
+      if (typ != 'B' && typ != 'I' && typ != 'F' && typ != 'D' && typ != 'S') {
         return;
       }
       // add type to types_
