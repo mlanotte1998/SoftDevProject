@@ -372,8 +372,7 @@ void test_add_col() {
     c->push_back(false);
     c->push_back(true);
     c->push_back(false);
-    String* c_name = new String("Column 5");
-    dframe.add_column(c, c_name);
+    dframe.add_column(c);
 
     t_true(dframe.nrows() == 4);
     t_true(dframe.ncols() == 5);
@@ -381,7 +380,6 @@ void test_add_col() {
     t_true(dframe.get_bool(4, 1) == false);
     t_true(dframe.get_bool(4, 2) == true);
     t_true(dframe.get_bool(4, 3) == false);
-    t_true(dframe.get_col(*(c_name)) == 4);
 
     Row r2(dframe.get_schema());
 
@@ -409,8 +407,8 @@ void test_add_col_construct() {
     c2->push_back(1);
     c2->push_back(2);
     c2->push_back(3);
-    dframe.add_column(c1, nullptr);
-    dframe.add_column(c2, nullptr);
+    dframe.add_column(c1);
+    dframe.add_column(c2);
 
     t_true(dframe.nrows() == 3);
     t_true(dframe.ncols() == 2);
@@ -492,167 +490,9 @@ void test_data_frame_copy() {
     OK("Copy Dataframe");
 }
 
-void test_col_names() {
-
-    String* int_col = new String("Integer Col");
-    String* string_col = new String("String Col");
-    String* float_col = new String("Float Col");
-    String* bool_col = new String("Bool Col");
-    Schema* builder = new Schema();
-    builder->add_column('I', nullptr);
-    builder->add_column('I', int_col);
-    builder->add_column('S', string_col);
-    builder->add_column('F', float_col);
-    builder->add_column('B', bool_col);
-    builder->add_column('F', nullptr);
-
-    t_true(builder->col_name(0) == nullptr);
-    t_true(builder->col_name(1)->equals(int_col));
-    t_true(builder->col_name(2)->equals(string_col));
-    t_true(builder->col_name(3)->equals(float_col));
-    t_true(builder->col_name(4)->equals(bool_col));
-    t_true(builder->col_name(5) == nullptr);
-
-    t_true(builder->col_idx(nullptr) == 0);
-    t_true(builder->col_idx("Integer Col") == 1);
-    t_true(builder->col_idx("String Col") == 2);
-    t_true(builder->col_idx("Float Col") == 3);
-    t_true(builder->col_idx("Bool Col") == 4);
-
-    DataFrame dframe(*builder);
-    t_true(dframe.get_col(*(int_col)) == 1);
-    t_true(dframe.get_col(*(string_col)) == 2);
-    t_true(dframe.get_col(*(float_col)) == 3);
-    t_true(dframe.get_col(*(bool_col)) == 4);
-
-    IntColumn* c = new IntColumn();
-    String* additional = new String("Additional Col");
-    dframe.add_column(c, additional);
-    t_true(dframe.get_col(*(additional)) == 6);
-
-    delete builder;
-
-    OK("Column Names");
-}
-
-void test_row_names() {
-
-    String* row1 = new String("Row 1");
-    String* row2 = new String("Row 2");
-    String* row4 = new String("Row 4");
-    Schema builder("IFF");
-    builder.add_row(row1);
-    builder.add_row(row2);
-    builder.add_row(nullptr);
-    builder.add_row(row4);
-
-    t_true(builder.row_name(0)->equals(row1));
-    t_true(builder.row_name(1)->equals(row2));
-    t_true(builder.row_name(2) == nullptr);
-    t_true(builder.row_name(3)->equals(row4));
-
-    t_true(builder.row_idx(nullptr) == 2);
-    t_true(builder.row_idx("Row 1") == 0);
-    t_true(builder.row_idx("Row 2") == 1);
-    t_true(builder.row_idx("Row 4") == 3);
-
-    DataFrame dframe(builder);
-
-    Row r(builder);
-    r.set(0, 1);
-    r.set(1, (float)1.0);
-    r.set(2, (float)2.0);
-    dframe.add_row(r);
-
-    r.set(0, 2);
-    r.set(1, (float)2.0);
-    r.set(2, (float)4.0);
-    dframe.add_row(r);
-
-    r.set(0, 3);
-    r.set(1, (float)3.0);
-    r.set(2, (float)6.0);
-    dframe.add_row(r);
-
-    r.set(0, 4);
-    r.set(1, (float)4.0);
-    r.set(2, (float)8.0);
-    dframe.add_row(r);
-
-    t_true(dframe.get_row(*(row1)) == 0);
-    t_true(dframe.get_row(*(row2)) == 1);
-    t_true(dframe.get_row(*(row4)) == 3);
-
-    r.set(0, 5);
-    r.set(1, (float)5.0);
-    r.set(2, (float)10.0);
-    dframe.add_row(r);
-
-    t_true(dframe.nrows() == 5);
-
-
-    OK("Row Names");
-}
-
-void test_schema_names() {
-    Schema* bifs = new Schema();
-	   DataFrame dframe(*bifs);
-
-    BoolColumn* c1 = new BoolColumn();
-    IntColumn* c2 = new IntColumn();
-
-    String* c1_name = new String("Boolean Column");
-    String* c2_name = new String("Integer Column");
-
-    dframe.add_column(c1, c1_name);
-    dframe.add_column(c2, c2_name);
-
-    String* r1_name = new String("Row 1");
-    String* r2_name = new String("Row 2");
-
-    dframe.get_schema().add_row(r1_name);
-    dframe.get_schema().add_row(r2_name);
-
-    t_true(dframe.nrows() == 0);
-    t_true(dframe.ncols() == 2);
-    t_true(dframe.get_schema().length() == 2);
-    t_true(dframe.get_col(*c1_name) == 0);
-    t_true(dframe.get_col(*c2_name) == 1);
-    t_true(dframe.get_row(*r1_name) == 0);
-    t_true(dframe.get_row(*r2_name) == 1);
-
-    Row r(dframe.get_schema());
-    r.set(0, true);
-    r.set(1, 1);
-    dframe.add_row(r);
-
-    r.set(0, false);
-    r.set(1, 2);
-    dframe.add_row(r);
-
-    t_true(dframe.nrows() == 2);
-    t_true(dframe.ncols() == 2);
-    t_true(dframe.get_schema().length() == 2);
-    t_true(dframe.get_col(*c1_name) == 0);
-    t_true(dframe.get_col(*c2_name) == 1);
-    t_true(dframe.get_row(*r1_name) == 0);
-    t_true(dframe.get_row(*r2_name) == 1);
-
-    delete bifs;
-
-    OK("Schema Names");
-}
-
 void test_sum_rower() {
 
-    String* row1 = new String("Row 1");
-    String* row2 = new String("Row 2");
-    String* row4 = new String("Row 4");
     Schema builder("IFFSB");
-    builder.add_row(row1);
-    builder.add_row(row2);
-    builder.add_row(nullptr);
-    builder.add_row(row4);
 
     String* hi = new String("Hi");
     String* hey = new String("Hey");
@@ -739,15 +579,8 @@ void test_sum_rower() {
 }
 
 void test_zero_filter() {
-
-  String* row1 = new String("Row 1");
-  String* row2 = new String("Row 2");
-  String* row4 = new String("Row 4");
     Schema builder("IFISB");
-    builder.add_row(row1);
-    builder.add_row(row2);
-    builder.add_row(nullptr);
-    builder.add_row(row4);
+
 
     DataFrame dframe(builder);
 
@@ -868,10 +701,6 @@ void test_zero_filter() {
 
 void test_print() {
 
-  String* row1 = new String("Row 1");
-  String* row2 = new String("Row 2");
-  String* row4 = new String("Row 4");
-
     String* hi = new String("Hi");
     String* hey = new String("Hey");
     String* hello = new String("Hello");
@@ -879,10 +708,6 @@ void test_print() {
     String* hej = new String("hej");
 
     Schema builder("IFFSB");
-    builder.add_row(row1);
-    builder.add_row(row2);
-    builder.add_row(nullptr);
-    builder.add_row(row4);
 
     DataFrame dframe(builder);
 
@@ -942,9 +767,6 @@ int main() {
     test_add_col_construct();
     test_fill_row();
     test_data_frame_copy();
-    test_col_names();
-    test_row_names();
-    test_schema_names();
     test_sum_rower();
     test_zero_filter();
     test_print();

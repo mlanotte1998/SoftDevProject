@@ -23,6 +23,9 @@ class StringColumn;
 class Column : public Object {
 public:
 
+    size_t array_length_;  // length of the upper array
+    size_t size_; // number of elements.
+
     /** Type converters: Return same column under its actual type, or
      *  nullptr if of the wrong type.  */
 
@@ -61,7 +64,7 @@ public:
 
     /** Returns the number of elements in the column. */
     virtual size_t size() {
-        return 0;
+        return size_;
     }
 
     /** Return the type of this column as a char: 'S', 'B', 'I' and 'F'.**/

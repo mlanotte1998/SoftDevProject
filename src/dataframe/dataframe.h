@@ -104,9 +104,9 @@ public:
     }
 
     /** Adds a column this dataframe, updates the schema, the new column
-      * is external, and appears as the last column of the dataframe, the
-      * name is optional and external. A nullptr colum is undefined. */
-    void add_column(Column *col, String *name) {
+      * is external, and appears as the last column of the dataframe.
+      * A nullptr colum is undefined. */
+    void add_column(Column *col) {
         bool valid = col->size() == nrows() || nrows() == 0;
         exit_if_not(valid, invalid_col_size);
         if (nrows() == 0) length_ = col->size();
@@ -118,8 +118,8 @@ public:
         grow_cols_[schema_->width()] = col;
         delete[] cols_;
         cols_ = grow_cols_;
-        // add column + name to schema
-        schema_->add_column(col->get_type(), name);
+        // add column  to schema
+        schema_->add_column(col->get_type());
     }
 
     /** Return the value at the given column and row. Accessing rows or
@@ -162,16 +162,6 @@ public:
         exit_if_not(column != nullptr, non_string_col);
         exit_if_not(row < column->size(), row_index_out_of_bounds);
         return column->get(row);
-    }
-
-    /** Return the offset of the given column name or -1 if no such col. */
-    int get_col(String &col) {
-        return schema_->col_idx(col.c_str());
-    }
-
-    /** Return the offset of the given row name or -1 if no such row. */
-    int get_row(String &col) {
-        return schema_->row_idx(col.c_str());
     }
 
     /** Set the value at the given column and row to the given value.
@@ -236,9 +226,6 @@ public:
             else if (schema_->col_type(col) == 'D') cols_[col]->as_double()->push_back(row.get_double(col));
             else if (schema_->col_type(col) == 'F') cols_[col]->as_float()->push_back(row.get_float(col));
             else if (schema_->col_type(col) == 'S') cols_[col]->as_string()->push_back(row.get_string(col));
-        }
-        if (length_ >= schema_->length()) {
-            schema_->add_row(nullptr);
         }
         length_++;
     }

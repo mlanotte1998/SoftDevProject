@@ -17,8 +17,6 @@ class DoubleColumn : public Column {
 public:
 
     double **binary_column_array_; // double array used so that inner objects are not copied
-    size_t array_length_;  // length of the upper array
-    size_t size_; // number of elements.
 
     /***
      * Basic constructor initializes the array to be able to hold one value to start.
@@ -230,13 +228,5 @@ public:
         }
         // out of bounds we throw an error.
         exit_if_not(idx < size_, double_col_index_out_of_bounds);
-    }
-
-    /***
-    * Gets the size of the column
-    * @return size_t size.
-    */
-    size_t size() {
-        return size_;
     }
 };

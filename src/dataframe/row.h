@@ -23,7 +23,6 @@
  */
 class Row : public Object {
 public:
-    String* name;
     size_t row_idx_;
     Schema* schema_;
     size_t cols_count_;
@@ -31,7 +30,6 @@ public:
 
     /** Build a row following a schema. */
     Row(Schema& scm) {
-      name = nullptr;
       row_idx_ = 0;
       schema_ = new Schema(scm);
       cols_count_ = scm.width();
@@ -50,7 +48,6 @@ public:
     }
 
     ~Row() {
-      delete name;
       row_idx_ = 0;
 
       for (int i = 0; i < cols_count_; i++) {
