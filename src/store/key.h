@@ -12,6 +12,10 @@ class Key : public Object {
 			idx_ = idx;
 		}
 
+		bool equals(Key other) {
+			return name_ == other.name_ && idx_ == other.idx_;
+		}
+
 		size_t hash_me() {
 			size_t hash = 0;
 			for (size_t i = 0; i < strlen(name_); ++i) {

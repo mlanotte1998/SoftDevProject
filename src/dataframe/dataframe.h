@@ -83,7 +83,7 @@ public:
             row->set(0, vals[i]);
             df->add_row(*row);
         }
-        kdstore->put(*key, *df);
+        kdstore->put(*key, df);
         return df;
     }
 

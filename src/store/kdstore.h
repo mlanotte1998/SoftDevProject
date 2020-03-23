@@ -22,7 +22,7 @@ public:
 
     DataFrame* waitAndGet(Key key);
 
-    void put(Key key, DataFrame value);
+    void put(Key key, DataFrame* value);
 };
 
 #include "../dataframe/dataframe.h"
@@ -35,6 +35,6 @@ DataFrame* KDStore::waitAndGet(Key key) {
     return dynamic_cast<DataFrame*>(map_->get(&key));
 }
 
-void KDStore::put(Key key, DataFrame value) {
-    map_->put(&key, &value);
+void KDStore::put(Key key, DataFrame* value) {
+    map_->put(&key, value);
 }
