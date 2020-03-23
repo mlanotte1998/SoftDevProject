@@ -75,6 +75,9 @@ public:
         }
     }
 
+    /** Create a data frame from an array of doubles and adds the one column dataframe to the
+     * given KDStore
+    */
     static DataFrame* fromArray(Key* key, KDStore* kdstore, size_t size, double* vals) {
         Schema schm("D");
         DataFrame* df = new DataFrame(schm);
@@ -88,6 +91,7 @@ public:
         return df;
     }
 
+    /** DataFrame destructor */
     ~DataFrame() {
 
         for (int i = 0; i < ncols(); i++) {

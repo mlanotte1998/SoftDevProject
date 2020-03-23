@@ -2,6 +2,11 @@
 #include "value.h"
 #include "../utility-classes/map.h"
 
+/***
+* KVStore::
+*
+* A KVStore is a basic key-value store.
+*/
 class KVStore {
 public:
     Map* map_;

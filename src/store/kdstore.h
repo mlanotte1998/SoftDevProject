@@ -6,6 +6,11 @@
 
 class DataFrame;
 
+/***
+* KDStore::
+*
+* A KDStore is a key-value store designed to hold DataFrames.
+*/
 class KDStore {
 public:
     Map* map_;

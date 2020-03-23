@@ -2,6 +2,11 @@
 
 #include "../utility-classes/object.h"
 
+/***
+* Key::
+*
+* A Key is an object designed to be used in a key-value store (KVStore, KDStore).
+*/
 class Key : public Object {
 	public:
 		const char* name_;
