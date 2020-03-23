@@ -32,7 +32,9 @@ communication with the other nodes.
 ## Implementation 
 
 #### Application:  
-The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.  
+The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.
+The Trivial Application subclass was also added to the code base as an example usage of how an application may run using the infrastructure. This Trivial subclass was
+provided in Project Milestone 2 as an example usage of the infrastructure that is in the process of being built.   
   
 #### RendezvousServer and Node:  
 These two classes have the network code needed for the application. The Rendezvous Server is essentially a server meant
@@ -69,6 +71,18 @@ of the first one (the length of all columns should be the same). Once this is fo
 length of the set of columns to read the data row by row. Each column can be casted to figure out whether the data
 inside is a Boolean, Float, Integer, or String. The data that is read can then be added to a DataFrame.  
 
+#### KVStore and KDStore  
+The store layer of the system is currently comprised of four classes: Key, Value, KVStore, and KDStore.  
+The KVStore uses the Map from the utility classes to build a key-value store, using the Key class for key objects  
+and the Value class for value objects. The KVStore has no knowledge of DataFrames or other classes that may be  
+used in the running of an application. The KDStore is the same concept as the KVStore, serving as a key-value  
+store, but this class is built specifically to handle DataFrames. The KDStore acts as an API for the application  
+tier of the system, allowing for storage of DataFrames. The Key class is used as keys in the KDStore, as they  
+were in the KVStore, but instead of the Value class being used for values, DataFrames are specifically used  
+as the store's values. This allows the application tier to access the store tier, with a convenient API that  
+does not require casting of Values to DataFrames. The Application class includes a KDStore instance as a field.
+The fromArray method on DataFrame can be used to create a new DataFrame and add it to the calling application's
+KDStore.  
 
 ## Use Cases  
   
@@ -97,6 +111,19 @@ dframe.add_row(r);
 
 ```
 
+Usage of KDStore and fromArray in Application layer:  
+```
+size_t SZ = 10;  
+double* vals = new double[SZ];  
+for (size_t i = 0; i < SZ; ++i) vals[i] = i;  
+Key key("triv",0);  
+DataFrame* df = DataFrame::fromArray(&key, &kv, SZ, vals);  
+DataFrame* df2 = kv.get(key);  
+double second = df2->get_double(0,1);  
+delete df;  
+delete[] vals;  
+```
+
 ## Open Questions
 What are the sum-dataframes used for?  
 Are entire dataframes supposed to be serialized and stored in the KV store?  
@@ -112,10 +139,10 @@ The tests are all together in one file and can be run together with the Makefile
 to be reused can be split up into a few different types of classes. The first is utility classes; these include
 Object, String, Array, and the other common data structure classes. The next group of classes are the classes
 that are used by the DataFrame; this folder has all of the classes that were new for the DataFrame assignment.
+There is also a folder called store to hold objects pertaining to the KVStore / KDStore. An application folder
+exists to hold the Application class as well as subclasses of Application. The trivial application is included here.
 Lastly there is a folder for sorer code that came from the group 45000NE. There is one main.cpp file in the top 
 level project directory that tests out reading in a file and creating a DataFrame with it along with running
 a simple map function on it. The tests have been run with valgrind to ensure that any memory issues that
 were in the code for the previous assignments have been fixed. When running the main executable with valgrind
 and the megabyte.sor file there is no memory leaks or memory errors. 
-
-#TODO ADD IN ASSIGNMENT 2 Status Update and Implementation Update
