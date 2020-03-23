@@ -82,6 +82,7 @@ public:
             Row* row = new Row(schm);
             row->set(0, vals[i]);
             df->add_row(*row);
+            delete row;
         }
         kdstore->put(*key, df);
         return df;

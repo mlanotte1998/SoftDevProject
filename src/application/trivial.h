@@ -16,6 +16,6 @@ class Trivial : public Application {
     DataFrame* df2 = kv.get(key);
     for (size_t i = 0; i < SZ; ++i) sum -= df2->get_double(0,i);
     assert(sum==0);
-    // delete df; delete df2;
+    delete df; delete[] vals;
   }
 };

@@ -10,5 +10,9 @@ class Application {
 			idx_ = idx;
 		}
 
+		~Application() {
+			
+		}
+
 		virtual void run_() {}
 };
