@@ -16,8 +16,8 @@ class Trivial : public Application {
     // printf("df cols: %zu\n", df->ncols());
     assert(df->get_double(0,1) == 1);
     DataFrame* df2 = kv.get(key);
-    printf("df2 rows: %zu\n", df2->nrows());
-    printf("df2 cols: %zu\n", df2->ncols());
+    // printf("df2 rows: %zu\n", df2->nrows());
+    // printf("df2 cols: %zu\n", df2->ncols());
     // for (size_t i = 0; i < SZ; ++i) sum -= df2->get_double(0,i);
     // assert(sum==0);
     // delete df; delete df2;

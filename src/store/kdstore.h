@@ -34,6 +34,7 @@ DataFrame* KDStore::get(Key key) {
 DataFrame* KDStore::waitAndGet(Key key) {
     return dynamic_cast<DataFrame*>(map_->get(&key));
 }
+
 void KDStore::put(Key key, DataFrame value) {
     map_->put(&key, &value);
 }
