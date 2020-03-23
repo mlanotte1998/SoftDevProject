@@ -140,7 +140,7 @@ public:
         return column->get(row);
     }
 
-    bool get_double(size_t col, size_t row) {
+    double get_double(size_t col, size_t row) {
         exit_if_not(col < ncols(), col_index_out_of_bounds);
         DoubleColumn *column = cols_[col]->as_double();
         exit_if_not(column != nullptr, non_double_col);
