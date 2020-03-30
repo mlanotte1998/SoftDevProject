@@ -66,7 +66,6 @@ public:
         address_.sin_addr.s_addr = inet_addr(ip);
         address_.sin_port = htons(port);
 
-        std::cout << ip << std::endl;
     }
 
     /**
@@ -608,7 +607,7 @@ public:
         memset(buffer, 0, 1024);
         new_client_connection->socket_read(buffer, 1024);
         printf("%s\n", buffer);
-        
+
     }
 
     /**
