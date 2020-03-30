@@ -27,7 +27,9 @@ layer will have to do more specifically remains to be seen.
 To go further on how the system will be distributed, there will be one main node that handles the 
 registration of the system. Other nodes will be made and they will register with the main node and be given 
 information on how to access the other nodes in the system. This allows each node to be able to have direct 
-communication with the other nodes. 
+communication with the other nodes. The Rendezvous Server and Node classes will have to be reworked to work with the 
+application and actually allow the application to be a distributed system rather than just having a naive message
+sending system that is the current network code implementation created. 
 
 ## Implementation 
 
@@ -51,6 +53,10 @@ Clients to send a message to the Registrar along with sending messages to other 
 receive their messages from other Nodes they also need their own Server object also listening. Since the Nodes 
 need to be simultaneously connected to the Registrar along with being able to receive/send messages, threading is 
 needed to run both of these functions at the same time. 
+
+After spending time thinking of how to go about the actual network functionality, it became apparent that these
+classes will have to manipulated to work with the application. The message sending structure needs to be updated
+to actually use serialized messages along with including the functionality to send store objects. 
   
 #### DataFrame:  
 The top level class for data storage in the application. The DataFrame will store data in row/column format. 
@@ -83,6 +89,17 @@ as the store's values. This allows the application tier to access the store tier
 does not require casting of Values to DataFrames. The Application class includes a KDStore instance as a field.
 The fromArray method on DataFrame can be used to create a new DataFrame and add it to the calling application's
 KDStore.  
+
+Currently, the plan to work in the network behavior is to have the KDStore hold a Node* and have that object
+hold a pointer to the Map created for the store. That way when the Node is running it's network behavior in the 
+separate thread, it has access to the map in case another Node asks it for a value for a Key. 
+
+#### Serialize and Message Classes: 
+These classes were pulled over with the intent of being used by the network layer to communicate. There is a Serial
+class that is used to both deserialize and serialize eligible objects. The deserialize method determines which 
+kind of Object the input is and calls on the deserialize constructor for that object. To serialize an object,
+there is a function that takes in the object and appends different words to a char* that is the serialized message
+which is then returned. 
 
 ## Use Cases  
   
@@ -124,13 +141,62 @@ delete df;
 delete[] vals;  
 ```
 
+Demo Usage (Not currently working) of basic Distributed System Functionality 
+```
+class Demo : public Application {
+public:
+    Key main{"main",0};
+    Key verify{"verif",0};
+    Key check{"ck",0};
+
+    Demo(size_t idx, KDStore* kd ): Application(idx, kd) {}
+
+    void run_() override {
+        switch(this_node()) {
+            case 0:   producer();     break;
+            case 1:   counter();      break;
+            case 2:   summarizer();
+            case 3: break;
+        }
+    }
+
+    void producer() {
+        size_t SZ = 100*1000;
+        double* vals = new double[SZ];
+        double sum = 0;
+        for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;
+        DataFrame* d1 = DataFrame::fromArray(&main, kv, SZ, vals);
+        DataFrame* d2 = DataFrame::fromScalar(&check, kv, sum);
+
+        delete d1;
+        delete d2;
+        delete [] vals;
+    }
+
+    void counter() {
+
+        DataFrame *v = kv->waitAndGet(main);
+        size_t sum = 0;
+        for (size_t i = 0; i < 100 * 1000; ++i) sum += v->get_double(0, i);
+        p("The sum is  ").pln(sum);
+        DataFrame::fromScalar(&verify, kv, sum);
+    }
+
+    void summarizer() {
+        DataFrame* result = kv->waitAndGet(verify);
+        DataFrame* expected = kv->waitAndGet(check);
+        pln(expected->get_double(0,0)==result->get_double(0,0) ? "SUCCESS":"FAILURE");
+    }
+
+};
+```
+
 ## Open Questions
-What are the sum-dataframes used for?  
-Are entire dataframes supposed to be serialized and stored in the KV store?  
-If dataframes cannot be updated then why would we possibly allow K/V pairs to be overwritten?  
-What did the assignment mean by saying the distributed array is a list of keys and a cache?  
-What does the fromScalar function do?  
-What are some example queries?  
+Is our implementation of having the main file create a Node* and run it in a thread separate from the demo specific
+code far off from what other teams are doing or is it a common implementation? 
+What is the point of possibly splitting up certain columns of one DataFrame into different nodes? There have
+been comments about this being something that could be done but we are not sure why and if we should or
+really how one would go about managing all of that. 
 
 
 ## Status
