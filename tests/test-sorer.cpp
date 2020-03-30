@@ -107,12 +107,11 @@ void test_strSlice() {
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
-    printf("Running internal tests\n");
     test_stringColumn();
     test_intColumn();
     test_floatColumn();
     test_boolColumn();
     test_strSlice();
-    printf("Success\n");
+    printf("Internal Tests Success\n");
     return 0;
 }
