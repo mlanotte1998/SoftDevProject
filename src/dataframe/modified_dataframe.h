@@ -19,6 +19,7 @@
 * A DataFrame is table composed of columns of equal length. Each column
 * holds values of the same type (I, S, B, F). A dataframe has a schema that
 * describes it.
+* authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class ModifiedDataFrame : public Object {
 public:
@@ -74,6 +75,7 @@ public:
         }
     }
 
+    /** ModifiedDataFrame destructor */
     ~ModifiedDataFrame() {
 
     }
@@ -103,7 +105,7 @@ public:
         schema_.add_column(col->get_type(), name);
     }
 
-    /** Return the value at the given column and row. Accessing rows or
+    /** Return the int value at the given column and row. Accessing rows or
      *  columns out of bounds, or request the wrong type is undefined.*/
     int get_int(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
@@ -113,6 +115,8 @@ public:
         return column->get(row);
     }
 
+    /** Return the bool value at the given column and row. Accessing rows or
+     *  columns out of bounds, or request the wrong type is undefined.*/
     bool get_bool(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
         BoolColumn *column = cols_[col]->as_bool();
@@ -121,7 +125,9 @@ public:
         return column->get(row);
     }
 
-    bool get_double(size_t col, size_t row) {
+    /** Return the double value at the given column and row. Accessing rows or
+     *  columns out of bounds, or request the wrong type is undefined.*/
+    double get_double(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
         DoubleColumn *column = cols_[col]->as_double();
         exit_if_not(column != nullptr, duplicate("Non-Double Column"));
@@ -129,6 +135,8 @@ public:
         return column->get(row);
     }
 
+    /** Return the float value at the given column and row. Accessing rows or
+     *  columns out of bounds, or request the wrong type is undefined.*/
     float get_float(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
         FloatColumn *column = cols_[col]->as_float();
@@ -137,6 +145,8 @@ public:
         return column->get(row);
     }
 
+    /** Return the string value at the given column and row. Accessing rows or
+     *  columns out of bounds, or request the wrong type is undefined.*/
     String *get_string(size_t col, size_t row) {
         exit_if_not(col < ncols(), duplicate("Col Index out of Bounds"));
         StringColumn *column = cols_[col]->as_string();
@@ -155,7 +165,7 @@ public:
         return schema_.row_idx(col.c_str());
     }
 
-    /** Set the value at the given column and row to the given value.
+    /** Set the int value at the given column and row to the given value.
       * If the column is not  of the right type or the indices are out of
       * bound, the result is undefined. */
     void set(size_t col, size_t row, int val) {
@@ -165,6 +175,9 @@ public:
         else column->set(row, val);
     }
 
+    /** Set the bool value at the given column and row to the given value.
+      * If the column is not  of the right type or the indices are out of
+      * bound, the result is undefined. */
     void set(size_t col, size_t row, bool val) {
         if (col >= ncols() || row >= nrows()) return;
         BoolColumn *column = cols_[col]->as_bool();
@@ -172,6 +185,9 @@ public:
         else column->set(row, val);
     }
 
+    /** Set the float value at the given column and row to the given value.
+      * If the column is not  of the right type or the indices are out of
+      * bound, the result is undefined. */
     void set(size_t col, size_t row, float val) {
         if (col >= ncols() || row >= nrows()) return;
         FloatColumn *column = cols_[col]->as_float();
@@ -179,6 +195,9 @@ public:
         else column->set(row, val);
     }
 
+    /** Set the double value at the given column and row to the given value.
+      * If the column is not  of the right type or the indices are out of
+      * bound, the result is undefined. */
     void set(size_t col, size_t row, double val) {
         if (col >= ncols() || row >= nrows()) return;
         DoubleColumn *column = cols_[col]->as_double();
@@ -186,6 +205,9 @@ public:
         else column->set(row, val);
     }
 
+    /** Set the string value at the given column and row to the given value.
+      * If the column is not  of the right type or the indices are out of
+      * bound, the result is undefined. */
     void set(size_t col, size_t row, String *val) {
         if (col >= ncols() || row >= nrows()) return;
         StringColumn *column = cols_[col]->as_string();

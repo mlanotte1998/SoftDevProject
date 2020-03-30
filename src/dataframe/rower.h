@@ -7,6 +7,7 @@
 *  An interface for iterating through each row of a data frame. The intent
 *  is that this class should subclassed and the accept() method be given
 *  a meaningful implementation. Rowers can be cloned for parallel execution.
+*  authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class Rower : public Object {
 public:

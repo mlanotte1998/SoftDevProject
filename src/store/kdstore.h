@@ -11,6 +11,7 @@ class DataFrame;
 * KDStore::
 *
 * A KDStore is a key-value store designed to hold DataFrames.
+* authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class KDStore {
 public:
@@ -18,12 +19,14 @@ public:
     int idx_;
     Node* n_;
 
+    /** KDStore constructor */
     KDStore(size_t idx) {
         map_ = new Map();
         idx_ = idx;
         n_ = nullptr;
     }
 
+    /** KDStore destructor */
     ~KDStore() {
         delete map_;
         if (n_ != nullptr) {
@@ -31,6 +34,7 @@ public:
         }
     }
 
+    /** Runs the network */
     void run_network(char* kill_switch) {
         char rendezvous_ip[10] = {0};
         strcpy(rendezvous_ip, "127.0.0.1");
@@ -52,10 +56,13 @@ public:
         }
     }
 
+    /** Get Dataframe from KDStore by Kev object */
     DataFrame* get(Key key);
 
+    /** Wait for unblock then get Dataframe from KDStore by Kev object */
     DataFrame* waitAndGet(Key key);
 
+    /** Put key-dataframe pair into KDStore */
     void put(Key key, DataFrame* value);
 };
 
@@ -66,7 +73,6 @@ DataFrame* KDStore::get(Key key) {
 }
 
 DataFrame* KDStore::waitAndGet(Key key) {
-
     size_t key_idx = key.get_idx();
     char node_ip[10] = {0};
 
@@ -82,7 +88,6 @@ DataFrame* KDStore::waitAndGet(Key key) {
       return nullptr;
     }
 }
-
 
 void KDStore::put(Key key, DataFrame* value) {
     map_->put(&key, value);

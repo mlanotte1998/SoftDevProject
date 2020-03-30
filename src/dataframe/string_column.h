@@ -8,10 +8,11 @@
 #include "../utility-classes/string.h"
 #include "constants.h"
 
-/***
+/*************************************************************************
  * StringColumn::
  * Holds string pointers. The strings are external.  Nullptr is a valid
  * value.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class StringColumn : public Column {
 public:
@@ -175,6 +176,7 @@ public:
         delete[] binary_column_array_;
     }
 
+    /** Return column as string.*/
     StringColumn *as_string() {
         return this;
     }
@@ -203,7 +205,6 @@ public:
      * @param val
      */
     void push_back(String *val) {
-
         // If size is 0, then add this as the first element.
         if (size_ == 0) {
             binary_column_array_[0][0] = val->clone();
