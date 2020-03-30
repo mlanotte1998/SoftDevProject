@@ -47,6 +47,7 @@ public:
       }
     }
 
+    /** Row destructor */
     ~Row() {
       row_idx_ = 0;
 
@@ -57,7 +58,7 @@ public:
       delete schema_;
     }
 
-    /** Setters: set the given column with the given value. Setting a column with
+    /** Set the given column with the given int value. Setting a column with
       * a value of the wrong type is undefined. */
     void set(size_t col, int val){
       if (col >= width()) return;
@@ -67,6 +68,8 @@ public:
       else column->set(0, val);
     }
 
+    /** Set the given column with the given float value. Setting a column with
+      * a value of the wrong type is undefined. */
     void set(size_t col, float val) {
       if (col >= width()) return;
       FloatColumn* column = cols_[col]->as_float();
@@ -75,6 +78,8 @@ public:
       else column->set(0, val);
     }
 
+    /** Set the given column with the given bool value. Setting a column with
+      * a value of the wrong type is undefined. */
     void set(size_t col, bool val) {
       if (col >= width()) return;
       BoolColumn* column = cols_[col]->as_bool();
@@ -83,6 +88,8 @@ public:
       else column->set(0, val);
     }
 
+    /** Set the given column with the given double value. Setting a column with
+      * a value of the wrong type is undefined. */
     void set(size_t col, double val) {
       if (col >= width()) return;
       DoubleColumn* column = cols_[col]->as_double();
@@ -91,6 +98,8 @@ public:
       else column->set(0, val);
     }
 
+    /** Set the given column with the given string value. Setting a column with
+      * a value of the wrong type is undefined. */
     /** The string is external. */
     void set(size_t col, String* val) {
       if (col >= width()) return;
@@ -100,17 +109,19 @@ public:
       else column->set(0, val);
     }
 
-    /** Set/get the index of this row (ie. its position in the dataframe. This is
+    /** Set the index of this row (ie. its position in the dataframe. This is
      *  only used for informational purposes, unused otherwise */
     void set_idx(size_t idx) {
       row_idx_ = idx;
     }
 
+    /** Get the index of this row (ie. its position in the dataframe. This is
+     *  only used for informational purposes, unused otherwise */
     size_t get_idx() {
       return row_idx_;
     }
 
-    /** Getters: get the value at the given column. If the column is not
+    /** Get the int value at the given column. If the column is not
       * of the requested type, the result is undefined. */
     int get_int(size_t col) {
       exit_if_not(col < width(), int_col_index_out_of_bounds);
@@ -120,6 +131,8 @@ public:
       return column->get(0);
     }
 
+    /** Get the bool value at the given column. If the column is not
+      * of the requested type, the result is undefined. */
     bool get_bool(size_t col) {
       exit_if_not(col < width(), bool_col_index_out_of_bounds);
       BoolColumn* column = cols_[col]->as_bool();
@@ -128,6 +141,8 @@ public:
       return column->get(0);
     }
 
+    /** Get the float value at the given column. If the column is not
+      * of the requested type, the result is undefined. */
     float get_float(size_t col) {
       exit_if_not(col < width(), float_col_index_out_of_bounds);
       FloatColumn* column = cols_[col]->as_float();
@@ -136,6 +151,8 @@ public:
       return column->get(0);
     }
 
+    /** Get the double value at the given column. If the column is not
+      * of the requested type, the result is undefined. */
     double get_double(size_t col) {
       exit_if_not(col < width(), double_col_index_out_of_bounds);
       DoubleColumn* column = cols_[col]->as_double();
@@ -144,6 +161,8 @@ public:
       return column->get(0);
     }
 
+    /** Get the string value at the given column. If the column is not
+      * of the requested type, the result is undefined. */
     String* get_string(size_t col) {
       exit_if_not(col < width(), string_col_index_out_of_bounds);
       StringColumn* column = cols_[col]->as_string();

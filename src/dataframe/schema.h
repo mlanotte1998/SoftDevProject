@@ -22,8 +22,6 @@ public:
     size_t cols_capacity_;
     size_t rows_capacity_;
 
-    // TODO: Implement using String Buffer and Given Helper Methods
-
     /** Copying constructor */
     Schema(Schema& from) {
       cols_ = from.cols_;

@@ -174,6 +174,7 @@ public:
         delete[] binary_column_array_;
     }
 
+    /** Return column as string.*/
     StringColumn *as_string() {
         return this;
     }
@@ -202,7 +203,6 @@ public:
      * @param val
      */
     void push_back(String *val) {
-
         // If size is 0, then add this as the first element.
         if (size_ == 0) {
             binary_column_array_[0][0] = val->clone();

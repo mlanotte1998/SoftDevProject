@@ -179,7 +179,6 @@ public:
      * @param val
      */
     void push_back(float val) {
-
         // If size is 0, then add this as the first element.
         if (size_ == 0) {
             binary_column_array_[0][0] = val;

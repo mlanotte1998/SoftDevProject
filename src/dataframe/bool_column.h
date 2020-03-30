@@ -97,7 +97,6 @@ public:
      * @param ser The serialized string for a Bool Column
      */
     BoolColumn(char* ser) {
-
         // Set initial column members.
         bool *first_array = new bool[1];
         binary_column_array_ = new bool *[1];
@@ -183,7 +182,6 @@ public:
      * @param val
      */
     void push_back(bool val) {
-
         // If size is 0, then add this as the first element.
         if (size_ == 0) {
             binary_column_array_[0][0] = val;
