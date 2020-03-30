@@ -1,20 +1,18 @@
 test:
-	- make runDataStructure
-	# make runBench
-	- make runDataframe
-	- make runSorer
-	# make runNetwork
-	- make runTrivial
+	@ make runDataStructure
+	@ make runDataframe
+	@ make runSorer
+	@ make runTrivial
 
 #===========================================================================================================
 #Data structure tests
 
 runDataStructure:
-	- make testArray
+	@ make testArray
 	@ make cleanArray
-	- make testMap
+	@ make testMap
 	@ make cleanMap
-	- make testAdditionalMap
+	@ make testAdditionalMap
 	@ make cleanMap
 
 testArray:
@@ -22,18 +20,21 @@ testArray:
 	#----------------------Array Tests------------------------#
 	@ ./array
 	#--------------------End Array Tests----------------------#
+	@ echo ""
 
 testMap:
 	@ g++ -std=c++11 -o map test-map.cpp
 	#-----------------------Map Tests-------------------------#
 	@ ./map
 	#---------------------End Map Tests-----------------------#
+	@ echo ""
 
 testAdditionalMap:
 	@ g++ -std=c++11 -o map test-additional-map.cpp
 	#------------------Additional Map Tests-------------------#
 	@ ./map
 	#----------------End Additional Map Tests-----------------#
+	@ echo ""
 
 cleanArray:
 	@ rm array
@@ -173,6 +174,7 @@ testDataframe:
 	#--------------------Dataframe Tests----------------------#
 	@ ./dataframe
 	#------------------End Dataframe Tests--------------------#
+	@ echo ""
 
 cleanDataframe:
 	@ rm -rf dataframe
@@ -180,8 +182,8 @@ cleanDataframe:
 #=================================================================================================================
 
 runSorer: buildSorer
-	- make testSorer
-	- make testSorerUnitTests
+	@ make testSorer
+	@ make testSorerUnitTests
 	@ make cleanSorer
 
 buildSorer:
@@ -208,12 +210,14 @@ testSorer:
 	@ printf "Parse String Test 1 " && ./test_sor.sh "4" -f "../data/data3.sor" -print_col_idx 3 0
 	@ printf "Parse String Test 2 " && ./test_sor.sh '"string with > inside "' -f "../data/data3.sor" -print_col_idx 2 0
 	#--------------------End Sorer Tests----------------------#
+	@ echo ""
 
 testSorerUnitTests:
 	@ g++ test-sorer.cpp -o test-sorer -std=c++11
 	#-----------------Additional Sorer Tests------------------#
 	@ ./test-sorer
 	#---------------End Additional Sorer Tests----------------#
+	@ echo ""
 
 cleanSorer:
 	@ rm -rf sorer
@@ -248,4 +252,6 @@ runTrivial:
 	#------------------Trivial Application--------------------#
 	@ ./trivial
 	#----------------End Trivial Application------------------#
+	@ echo ""
+	
 	@ rm trivial
