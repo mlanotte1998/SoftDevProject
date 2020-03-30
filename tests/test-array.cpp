@@ -33,6 +33,7 @@ bool float_equal(float f1, float f2) {
     }
 }
 
+// test appending to all types of arrays
 void test_append() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -67,6 +68,7 @@ void test_append() {
     OK("Test Append");
 }
 
+// test appending one array to another array of the same type for all types
 void test_append_array() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -147,6 +149,7 @@ void test_append_array() {
     OK("Test AppendArray");
 }
 
+// test adding to arrays of all types
 void test_add() {
     Array *l1 = new Array();
     String *s = new String("Hello");
@@ -183,6 +186,7 @@ void test_add() {
     OK("Test Add");
 }
 
+// test clearing array of all types
 void test_clear() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -233,6 +237,7 @@ void test_clear() {
     OK("Test Clear");
 }
 
+// test getting from all types of arrays
 void test_get() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -271,6 +276,7 @@ void test_get() {
     OK("Test Get");
 }
 
+// test index of method on all types of arrays
 void test_index_of() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -320,6 +326,7 @@ void test_index_of() {
     OK("Test Index of");
 }
 
+// test remove method on all types of arrays
 void test_remove() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -382,6 +389,7 @@ void test_remove() {
     OK("Test Remove");
 }
 
+// test set method on all types of arrays
 void test_set() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -439,6 +447,7 @@ void test_set() {
     OK("Test Set");
 }
 
+// test size method on all types of arrays
 void test_size() {
     String *s = new String("Hello");
     float f = 5.6;
@@ -475,6 +484,7 @@ void test_size() {
     OK("Test Size");
 }
 
+// test hash method on all types of arrays
 void test_hash() {
     String *s = new String("Hello");
     String *t = new String("World");
@@ -521,6 +531,7 @@ void test_hash() {
     OK("Test Hash");
 }
 
+// main function
 int main() {
     test_add();
     test_append();

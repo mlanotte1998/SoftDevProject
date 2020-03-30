@@ -33,6 +33,7 @@ bool float_equal(float f1, float f2) {
   }
 }
 
+// test functionality of int column
 void test_int_column() {
     Column* c = new IntColumn(5,1,2,3,4,25);
     t_true(c->as_bool() == nullptr);
@@ -90,6 +91,7 @@ void test_int_column() {
     OK("Valid Int");
 }
 
+// test functionality of bool column
 void test_bool_column() {
     Column* c = new BoolColumn(5,0,1,0,1,1);
     t_true(c->as_int() == nullptr);
@@ -147,6 +149,7 @@ void test_bool_column() {
     OK("Valid Bool");
 }
 
+// test functionality of float column
 void test_float_column() {
     Column* c = new FloatColumn(5,1.1,2.2,3.3,4.4,25.25);
     t_true(c->as_bool() == nullptr);
@@ -204,6 +207,7 @@ void test_float_column() {
     OK("Valid Float");
 }
 
+// test functionality of string column
 void test_string_column() {
     String* s1 = new String("s1");
     String* s2 = new String("s2");
@@ -265,6 +269,7 @@ void test_string_column() {
     OK("Valid String");
 }
 
+// test functionality of row
 void test_row() {
     Schema bifs("BIFS");
     DataFrame dframe(bifs);
@@ -326,6 +331,7 @@ void test_row() {
     OK("Row");
 }
 
+// test dataframe add row method
 void test_add_row() {
     Schema bifs("BIFS");
     DataFrame dframe(bifs);
@@ -351,8 +357,8 @@ void test_add_row() {
     OK("Add Row");
 }
 
+// test dataframe add column method
 void test_add_col() {
-
     Schema bifs("BIFS");
     DataFrame dframe(bifs);
 
@@ -397,6 +403,7 @@ void test_add_col() {
     OK("Add Column");
 }
 
+// test constructing a dataframe column by column
 void test_add_col_construct() {
     Schema* bifs = new Schema();
     DataFrame dframe(*bifs);
@@ -425,6 +432,7 @@ void test_add_col_construct() {
     OK("Construct with Columns");
 }
 
+// test dataframe fill row method
 void test_fill_row() {
     Schema bifs("BIFS");
     DataFrame dframe(bifs);
@@ -454,6 +462,7 @@ void test_fill_row() {
     OK("Fill Row");
 }
 
+// test dataframe copy constructor
 void test_data_frame_copy() {
     Schema bifs("BIFS");
     DataFrame dframe(bifs);
@@ -491,8 +500,8 @@ void test_data_frame_copy() {
     OK("Copy Dataframe");
 }
 
+// test sum rower on dataframe
 void test_sum_rower() {
-
     Schema builder("IFFSB");
 
     String* hi = new String("Hi");
@@ -579,9 +588,9 @@ void test_sum_rower() {
     OK("Sum Rower");
 }
 
+// test filter by 0
 void test_zero_filter() {
     Schema builder("IFISB");
-
 
     DataFrame dframe(builder);
 
@@ -700,8 +709,8 @@ void test_zero_filter() {
     OK("Zero Filter");
 }
 
+// test printing a dataframe
 void test_print() {
-
     String* hi = new String("Hi");
     String* hey = new String("Hey");
     String* hello = new String("Hello");
@@ -757,6 +766,7 @@ void test_print() {
     OK("Print");
 }
 
+// main function
 int main() {
     test_int_column();
     test_bool_column();

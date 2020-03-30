@@ -1,10 +1,17 @@
 #include "message.h"
 #include "string.h"
 
+/**
+ * Status::
+ *
+ * Serializable Status class to be used by network
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
+ */
 class Status : public Message {
 public:
     String *msg_; // owned
 
+    /** Status constructor */
     Status(size_t sender, size_t target, size_t id, String *msg) {
         kind_ = MsgKind::Status;
         sender_ = sender;
@@ -13,6 +20,7 @@ public:
         msg_ = msg;
     }
 
+    /** Constructs Status from serialized Status string */
     Status(char *ser) {
         // set kind_ member to Status
         kind_ = MsgKind::Status;
@@ -71,6 +79,7 @@ public:
         }
     }
 
+    /** Status destructor */
     ~Status() {
       delete msg_;
     }

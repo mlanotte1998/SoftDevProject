@@ -5,6 +5,7 @@
 #include "../src/dataframe/dataframe.h"
 #include "../src/seriazation_and_messages/serial.h"
 
+// test serializing and deserializing a bool array
 void serializeBoolArray() {
 	// create bool column
 	BoolColumn* boolCol = new BoolColumn();
@@ -28,13 +29,14 @@ void serializeBoolArray() {
 		assert(boolCol->get(i) == boolCol2->get(i));
 	}
 
-	// printf("Passed Serialized Bool Column Test\n");
+	printf("Passed Serialized Bool Column Test\n");
 
 	delete boolCol;
 	delete boolCol2;
 	delete boolSer;
 }
 
+// test serializing and deserializing an int array
 void serializeIntArray() {
 	// create int column
 	IntColumn* intCol = new IntColumn();
@@ -58,13 +60,14 @@ void serializeIntArray() {
 		assert(intCol->get(i) == intCol2->get(i));
 	}
 
-	// printf("Passed Serialized Int Column Test\n");
+	printf("Passed Serialized Int Column Test\n");
 
 	delete intCol;
 	delete intCol2;
 	delete intSer;
 }
 
+// test serializing and deserializing a float array
 void serializeFloatArray() {
 	// create float column
 	FloatColumn* floatCol = new FloatColumn();
@@ -88,12 +91,14 @@ void serializeFloatArray() {
 		assert(floatCol->get(i) == floatCol2->get(i));
 	}
 
-	// printf("Passed Serialized Float Column Test\n");
+	printf("Passed Serialized Float Column Test\n");
+
 	delete floatCol;
 	delete floatCol2;
 	delete floatSer;
 }
 
+// test serializing and deserializing a double array
 void serializeDoubleArray() {
 	// create double column
 	DoubleColumn* doubleCol = new DoubleColumn();
@@ -117,13 +122,14 @@ void serializeDoubleArray() {
 		assert(doubleCol->get(i) == doubleCol2->get(i));
 	}
 
-	// printf("Passed Serialized Double Column Test\n");
+	printf("Passed Serialized Double Column Test\n");
 
 	delete doubleCol;
 	delete doubleCol2;
 	delete doubleSer;
 }
 
+// test serializing and deserializing a string array
 void serializeStringArray() {
 	// create string column
 	StringColumn* stringCol = new StringColumn();
@@ -153,7 +159,7 @@ void serializeStringArray() {
 		assert(stringCol->get(i)->equals(stringCol2->get(i)));
 	}
 
-	// printf("Passed Serialized String Column Test\n");
+	printf("Passed Serialized String Column Test\n");
 
 	delete stringCol;
 	delete stringCol2;
@@ -165,6 +171,7 @@ void serializeStringArray() {
 	delete quoted;
 }
 
+// test serializing and deserializing a message object
 void serializeMessage() {
 	// create message
 	Message* message1 = new Message(ACK, 10, 11, 1234);
@@ -182,13 +189,14 @@ void serializeMessage() {
 	assert(message1->target_ == message2->target_);
 	assert(message1->id_ == message2->id_);
 
-	// printf("Passed Serialized Message Test\n");
+	printf("Passed Serialized Message Test\n");
 
 	delete message1;
 	delete message2;
 	delete messageSer;
 }
 
+// test serializing and deserializing an ack message
 void serializeAck() {
 	// create ack message
 	Ack* ack1 = new Ack(8, 9, 1111);
@@ -205,13 +213,14 @@ void serializeAck() {
 	assert(ack1->target_ == ack2->target_);
 	assert(ack1->id_ == ack2->id_);
 
-	// printf("Passed Serialized Ack Test\n");
+	printf("Passed Serialized Ack Test\n");
 
 	delete ack1;
 	delete ack2;
 	delete ackSer;
 }
 
+// test serializing and deserializing a status message
 void serializeStatus() {
 	// create status message
 	Status* status1 = new Status(8, 9, 1111, new String("Marco Polo"));
@@ -229,21 +238,24 @@ void serializeStatus() {
 	assert(status1->id_ == status2->id_);
 	assert(status1->msg_->equals(status2->msg_));
 
-	// printf("Passed Serialized Status Test\n");
+	printf("Passed Serialized Status Test\n");
 
 	delete status1;
 	delete status2;
 	delete statusSer;
 }
 
+// test serializing and deserializing a register message
 void serializeRegister() {
 
 }
 
+// test serializing and deserializing a directory message
 void serializeDirectory() {
 
 }
 
+// non-trivial test of serializing and deserializing bool array
 void serializeDeserializeBoolArray() {
 	// create bool column
 	BoolColumn* boolCol = new BoolColumn();
@@ -269,7 +281,7 @@ void serializeDeserializeBoolArray() {
 		assert(boolCol->get(i) == boolCol2->get(i));
 	}
 
-	// printf("Passed Serialize Deserialize Bool Array Test\n");
+	printf("Passed Serialize Deserialize Bool Array Test\n");
 
 	delete boolCol;
 	delete boolCol2;
@@ -277,6 +289,7 @@ void serializeDeserializeBoolArray() {
 	delete boolSer2;
 }
 
+// main function
 int main(int argc, char **argv) {
 	serializeBoolArray();
 	serializeIntArray();
@@ -289,7 +302,6 @@ int main(int argc, char **argv) {
 	serializeRegister();
 	serializeDirectory();
 	serializeDeserializeBoolArray();
-	printf("Passed Serialize Tests\n");
 
 	return 0;
 }

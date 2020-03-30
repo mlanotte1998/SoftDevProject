@@ -11,6 +11,7 @@ char* cwc_strdup(const char* src) {
     return result;
 }
 
+// internal string column test
 void test_stringColumn() {
     SorerStringColumn* col = new SorerStringColumn();
     // Basic tests
@@ -35,6 +36,7 @@ void test_stringColumn() {
     delete col;
 }
 
+// internal int column test
 void test_intColumn() {
     SorerIntegerColumn* col = new SorerIntegerColumn();
     // Basic int tests
@@ -50,6 +52,7 @@ void test_intColumn() {
     delete col;
 }
 
+// internal float column test
 void test_floatColumn() {
     SorerFloatColumn* col = new SorerFloatColumn();
     // Basic float tests
@@ -64,6 +67,7 @@ void test_floatColumn() {
     delete col;
 }
 
+// internal bool column test
 void test_boolColumn() {
     SorerBoolColumn* col = new SorerBoolColumn();
     // Basic bool tests
@@ -78,6 +82,7 @@ void test_boolColumn() {
     delete col;
 }
 
+// test StrSlice class
 void test_strSlice() {
     const char* test_str = "abcde   5.2  100 test";
     StrSlice slice1{test_str, 17, 21};
@@ -104,6 +109,7 @@ void test_strSlice() {
     assert(slice5.toInt() == 4378);
 }
 
+// main function
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;

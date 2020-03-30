@@ -1,13 +1,16 @@
-main: build
-	# - make p1test
-	# - make p1valgrind
+main:
+	# make valgrind
+	# make clean
 	- make test
-	# - make valgrind
+
+demo: build
+	- make runNode0
 	- make clean
 
 build:
 	docker build -t cs4500:0.1 .
 	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ;  g++ -std=c++11 -pthread -o main src/main.cpp ;"
+
 
 runNode0:
 	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main -node 0"
