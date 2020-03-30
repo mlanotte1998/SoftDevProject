@@ -2,6 +2,7 @@ test:
 	@ make runDataStructure
 	@ make runDataframe
 	@ make runSerialize
+	@ make runStore
 	@ make runSorer
 	@ make runTrivial
 
@@ -198,6 +199,25 @@ testSerialize:
 
 cleanSerialize:
 	@ rm -rf serialize
+
+#===============================================================================================================
+# Store Tests
+
+runStore: buildStore
+	@ make testStore
+	@ make cleanStore
+
+buildStore:
+	@ g++ -w test-store.cpp -o store -std=c++11
+
+testStore:
+	#--------------------Store Tests----------------------#
+	@ ./store
+	#------------------End Store Tests--------------------#
+	@ echo ""
+
+cleanStore:
+	@ rm -rf store
 
 #=================================================================================================================
 
