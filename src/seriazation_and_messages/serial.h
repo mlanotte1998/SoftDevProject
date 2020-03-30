@@ -24,6 +24,7 @@ class Serializer : public Object {
     // constructor for serialization
     Serializer() {
       buffer_ = new char[MAX_BUFFER_SIZE];
+			strcpy(buffer_, "");
     }
 
     // constructor for deserialization

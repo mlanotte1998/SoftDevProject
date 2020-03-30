@@ -114,7 +114,7 @@ public:
         int ser_token_length;
 
         // buffer used to add char* to a string
-        int buffer_size = ser_token_length;
+        int buffer_size = ser_array_length;
         char buffer[buffer_size];
         memset(buffer, 0, buffer_size);
 
@@ -140,6 +140,7 @@ public:
             String* add_str = new String(buffer);
             push_back(add_str);
 
+            delete add_str; 
             // move to next token
             ser_token++;
             ser_token = strstr(ser_token, "\"],[\"");

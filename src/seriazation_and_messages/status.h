@@ -33,6 +33,8 @@ public:
         target_ = temp->target_;
         id_ = temp->id_;
 
+        delete temp; 
+
         // loop through tokens split by spaces
         char *ser_token = strtok(ser_copy, " ");
         while (ser_token != NULL) {
@@ -67,6 +69,10 @@ public:
             // continue to next token
             ser_token = strtok(NULL, " ");
         }
+    }
+
+    ~Status() {
+      delete msg_;
     }
 
 };
