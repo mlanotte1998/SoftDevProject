@@ -16,7 +16,7 @@ test2:
 	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main -node 1"
 
 test3:
-	cd tests && make runDataframe
+	cd tests && make test
 
 valgrind:
 	docker build -t cs4500:0.1 .

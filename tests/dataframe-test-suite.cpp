@@ -1,6 +1,7 @@
 //lang::CwC
 #include <string.h>
 #include <stdio.h>
+#include "../src/application/application.h"
 #include "../src/dataframe/dataframe.h"
 
 void FAIL() { exit(1); }
