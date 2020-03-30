@@ -3,6 +3,7 @@
 #include <time.h>
 #include "../src/dataframe/modified_dataframe.h"
 
+// test pmap on large Dataframe
 void test_thread_sum_rower_larger() {
   Schema s("II");
   ModifiedDataFrame df(s);
@@ -18,6 +19,7 @@ void test_thread_sum_rower_larger() {
   assert(sum_rower_0->sum_ == 1000*1000*10);
 }
 
+// main function
 int main(int argc, char **argv) {
   // instantiate dataframe
   Schema file_schema("IIIIIIIISFS");

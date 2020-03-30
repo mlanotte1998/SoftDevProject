@@ -88,7 +88,6 @@ void test4() {
  * remove returns the value mapped to the given key if the key exists in the map
  * remove returns nullptr if the key does not exist
  */
-
 void test5() {
     Map* h1 = new Map();
     String * key_1 = new String("Hello");
@@ -165,7 +164,7 @@ void test7() {
     OK("7");
 }
 
-
+// main function
 int main() {
     test1();
     test2();

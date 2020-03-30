@@ -267,6 +267,7 @@ void test_large() {
     OK("Large");
 }
 
+// main function
 int main() {
     test_hash1();
     test_hash2();

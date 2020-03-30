@@ -151,6 +151,7 @@ void test_invalid_key() {
     OK("Invalid Key");
 }
 
+// main function
 int main() {
 		test_put_and_get();
 		put_multiple();
