@@ -1,6 +1,7 @@
 test:
 	@ make runDataStructure
 	@ make runDataframe
+	@ make runSerialize
 	@ make runSorer
 	@ make runTrivial
 
@@ -178,6 +179,25 @@ testDataframe:
 
 cleanDataframe:
 	@ rm -rf dataframe
+
+#===============================================================================================================
+# Serialization Tests
+
+runSerialize: buildSerialize
+	@ make testSerialize
+	@ make cleanSerialize
+
+buildSerialize:
+	@ g++ -w serialize_tests.cpp -o serialize -std=c++11
+
+testSerialize:
+	#--------------------Serialize Tests----------------------#
+	@ ./serialize
+	#------------------End Serialize Tests--------------------#
+	@ echo ""
+
+cleanSerialize:
+	@ rm -rf serialize
 
 #=================================================================================================================
 
