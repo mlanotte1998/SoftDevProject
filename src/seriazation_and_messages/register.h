@@ -8,12 +8,19 @@
 Class for a register of an node that would be sent as a message
 to the registrar to then be relayed to other nodes.
 */
+/**
+ * Register::
+ *
+ * Class for a register of an node that would be sent as a message
+ * to the registrar to then be relayed to other nodes.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
+ */
 class Register : public Message {
 public:
 	sockaddr_in client_; // sockaddr for the node
 	size_t port_; // port of the node
 
-
+	/** Register constructor */
 	Register(char* ip, size_t port, size_t sender, size_t target,
 	size_t id) {
 		client_.sin_family = AF_INET;
@@ -28,6 +35,7 @@ public:
 		id_ = id;
 	}
 
+	/** Constructs Regiser from serialized Register string */
 	Register(char *ser) {
 			// set kind_ member to Register
 			kind_ = MsgKind::Register;

@@ -7,6 +7,12 @@ enum class MsgKind {
     Ack, Nack, Put, Reply, Get, WaitAndGet, Status, Kill, Register, Directory
 };
 
+/**
+ * Message::
+ *
+ * Serializable Message class to be used by network
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
+ */
 class Message : public Object {
 public:
     MsgKind kind_;  // the message kind
@@ -14,10 +20,12 @@ public:
     size_t target_; // the index of the receiver node
     size_t id_;     // an id t unique within the node
 
+    /** Default Message constructor */
     Message() {
 
     }
 
+    /** Message constructor with parameters */
     Message(MsgKind kind, size_t sender, size_t target, size_t id) {
         kind_ = kind;
         sender_ = sender;
@@ -25,7 +33,7 @@ public:
         id_ = id;
     }
 
-    // Deserialize constructor
+    /** Constructs Message from serialized Message string */
     Message(char *ser) {
         // Iterate through tokens
         char *ser_token = strtok(ser, " ");

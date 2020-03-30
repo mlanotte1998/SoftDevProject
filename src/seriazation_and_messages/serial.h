@@ -9,13 +9,10 @@
 #include "status.h"
 #include "../dataframe/constants.h"
 
-//
-// Created by Michael Lanotte and Daniel Welch on 2/26/20.
-//
-
 /*****************************************************************************
  * Serializer::
  * A serialization support class.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class Serializer : public Object {
 	public:
