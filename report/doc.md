@@ -34,9 +34,13 @@ sending system that is the current network code implementation created.
 ## Implementation 
 
 #### Application:  
-The main application class. Running this class will handle launching the entire application and setting up all other classes necessary to set up and run the application.
-The Trivial Application subclass was also added to the code base as an example usage of how an application may run using the infrastructure. This Trivial subclass was
-provided in Project Milestone 2 as an example usage of the infrastructure that is in the process of being built.   
+The main application class. Running this class will handle launching the entire application and setting up all 
+other classes necessary to set up and run the application. The Trivial Application subclass was also added to the 
+code base as an example usage of how an application may run using the infrastructure. This Trivial subclass was
+provided in Project Milestone 2 as an example usage of the infrastructure that is in the process of being built. 
+The Demo code from Project Milestone 1 to be implemented in Milestone 3 was also added but not fully
+implemented yet. Applications take in a KDStore* to be used for the store functionality, and this is a pointer 
+because the main file will handle starting the server functionality of the store. 
   
 #### RendezvousServer and Node:  
 These two classes have the network code needed for the application. The Rendezvous Server is essentially a server meant
@@ -55,7 +59,7 @@ need to be simultaneously connected to the Registrar along with being able to re
 needed to run both of these functions at the same time. 
 
 After spending time thinking of how to go about the actual network functionality, it became apparent that these
-classes will have to manipulated to work with the application. The message sending structure needs to be updated
+classes will have to be manipulated to work with the application. The message sending structure needs to be updated
 to actually use serialized messages along with including the functionality to send store objects. 
   
 #### DataFrame:  
@@ -78,14 +82,14 @@ length of the set of columns to read the data row by row. Each column can be cas
 inside is a Boolean, Float, Integer, or String. The data that is read can then be added to a DataFrame.  
 
 #### KVStore and KDStore  
-The store layer of the system is currently comprised of four classes: Key, Value, KVStore, and KDStore.  
-The KVStore uses the Map from the utility classes to build a key-value store, using the Key class for key objects  
-and the Value class for value objects. The KVStore has no knowledge of DataFrames or other classes that may be  
-used in the running of an application. The KDStore is the same concept as the KVStore, serving as a key-value  
-store, but this class is built specifically to handle DataFrames. The KDStore acts as an API for the application  
-tier of the system, allowing for storage of DataFrames. The Key class is used as keys in the KDStore, as they  
-were in the KVStore, but instead of the Value class being used for values, DataFrames are specifically used  
-as the store's values. This allows the application tier to access the store tier, with a convenient API that  
+The store layer of the system is currently comprised of four classes: Key, Value, KVStore, and KDStore. 
+The KVStore uses the Map from the utility classes to build a key-value store, using the Key class for key objects 
+and the Value class for value objects. The KVStore has no knowledge of DataFrames or other classes that may be 
+used in the running of an application. The KDStore is the same concept as the KVStore, serving as a key-value 
+store, but this class is built specifically to handle DataFrames. The KDStore acts as an API for the application 
+tier of the system, allowing for storage of DataFrames. The Key class is used as keys in the KDStore, as they 
+were in the KVStore, but instead of the Value class being used for values, DataFrames are specifically used 
+as the store's values. This allows the application tier to access the store tier, with a convenient API that 
 does not require casting of Values to DataFrames. The Application class includes a KDStore instance as a field.
 The fromArray method on DataFrame can be used to create a new DataFrame and add it to the calling application's
 KDStore.  
@@ -100,6 +104,7 @@ class that is used to both deserialize and serialize eligible objects. The deser
 kind of Object the input is and calls on the deserialize constructor for that object. To serialize an object,
 there is a function that takes in the object and appends different words to a char* that is the serialized message
 which is then returned. 
+Currently, the Register and Directory are still unfinished so those need to be addressed. 
 
 ## Use Cases  
   
@@ -197,18 +202,29 @@ code far off from what other teams are doing or is it a common implementation?
 What is the point of possibly splitting up certain columns of one DataFrame into different nodes? There have
 been comments about this being something that could be done but we are not sure why and if we should or
 really how one would go about managing all of that. 
+Should we send messages in chunks if they are large or send some first message to alert the receiver of how many
+bytes the full incoming message is going to be for large columns? 
+Is our Makefile structure okay? Should valgrind be running by default? 
 
 
 ## Status
 All of the code to be reused has been brought over into the directory along with the tests for all of them.
-The tests are all together in one file and can be run together with the Makefile in the directory. The code
+The tests are all together in one folder and can be run together with the main Makefile with "make". The code
 to be reused can be split up into a few different types of classes. The first is utility classes; these include
 Object, String, Array, and the other common data structure classes. The next group of classes are the classes
-that are used by the DataFrame; this folder has all of the classes that were new for the DataFrame assignment.
-There is also a folder called store to hold objects pertaining to the KVStore / KDStore. An application folder
-exists to hold the Application class as well as subclasses of Application. The trivial application is included here.
-Lastly there is a folder for sorer code that came from the group 45000NE. There is one main.cpp file in the top 
-level project directory that tests out reading in a file and creating a DataFrame with it along with running
-a simple map function on it. The tests have been run with valgrind to ensure that any memory issues that
-were in the code for the previous assignments have been fixed. When running the main executable with valgrind
-and the megabyte.sor file there is no memory leaks or memory errors. 
+that are used by the DataFrame; this folder has all of the classes that were new for the DataFrame assignment. For 
+network specific code, this is in the network folder, and related to that, the serialization code along with
+classes to be used as serialized messages are in their own folder. There is also a folder called store to hold objects
+pertaining to the KVStore / KDStore. An application folder exists to hold the Application class as well as subclasses 
+of Application. The trivial application is included here. Lastly there is a folder for sorer code that came from the 
+group 45000NE. There is one main.cpp file in the top level project directory that tests out reading in a file and 
+creating a DataFrame with it along with running a simple map function on it. The tests have been run with valgrind 
+to ensure that any memory issues that were in the code for the previous assignments have been fixed. When running the
+main executable with valgrind and the megabyte.sor file there is no memory leaks or memory errors. 
+Currently the network functionality is incomplete. Code debt for the serialization classes was forgotten about until
+recently so a lot of time was spent on cleaning up some of that along with planning how to go at the network
+functionality. For the moment, the planned implementation of the network behavior is to have each KDStore hold
+a Node pointer so that the each acts as it's own node. There will be a thread in the application for running the 
+application specific code (for example the given Demo code), and then another thread for running the Node server
+so that it will be able to handle another node waiting to get a DataFrame from it. It took a while to come to this idea
+after messing around with threads in different places and having the store not be a pointer in the Application class. 
