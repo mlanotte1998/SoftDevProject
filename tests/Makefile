@@ -4,6 +4,7 @@ test:
 	- make runDataframe
 	- make runSorer
 	# make runNetwork
+	- make runTrivial
 
 #===========================================================================================================
 #Data structure tests
@@ -239,3 +240,12 @@ testNetwork: server client
 
 cleanNetwork:
 	-rm *.o $(objects) *.txt server client
+
+#===================================================================================================================
+
+runTrivial:
+	g++ -w -std=c++11 -o trivial ../src/p2main.cpp
+	#---------------Trivial Application----------------#
+	./trivial
+	#-------------End Trivial Application--------------#
+	rm trivial
