@@ -28,7 +28,11 @@ void serializeBoolArray() {
 		assert(boolCol->get(i) == boolCol2->get(i));
 	}
 
-	printf("Passed Serialized Bool Array Test\n");
+	// printf("Passed Serialized Bool Column Test\n");
+
+	delete boolCol;
+	delete boolCol2;
+	delete boolSer;
 }
 
 void serializeIntArray() {
@@ -54,7 +58,11 @@ void serializeIntArray() {
 		assert(intCol->get(i) == intCol2->get(i));
 	}
 
-	printf("Passed Serialized Int Array Test\n");
+	// printf("Passed Serialized Int Column Test\n");
+
+	delete intCol;
+	delete intCol2;
+	delete intSer;
 }
 
 void serializeFloatArray() {
@@ -80,7 +88,10 @@ void serializeFloatArray() {
 		assert(floatCol->get(i) == floatCol2->get(i));
 	}
 
-	printf("Passed Serialized Float Array Test\n");
+	// printf("Passed Serialized Float Column Test\n");
+	delete floatCol;
+	delete floatCol2;
+	delete floatSer;
 }
 
 void serializeDoubleArray() {
@@ -106,21 +117,30 @@ void serializeDoubleArray() {
 		assert(doubleCol->get(i) == doubleCol2->get(i));
 	}
 
-	printf("Passed Serialized Double Array Test\n");
+	// printf("Passed Serialized Double Column Test\n");
+
+	delete doubleCol;
+	delete doubleCol2;
+	delete doubleSer;
 }
 
 void serializeStringArray() {
 	// create string column
 	StringColumn* stringCol = new StringColumn();
-	stringCol->push_back(new String("Hello"));
-	stringCol->push_back(new String("World"));
-	stringCol->push_back(new String("My name is: N/A"));
-	stringCol->push_back(new String("Hi, how are you"));
-	stringCol->push_back(new String("\"Quoted\""));
+	String* hello = new String("Hello");
+	String* world = new String("World");
+	String* my_name = new String("My name is: N/A");
+	String* how_are_you = new String("Hi, how are you");
+	String* quoted = new String("\"Quoted\"");
+	stringCol->push_back(hello);
+	stringCol->push_back(world);
+	stringCol->push_back(my_name);
+	stringCol->push_back(how_are_you);
+	stringCol->push_back(quoted);
 
 	// serialize string column
 	Serializer* stringSer = new Serializer();
-	char* serialized_double_col = stringSer->serialize(stringCol);
+	char* serialized_string_col = stringSer->serialize(stringCol);
 
 	// deserialize string column into second string column object
 	StringColumn* stringCol2 = dynamic_cast<StringColumn*>(stringSer->deserialize());
@@ -133,7 +153,16 @@ void serializeStringArray() {
 		assert(stringCol->get(i)->equals(stringCol2->get(i)));
 	}
 
-	printf("Passed Serialized String Array Test\n");
+	// printf("Passed Serialized String Column Test\n");
+
+	delete stringCol;
+	delete stringCol2;
+	delete stringSer;
+	delete hello;
+	delete world;
+	delete my_name;
+	delete how_are_you;
+	delete quoted;
 }
 
 void serializeMessage() {
@@ -153,7 +182,11 @@ void serializeMessage() {
 	assert(message1->target_ == message2->target_);
 	assert(message1->id_ == message2->id_);
 
-	printf("Passed Serialized Message Test\n");
+	// printf("Passed Serialized Message Test\n");
+
+	delete message1;
+	delete message2;
+	delete messageSer;
 }
 
 void serializeAck() {
@@ -172,7 +205,11 @@ void serializeAck() {
 	assert(ack1->target_ == ack2->target_);
 	assert(ack1->id_ == ack2->id_);
 
-	printf("Passed Serialized Ack Test\n");
+	// printf("Passed Serialized Ack Test\n");
+
+	delete ack1;
+	delete ack2;
+	delete ackSer;
 }
 
 void serializeStatus() {
@@ -192,7 +229,11 @@ void serializeStatus() {
 	assert(status1->id_ == status2->id_);
 	assert(status1->msg_->equals(status2->msg_));
 
-	printf("Passed Serialized Status Test\n");
+	// printf("Passed Serialized Status Test\n");
+
+	delete status1;
+	delete status2;
+	delete statusSer;
 }
 
 void serializeRegister() {
@@ -228,7 +269,12 @@ void serializeDeserializeBoolArray() {
 		assert(boolCol->get(i) == boolCol2->get(i));
 	}
 
-	printf("Passed Serialize Deserialize Bool Array Test\n");
+	// printf("Passed Serialize Deserialize Bool Array Test\n");
+
+	delete boolCol;
+	delete boolCol2;
+	delete boolSer;
+	delete boolSer2;
 }
 
 int main(int argc, char **argv) {
@@ -243,6 +289,7 @@ int main(int argc, char **argv) {
 	serializeRegister();
 	serializeDirectory();
 	serializeDeserializeBoolArray();
+	printf("Passed Serialize Tests\n");
 
 	return 0;
 }
