@@ -2,6 +2,9 @@
 #include "../dataframe/dataframe.h"
 #include "../store/kdstore.h"
 
+/**
+ * Trivial Application given in Project Milestone 2
+*/
 class Trivial : public Application {
  public:
   Trivial(size_t idx, KDStore* kd): Application(idx, kd) { }
