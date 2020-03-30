@@ -848,6 +848,7 @@ public:
         return hash;
     }
 
+    /** Helper method for checking float equality */
     bool float_equal(float f1, float f2) {
         float eps = 0.0000001;
         if (f1 > f2) {

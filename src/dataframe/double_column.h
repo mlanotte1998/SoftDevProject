@@ -12,6 +12,7 @@
 /*************************************************************************
  * DoubleColumn::
  * Holds double values.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class DoubleColumn : public Column {
 public:

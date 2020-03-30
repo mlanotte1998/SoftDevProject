@@ -13,6 +13,7 @@
  * a dataframe. Each rower thread operates on a subset of rows of the dataframe
  * defined by the start_ and end_ index values. The rower operation to perform
  * is based on the rower_.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class RowerThread : public Thread {
 public:

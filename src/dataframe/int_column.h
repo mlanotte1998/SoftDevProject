@@ -12,6 +12,7 @@
 /***
  * IntColumn::
  * Holds int values.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class IntColumn : public Column {
 public:

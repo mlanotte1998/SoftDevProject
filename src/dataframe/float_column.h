@@ -12,6 +12,7 @@
 /*************************************************************************
  * FloatColumn::
  * Holds float values.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class FloatColumn : public Column {
 public:

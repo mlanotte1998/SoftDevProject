@@ -12,6 +12,7 @@
 /*************************************************************************
  * BoolColumn::
  * Holds bool values.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class BoolColumn : public Column {
 public:

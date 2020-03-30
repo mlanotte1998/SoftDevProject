@@ -19,6 +19,7 @@
 * A DataFrame is table composed of columns of equal length. Each column
 * holds values of the same type (I, S, B, F). A dataframe has a schema that
 * describes it.
+* authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class DataFrame : public Object {
 public:

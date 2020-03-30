@@ -13,6 +13,7 @@
  * A schema is a description of the contents of a data frame, the schema
  * knows the number of columns and number of rows, the type of each column.
  * The valid types are represented by the chars 'S', 'B', 'I' and 'F'.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class Schema : public Object {
 public:

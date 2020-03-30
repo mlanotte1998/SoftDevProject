@@ -8,10 +8,11 @@
 #include "../utility-classes/string.h"
 #include "constants.h"
 
-/***
+/*************************************************************************
  * StringColumn::
  * Holds string pointers. The strings are external.  Nullptr is a valid
  * value.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class StringColumn : public Column {
 public:

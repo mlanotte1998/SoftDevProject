@@ -20,6 +20,7 @@
  * dataframe's schema. The purpose of this class is to make it easier to add
  * read/write complete rows. Internally a dataframe hold data in columns.
  * Rows have pointer equality.
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class Row : public Object {
 public:
