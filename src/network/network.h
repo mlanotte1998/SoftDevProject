@@ -315,7 +315,7 @@ public:
     /**
      * Function for running the rendezvous server.
      */
-    void run(int kill_switch) {
+    void run(char* kill_switch) {
 
         // Begin listening.
         int listener = internalServer_->socket_listen();
@@ -325,11 +325,12 @@ public:
         listener_added_ = true;
 
         // Loop on true to continuously run the server.
-        while (kill_switch != 1) {
+        while (kill_switch[0] != '1') {
+
             // Poll the server activity.
             int poll_count = poll(pfds_, total_socket_count_ + 1, -1);
             if (poll_count == -1) {
-                kill_switch = 1;
+                kill_switch[0] = '1';
             }
             // Run through the existing connections looking for data to read.
             for (int i = 0; i < total_socket_count_ + 1; i++) {

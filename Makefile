@@ -6,10 +6,11 @@ main: build
 	- make clean
 
 build:
-	g++ -std=c++11 -o main ./src/main.cpp
+	docker build -t cs4500:0.1 .
+	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ;  g++ -std=c++11 -pthread -o main src/main.cpp ;"
 
 test:
-	./main
+	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main"
 
 valgrind:
 	docker build -t cs4500:0.1 .

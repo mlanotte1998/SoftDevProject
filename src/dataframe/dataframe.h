@@ -78,7 +78,7 @@ public:
     /** Create a data frame from an array of doubles and adds the one column dataframe to the
      * given KDStore
     */
-    static DataFrame* fromArray(Key* key, KDStore* kdstore, size_t size, double* vals) {
+    static DataFrame* fromArray(Key* key, KDStore* kdStore, size_t size, double* vals) {
         Schema schm("D");
         DataFrame* df = new DataFrame(schm);
         for(size_t i = 0; i < size; i++) {
@@ -87,7 +87,24 @@ public:
             df->add_row(*row);
             delete row;
         }
-        kdstore->put(*key, df);
+        kdStore->put(*key, df);
+        return df;
+    }
+
+    /** Create a data frame of one double and adds the one column dataframe to the
+     * given KDStore
+    */
+    static DataFrame* fromScalar(Key* key, KDStore* kdStore, double val) {
+        Schema schm("D");
+        DataFrame* df = new DataFrame(schm);
+        Row* row = new Row(schm);
+        row->set(0, val);
+        df->add_row(*row);
+        delete row;
+        kdStore->put(*key, df);
+
+        std::cout << val << std::endl;
+
         return df;
     }
 
