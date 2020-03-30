@@ -2,17 +2,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "modified_dataframe.h"
+#include "../dataframe/dataframe.h"
 #include "message.h"
-#include "bool_column.h"
-#include "int_column.h"
-#include "float_column.h"
-#include "double_column.h"
-#include "string_column.h"
 #include "message_kind.h"
 #include "ack.h"
 #include "status.h"
-#include "constants.h"
+#include "../dataframe/constants.h"
 
 //
 // Created by Michael Lanotte and Daniel Welch on 2/26/20.

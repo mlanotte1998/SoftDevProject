@@ -1,7 +1,7 @@
 #pragma once
 
-#include "object.h"
-#include "constants.h"
+#include "../utility-classes/object.h"
+#include "../dataframe/constants.h"
 
 enum class MsgKind {
     Ack, Nack, Put, Reply, Get, WaitAndGet, Status, Kill, Register, Directory
