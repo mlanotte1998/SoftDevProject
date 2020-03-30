@@ -17,6 +17,13 @@ public:
         // set kind_ member to Status
         kind_ = MsgKind::Status;
 
+        // Create a normal message to extract shared fields. 
+        Message* temp = new Message(ser);
+        sender_ = temp_->sender_;
+        target_ = temp_->target_;
+        id_ = temp_->id_;
+
+
         // create copy of serialized string
         char ser_copy[MAX_BUFFER_SIZE];
         memset(ser_copy, 0, MAX_BUFFER_SIZE);
@@ -25,44 +32,9 @@ public:
         // loop through tokens split by spaces
         char *ser_token = strtok(ser, " ");
         while (ser_token != NULL) {
-            // if p2 value is found add it as sender_ member
-            if (strncmp("-p2_val::", ser_token, strlen("-p2_val::")) == 0) {
-                int key_len = strlen("-p2_val::");
-                char sender_value[MAX_SIZET_BYTES];
-                memset(sender_value, 0, MAX_SIZET_BYTES);
-                strncpy(
-                        sender_value,
-                        ser_token + key_len,
-                        strlen(ser_token) - key_len
-                );
-                sscanf(sender_value, "%zu", &sender_);
-            }
-                // if p3 value is found add it as target_ member
-            else if (strncmp("-p3_val::", ser_token, strlen("-p3_val::")) == 0) {
-                int key_len = strlen("-p3_val::");
-                char target_value[MAX_SIZET_BYTES];
-                memset(target_value, 0, MAX_SIZET_BYTES);
-                strncpy(
-                        target_value,
-                        ser_token + key_len,
-                        strlen(ser_token) - key_len
-                );
-                sscanf(target_value, "%zu", &target_);
-            }
-                // if p4 value is found add it as id_ member
-            else if (strncmp("-p4_val::", ser_token, strlen("-p4_val::")) == 0) {
-                int key_len = strlen("-p4_val::");
-                char id_value[MAX_SIZET_BYTES];
-                memset(id_value, 0, MAX_SIZET_BYTES);
-                strncpy(
-                        id_value,
-                        ser_token + key_len,
-                        strlen(ser_token) - key_len
-                );
-                sscanf(id_value, "%zu", &id_);
-            }
+
                 // if p5 value is found add it as msg_ member
-            else if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
+            if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
                 char *p5_value = strstr(ser_copy, "-p5_val::");
                 // buffer used to add char* to a string
                 int buffer_size = strlen(p5_value) - strlen("-p5_val::");
