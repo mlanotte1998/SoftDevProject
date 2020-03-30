@@ -10,7 +10,11 @@ build:
 	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ;  g++ -std=c++11 -pthread -o main src/main.cpp ;"
 
 test:
-	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main"
+	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main -node 0"
+
+test2:
+	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ; valgrind --leak-check=full ./main -node 1"
+
 
 valgrind:
 	docker build -t cs4500:0.1 .

@@ -65,6 +65,8 @@ public:
         address_.sin_family = AF_INET;
         address_.sin_addr.s_addr = inet_addr(ip);
         address_.sin_port = htons(port);
+
+        std::cout << ip << std::endl;
     }
 
     /**
@@ -137,6 +139,8 @@ public:
      *  Also has the servers ip to connect to.
      */
     Client(char *own_ip, int port, char *server_ip) {
+
+        std::cout << server_ip << std::endl;
         // Set sock to default and the server_length.
         sock_ = 0;
         server_addrlen_ = sizeof(client_addr_);

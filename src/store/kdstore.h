@@ -31,11 +31,24 @@ public:
         delete map_;
     }
 
-    void run_server(char* kill_switch) {
+    void run_network(char* kill_switch) {
         char rendezvous_ip[10] = {0};
         strcpy(rendezvous_ip, "127.0.0.1");
-        RendezvousServer r(rendezvous_ip, 8080, 5);
-        r.run(kill_switch);
+        if (idx_ == 0) {
+            RendezvousServer r(rendezvous_ip, 8080, 5);
+            r.run(kill_switch);
+        } else if (idx_ == 1) {
+            char node_ip[10] = {0};
+            strcpy(node_ip, "127.0.0.2");
+            Node n(node_ip, 8080, rendezvous_ip, 5);
+            n.run(kill_switch);
+        } else if (idx_ == 2) {
+            char node_ip[10] = {0};
+            strcpy(node_ip, "127.0.0.3");
+            Node n(node_ip, 8080, rendezvous_ip,  5);
+            n.run(kill_switch);
+        }
+
     }
 
     DataFrame* get(Key key);
