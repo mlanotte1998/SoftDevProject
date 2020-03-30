@@ -222,10 +222,8 @@ void test_large() {
     t_true(h1->equals(h2));
     t_true(h1->get_size() == 35);
     t_true(h1->bucket_size_ == 64);
-    printf("\tHash H1: %zu\n", h1->hash());
     t_true(h2->get_size() == 35);
     t_true(h2->bucket_size_ == 64);
-    printf("\tHash H2: %zu\n", h2->hash());
 
     delete val_1;
     delete key_1;

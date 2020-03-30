@@ -3,7 +3,7 @@ test:
 	# make runBench
 	- make runDataframe
 	- make runSorer
-	- make runNetwork
+	# make runNetwork
 
 #===========================================================================================================
 #Data structure tests
@@ -17,7 +17,7 @@ runDataStructure:
 	- make cleanMap
 
 testArray:
-	g++ -std=c++11 -o array test-array.cpp
+	g++ -w -std=c++11 -o array test-array.cpp
 	#---------------Array Tests----------------#
 	./array
 	#-------------End Array Tests--------------#
