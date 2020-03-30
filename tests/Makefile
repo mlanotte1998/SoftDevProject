@@ -11,29 +11,29 @@ test:
 
 runDataStructure:
 	- make testArray
-	- make cleanArray
+	@ make cleanArray
 	- make testMap
-	- make cleanMap
+	@ make cleanMap
 	- make testAdditionalMap
-	- make cleanMap
+	@ make cleanMap
 
 testArray:
 	@ g++ -w -std=c++11 -o array test-array.cpp
-	#---------------Array Tests----------------#
-	./array
-	#-------------End Array Tests--------------#
+	#----------------------Array Tests------------------------#
+	@ ./array
+	#--------------------End Array Tests----------------------#
 
 testMap:
 	@ g++ -std=c++11 -o map test-map.cpp
-	#----------------Map Tests-----------------#
-	./map
-	#--------------End Map Tests---------------#
+	#-----------------------Map Tests-------------------------#
+	@ ./map
+	#---------------------End Map Tests-----------------------#
 
 testAdditionalMap:
 	@ g++ -std=c++11 -o map test-additional-map.cpp
-	#-----------Additional Map Tests-----------#
-	./map
-	#---------End Additional Map Tests---------#
+	#------------------Additional Map Tests-------------------#
+	@ ./map
+	#----------------End Additional Map Tests-----------------#
 
 cleanArray:
 	@ rm array
@@ -163,14 +163,16 @@ full-sumall-map:
 # Dataframe Accuracy Tests
 
 runDataframe: buildDataframe
-	- make testDataframe
-	- make cleanDataframe
+	@ make testDataframe
+	@ make cleanDataframe
 
 buildDataframe:
-	@ g++ dataframe-test-suite.cpp -o dataframe -std=c++11
+	@ g++ -w dataframe-test-suite.cpp -o dataframe -std=c++11
 
 testDataframe:
+	#--------------------Dataframe Tests----------------------#
 	@ ./dataframe
+	#------------------End Dataframe Tests--------------------#
 
 cleanDataframe:
 	@ rm -rf dataframe
@@ -180,13 +182,13 @@ cleanDataframe:
 runSorer: buildSorer
 	- make testSorer
 	- make testSorerUnitTests
-	- make cleanSorer
+	@ make cleanSorer
 
 buildSorer:
 	@ g++ sorer.cpp -o sorer -std=c++11
 
 testSorer:
-	#---------------Sorer Tests----------------#
+	#----------------------Sorer Tests------------------------#
 	@ printf "Bool Col Test " && ./test_sor.sh "BOOL" -f "../data/data.sor" -from 0 -len 100 -print_col_type 0
 	@ printf "String Col Test " && ./test_sor.sh "STRING" -f "../data/data.sor" -from 0 -len 100 -print_col_type 2
 	@ printf "Is Missing Test 1 " && ./test_sor.sh "0" -f "../data/data.sor" -from 0 -len 100 -is_missing_idx 2 0
@@ -205,12 +207,12 @@ testSorer:
 	@ printf "Len Test " && ./test_sor.sh "No such entry" -f "../data/data2.sor" -from 5 -len 60 -print_col_idx 2 2
 	@ printf "Parse String Test 1 " && ./test_sor.sh "4" -f "../data/data3.sor" -print_col_idx 3 0
 	@ printf "Parse String Test 2 " && ./test_sor.sh '"string with > inside "' -f "../data/data3.sor" -print_col_idx 2 0
-	#---------------End Sorer Tests----------------#
+	#--------------------End Sorer Tests----------------------#
 
 testSorerUnitTests:
 	@ g++ test-sorer.cpp -o test-sorer -std=c++11
-	#---------------Additional Sorer Tests----------------#
-	./test-sorer
+	#-----------------Additional Sorer Tests------------------#
+	@ ./test-sorer
 	#---------------End Additional Sorer Tests----------------#
 
 cleanSorer:
@@ -243,7 +245,7 @@ cleanNetwork:
 
 runTrivial:
 	@ g++ -w -std=c++11 -o trivial ../src/p2main.cpp
-	#---------------Trivial Application----------------#
-	./trivial
-	#-------------End Trivial Application--------------#
+	#------------------Trivial Application--------------------#
+	@ ./trivial
+	#----------------End Trivial Application------------------#
 	@ rm trivial

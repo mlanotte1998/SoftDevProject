@@ -9,7 +9,5 @@ if [ "$expected" == "$output" ]; then
     exit 0
 else
     echo "Failed"
-    echo "Expected: $expected"
-    echo "Output: $output"
     exit 0
 fi
