@@ -332,7 +332,7 @@ public:
         while (kill_switch[0] != '1') {
 
             // Poll the server activity.
-            int poll_count = poll(pfds_, total_socket_count_ + 1, -1);
+            int poll_count = poll(pfds_, total_socket_count_ + 1, 0);
             if (poll_count == -1) {
                 kill_switch[0] = '1';
             }
@@ -384,6 +384,8 @@ public:
     int *IS_sockets_; // List of socket values for every client that has connected.
     int IS_total_socket_count_; // Count of clients that have connected on a socket.
 
+    Map* store_map_;
+
 
     /**
      * Main Node Constructor
@@ -392,7 +394,7 @@ public:
      * @param server_ip The ip of the rendezvous server.
      * @param max_clients The maximum number of clients that can be added.
      */
-    Node(char *client_ip, int port, char *server_ip, int max_clients) {
+    Node(char *client_ip, int port, char *server_ip, int max_clients, Map* map) {
 
         max_clients_ = max_clients;
 
@@ -416,6 +418,8 @@ public:
         IS_ip_list_ = new char *[max_clients_];
 
         IS_total_socket_count_ = 0;
+
+        store_map_ = map;
     }
 
     /**
@@ -579,16 +583,14 @@ public:
     void received_ip_list_message(char *buffer) {
         // Build the list of ips from this message.
         IC_other_total_client_count_ = build_ip_list(buffer, IC_ip_list_);
-
-        // Send a message to the last client in the list.
-        send_client_to_client_message(IC_ip_list_[IC_other_total_client_count_ - 1]);
     }
 
     /**
      * Function for sending a message from a client to another client.
      * @param receiver_ip The ip of the other client that should receive the message.
      */
-    void send_client_to_client_message(char *receiver_ip) {
+    void ask_other_node_for_dataframe(char *receiver_ip, char* message) {
+
         // Create a new client object to connect to the receiver client.
         Client *new_client_connection = new Client(client_ip_, port_, receiver_ip);
         // Add this client to the internal list of clients
@@ -606,6 +608,7 @@ public:
         memset(buffer, 0, 1024);
         new_client_connection->socket_read(buffer, 1024);
         printf("%s\n", buffer);
+        
     }
 
     /**

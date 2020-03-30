@@ -17,6 +17,7 @@ public:
             case 0:   producer();     break;
             case 1:   counter();      break;
             case 2:   summarizer();
+            case 3: break;
         }
     }
 
@@ -36,8 +37,9 @@ public:
 
 
     void counter() {
-        /*
+
         DataFrame *v = kv->waitAndGet(main);
+        /*
         size_t sum = 0;
         for (size_t i = 0; i < 100 * 1000; ++i) sum += v->get_double(0, i);
         p("The sum is  ").pln(sum);
@@ -46,9 +48,11 @@ public:
     }
 
     void summarizer() {
+      /*
         DataFrame* result = kv->waitAndGet(verify);
         DataFrame* expected = kv->waitAndGet(check);
         pln(expected->get_double(0,0)==result->get_double(0,0) ? "SUCCESS":"FAILURE");
+        */
     }
 
 };

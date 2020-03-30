@@ -21,6 +21,10 @@ class Key : public Object {
 			return name_ == other.name_ && idx_ == other.idx_;
 		}
 
+		size_t get_idx() {
+			return idx_; 
+		}
+
 		size_t hash_me() {
 			size_t hash = 0;
 			for (size_t i = 0; i < strlen(name_); ++i) {

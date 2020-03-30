@@ -21,18 +21,22 @@ void handle_sigint(int sig)
 */
 int main(int argc, char* argv[]) {
 
-    std:: cout << argv[2] << std::endl;
     int x = atoi(argv[2]);
 
     signal(SIGINT, handle_sigint);
     kill_switch[0] = '0';
     kill_switch[1] = '\0';
 
+    if (x == 3) {
+      char rendezvous_ip[10] = {0};
+      strcpy(rendezvous_ip, "127.0.0.1");
+      RendezvousServer r(rendezvous_ip, 8080, 5);
+      r.run(kill_switch);
+    } else {
+
     KDStore* k = new KDStore(x);
 
     Demo d (x, k);
-
-    std::cout << x << std::endl;
 
     std::thread network_thread(&KDStore::run_network, k, kill_switch);
 
@@ -43,11 +47,6 @@ int main(int argc, char* argv[]) {
 
     delete k;
 
+  }
     return 0;
 }
-
-
-
-
-
-

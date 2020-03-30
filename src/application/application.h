@@ -13,7 +13,7 @@ class Application : public Object {
 		}
 
 		~Application() {
-        }
+    }
 
 		size_t this_node() {
 		    return idx_;
