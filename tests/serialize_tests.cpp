@@ -258,10 +258,15 @@ void serializeDirectory() {
 	ports[2] = 333333;
 
 	String* addresses[4];
-	addresses[0] = new String("One");
-	addresses[1] = new String("Two");
-	addresses[2] = new String("Three");
-	addresses[3] = new String("Four");
+	String* one = new String("One");
+	String* two = new String("Two");
+	String* three = new String("Three");
+	String* four = new String("Four");
+
+	addresses[0] = one;
+	addresses[1] = two;
+	addresses[2] = three;
+	addresses[3] = four;
 
 	// create directory message
 	Directory* directory1 = new Directory(8, 9, 1111, 2222, 3, ports, 4, addresses);
@@ -269,8 +274,6 @@ void serializeDirectory() {
 	// serialize directory message
 	Serializer* directorySer = new Serializer();
 	char* serialized_directory = directorySer->serialize(directory1);
-
-	// printf("%s\n", serialized_directory);
 
 	// deserialize directory message into second directory message object
 	Directory* directory2 = dynamic_cast<Directory*>(directorySer->deserialize());
@@ -285,9 +288,16 @@ void serializeDirectory() {
 	for (size_t i = 0; i < 3; i++) {
 		assert(directory1->ports_[i] == directory2->ports_[i]);
 	}
+	for (size_t j = 0; j < 4; j++) {
+		assert(directory1->addresses_[j]->equals(directory2->addresses_[j]));
+	}
 
 	printf("Passed Serialized Directory Test\n");
 
+	delete one;
+	delete two;
+	delete three;
+	delete four;
 	delete directory1;
 	delete directory2;
 	delete directorySer;
