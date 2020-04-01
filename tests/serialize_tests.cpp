@@ -252,11 +252,10 @@ void serializeRegister() {
 
 // test serializing and deserializing a directory message
 void serializeDirectory() {
-	size_t ports[4];
+	size_t ports[3];
 	ports[0] = 1;
 	ports[1] = 2;
 	ports[2] = 3;
-	ports[3] = 4;
 
 	String* addresses[4];
 	addresses[0] = new String("One");
@@ -265,7 +264,7 @@ void serializeDirectory() {
 	addresses[3] = new String("Four");
 
 	// create directory message
-	Directory* directory1 = new Directory(8, 9, 1111, 2222, 4, ports, 4, addresses);
+	Directory* directory1 = new Directory(8, 9, 1111, 2222, 3, ports, 4, addresses);
 
 	// serialize directory message
 	Serializer* directorySer = new Serializer();
@@ -280,6 +279,9 @@ void serializeDirectory() {
 	assert(directory1->sender_ == directory2->sender_);
 	assert(directory1->target_ == directory2->target_);
 	assert(directory1->id_ == directory2->id_);
+	assert(directory1->client_ == directory2->client_);
+	assert(directory1->ports_count_ == directory2->ports_count_);
+	assert(directory1->addresses_count_ == directory2->addresses_count_);
 
 	printf("Passed Serialized Directory Test\n");
 
