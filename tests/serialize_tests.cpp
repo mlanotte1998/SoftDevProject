@@ -232,7 +232,7 @@ void serializeStatus() {
 	// deserialize status message into second ack message object
 	Status* status2 = dynamic_cast<Status*>(statusSer->deserialize());
 
-	// // two status messages should be equal
+	// two status messages should be equal
 	assert(status1->sender_ == status2->sender_);
 	assert(status1->target_ == status2->target_);
 	assert(status1->id_ == status2->id_);
@@ -252,7 +252,40 @@ void serializeRegister() {
 
 // test serializing and deserializing a directory message
 void serializeDirectory() {
+	size_t ports[4];
+	ports[0] = 1;
+	ports[1] = 2;
+	ports[2] = 3;
+	ports[3] = 4;
 
+	String* addresses[4];
+	addresses[0] = new String("One");
+	addresses[1] = new String("Two");
+	addresses[2] = new String("Three");
+	addresses[3] = new String("Four");
+
+	// create directory message
+	Directory* directory1 = new Directory(8, 9, 1111, 2222, 4, ports, 4, addresses);
+
+	// serialize directory message
+	Serializer* directorySer = new Serializer();
+	char* serialized_directory = directorySer->serialize(directory1);
+
+	printf("%s\n", serialized_directory);
+
+	// deserialize directory message into second directory message object
+	// Directory* directory2 = dynamic_cast<Directory*>(directorySer->deserialize());
+
+	// // two directory messages should be equal
+	// assert(directory1->sender_ == directory2->sender_);
+	// assert(directory1->target_ == directory2->target_);
+	// assert(directory1->id_ == directory2->id_);
+
+	printf("Passed Serialized Directory Test\n");
+
+	delete directory1;
+	// delete directory2;
+	delete directorySer;
 }
 
 // non-trivial test of serializing and deserializing bool array
