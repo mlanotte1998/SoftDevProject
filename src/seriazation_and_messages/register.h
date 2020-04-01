@@ -1,8 +1,7 @@
 #pragma once
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include "message.h"
+#include "../utility-classes/string.h"
 
 /**
 Class for a register of an node that would be sent as a message
@@ -17,15 +16,13 @@ to the registrar to then be relayed to other nodes.
  */
 class Register : public Message {
 public:
-	sockaddr_in client_; // sockaddr for the node
+	String* client_ip_; // client_ip for the node, has ownership
 	size_t port_; // port of the node
 
 	/** Register constructor */
-	Register(char* ip, size_t port, size_t sender, size_t target,
-	size_t id) {
-		client_.sin_family = AF_INET;
-		client_.sin_addr.s_addr = inet_addr(ip);
-		client_.sin_port = htons(port);
+	Register(size_t sender, size_t target, size_t id,
+	char* ip, size_t port) {
+		client_ip_ = new String(ip);
 
 		port_ = port;
 
@@ -35,58 +32,38 @@ public:
 		id_ = id;
 	}
 
-	/** Constructs Regiser from serialized Register string */
+
+	/** Constructs Status from serialized Register string */
 	Register(char *ser) {
 			// set kind_ member to Register
 			kind_ = MsgKind::Register;
 
-			// create copy of serialized string
+			// create copy of serialized string to tokenize
 			char ser_copy[MAX_BUFFER_SIZE];
 			memset(ser_copy, 0, MAX_BUFFER_SIZE);
 			strcpy(ser_copy, ser);
 
+			// create copy of serialized string to grab the message from
+			char ser_copy2[MAX_BUFFER_SIZE];
+			memset(ser_copy2, 0, MAX_BUFFER_SIZE);
+			strcpy(ser_copy2, ser);
+
+			// Create a normal message to extract shared fields.
+			Message* temp = new Message(ser);
+			sender_ = temp->sender_;
+			target_ = temp->target_;
+			id_ = temp->id_;
+
+			delete temp;
+
 			// loop through tokens split by spaces
-			char *ser_token = strtok(ser, " ");
+			char *ser_token = strtok(ser_copy, " ");
 			while (ser_token != NULL) {
-					// if p2 value is found add it as sender_ member
-					if (strncmp("-p2_val::", ser_token, strlen("-p2_val::")) == 0) {
-							int key_len = strlen("-p2_val::");
-							char sender_value[MAX_SIZET_BYTES];
-							memset(sender_value, 0, MAX_SIZET_BYTES);
-							strncpy(
-											sender_value,
-											ser_token + key_len,
-											strlen(ser_token) - key_len
-							);
-							sscanf(sender_value, "%zu", &sender_);
-					}
-							// if p3 value is found add it as target_ member
-					else if (strncmp("-p3_val::", ser_token, strlen("-p3_val::")) == 0) {
-							int key_len = strlen("-p3_val::");
-							char target_value[MAX_SIZET_BYTES];
-							memset(target_value, 0, MAX_SIZET_BYTES);
-							strncpy(
-											target_value,
-											ser_token + key_len,
-											strlen(ser_token) - key_len
-							);
-							sscanf(target_value, "%zu", &target_);
-					}
-							// if p4 value is found add it as id_ member
-					else if (strncmp("-p4_val::", ser_token, strlen("-p4_val::")) == 0) {
-							int key_len = strlen("-p4_val::");
-							char id_value[MAX_SIZET_BYTES];
-							memset(id_value, 0, MAX_SIZET_BYTES);
-							strncpy(
-											id_value,
-											ser_token + key_len,
-											strlen(ser_token) - key_len
-							);
-							sscanf(id_value, "%zu", &id_);
-					}
-							// if p5 value is found add it as msg_ member
-					else if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
-							char *p5_value = strstr(ser_copy, "-p5_val::");
+
+							// if p5 value is found add it as client_ip_ member
+					if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
+							char *p5_value = strstr(ser_copy2, "-p5_val::");
+
 							// buffer used to add char* to a string
 							int buffer_size = strlen(p5_value) - strlen("-p5_val::");
 							char buffer[buffer_size];
@@ -106,14 +83,32 @@ public:
 							}
 
 							// create string using token buffer set msg_ to created string
-							String *msg_str = new String(buffer);
-							msg_ = msg_str;
+							String *client_ip = new String(buffer);
+							client_ip_ = client_ip;
 					}
+
+					// if p6 value is found add it as port_ member
+					if (strncmp("-p6_val::", ser_token, strlen("-p6_val::")) == 0) {
+						int p6_key_len = strlen("-p6_val::");
+						char port_value[MAX_SIZET_BYTES];
+						memset(port_value, 0, MAX_SIZET_BYTES);
+						strncpy(
+							port_value,
+							ser_token + p6_key_len,
+							strlen(ser_token) - p6_key_len
+						);
+						sscanf(port_value, "%zu", &port_);
+					}
+
+
 
 					// continue to next token
 					ser_token = strtok(NULL, " ");
 			}
-		}
+	}
 
-
+	/** Register destructor */ 
+	~Register() {
+		delete client_ip_;
+	}
 };

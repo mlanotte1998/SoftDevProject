@@ -217,8 +217,11 @@ class Directory : public Message {
 
 		/** Directory destructor */
 		~Directory() {
-			delete ports_;
-			delete[] addresses_;
+			delete [] ports_;
+			for(size_t i = 0; i < addresses_count_; i++) {
+				delete addresses_[i];
+			}
+			delete [] addresses_;
 		}
 
 };

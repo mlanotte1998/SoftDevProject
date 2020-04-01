@@ -1,5 +1,5 @@
 #include "message.h"
-#include "string.h"
+#include "../utility-classes/string.h"
 
 /**
  * Status::
@@ -41,7 +41,7 @@ public:
         target_ = temp->target_;
         id_ = temp->id_;
 
-        delete temp; 
+        delete temp;
 
         // loop through tokens split by spaces
         char *ser_token = strtok(ser_copy, " ");

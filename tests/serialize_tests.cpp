@@ -248,6 +248,29 @@ void serializeStatus() {
 // test serializing and deserializing a register message
 void serializeRegister() {
 
+	// create register message
+	Register* register1 = new Register(8, 9, 1111, "127.0.0.1", 8000);
+
+	// serialize register message
+	Serializer* registerSer = new Serializer();
+	char* serialized_register = registerSer->serialize(register1);
+
+	// deserialize status message into second ack message object
+	Register* register2 = dynamic_cast<Register*>(registerSer->deserialize());
+
+	// two register messages should be equal
+	assert(register1->kind_ == register2->kind_);
+	assert(register1->sender_ == register2->sender_);
+	assert(register1->target_ == register2->target_);
+	assert(register1->id_ == register2->id_);
+	assert(register1->client_ip_->equals(register2->client_ip_));
+	assert(register1->port_ == register2->port_);
+
+	printf("Passed Serialized Register Test\n");
+
+	delete register1;
+	delete register2;
+	delete registerSer;
 }
 
 // test serializing and deserializing a directory message

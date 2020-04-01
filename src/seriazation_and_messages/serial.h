@@ -8,6 +8,7 @@
 #include "ack.h"
 #include "directory.h"
 #include "status.h"
+#include "register.h"
 #include "../dataframe/constants.h"
 
 /*****************************************************************************
@@ -55,6 +56,12 @@ class Serializer : public Object {
         serialize_directory(dir);
         return buffer_;
       }
+			Register* reg = dynamic_cast<Register*>(obj);
+      if (reg != nullptr) {
+        serialize_message(reg, "Register", 6);
+        serialize_register(reg);
+        return buffer_;
+      }
       Ack* ack = dynamic_cast<Ack*>(obj);
       if (ack != nullptr) {
         serialize_message(ack, "Ack", 5);
@@ -97,6 +104,8 @@ class Serializer : public Object {
     Object* deserialize() {
       if (strncmp(buffer_, STATUS_STRING, STATUS_STRING_SIZE) == 0) {
         return new Status(buffer_);
+      } else if (strncmp(buffer_, REGISTER_STRING, REGISTER_STRING_SIZE) == 0) {
+        return new Register(buffer_);
       } else if (strncmp(buffer_, DIRECTORY_STRING, DIRECTORY_STRING_SIZE) == 0) {
         return new Directory(buffer_);
       } else if (strncmp(buffer_, ACK_STRING, ACK_STRING_SIZE) == 0) {
@@ -259,6 +268,16 @@ class Serializer : public Object {
         append("-p5_name","msg_");
       }
 
+			if (strncmp(type, "Register", 6) == 0) {
+        // append client_ip_ parameter
+        append("-p5_type", "String*");
+        append("-p5_name","client_ip_");
+
+				// append port_ parameter
+        append("-p6_type", "size_t");
+        append("-p6_name","port_");
+      }
+
       if (strncmp(type, "Directory", 9) == 0) {
         // append client_ parameter
         append("-p5_type", "size_t");
@@ -297,10 +316,30 @@ class Serializer : public Object {
       append("-p5_val", msg_str);
     }
 
+
+	   // method for adding register-specific parameters to serialized message
+		 void serialize_register(Register* regis) {
+		    // append the ip string to the end of the serialized
+		    // message object as the p5_val
+		    int ip_size = strlen(regis->client_ip_->c_str()) + 4;
+		      char ip_str[ip_size];
+		      memset(ip_str, 0, ip_size);
+		      strcat(ip_str, "[\"");
+		      strcat(ip_str, regis->client_ip_->c_str());
+		      strcat(ip_str, "\"]");
+		      append("-p5_val", ip_str);
+
+					// append the port number to the end of the serialzed message
+					// object as the p6 val.
+					append("-p6_val", regis->port_);
+		   }
+
+
+
     // method for adding directory-specific parameters to serialized message
     void serialize_directory(Directory* dir) {
       // append the client_, ports_count_, ports_, addresses_count_, and addresses_
-      // to the end of the serialized message object as the 
+      // to the end of the serialized message object as the
       // p5_val, p6_val, p7_val, p8_val, and p9_val
       append("-p5_val", dir->client_);
       append("-p6_val", dir->ports_count_);
@@ -322,7 +361,7 @@ class Serializer : public Object {
       strcat(sizet_arr_str, ")");
 
       append("-p7_val", sizet_arr_str);
-      
+
       append("-p8_val", dir->addresses_count_);
 
       // append addresses values
