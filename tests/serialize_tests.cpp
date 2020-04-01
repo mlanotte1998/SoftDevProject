@@ -254,8 +254,8 @@ void serializeRegister() {
 void serializeDirectory() {
 	size_t ports[3];
 	ports[0] = 1;
-	ports[1] = 2;
-	ports[2] = 3;
+	ports[1] = 22;
+	ports[2] = 333333;
 
 	String* addresses[4];
 	addresses[0] = new String("One");
@@ -282,6 +282,9 @@ void serializeDirectory() {
 	assert(directory1->client_ == directory2->client_);
 	assert(directory1->ports_count_ == directory2->ports_count_);
 	assert(directory1->addresses_count_ == directory2->addresses_count_);
+	for (size_t i = 0; i < 3; i++) {
+		assert(directory1->ports_[i] == directory2->ports_[i]);
+	}
 
 	printf("Passed Serialized Directory Test\n");
 

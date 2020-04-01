@@ -32,13 +32,15 @@ class Directory : public Message {
 		/** Constructs Directory from serialized Directory string */
 		Directory(char* ser) {
 			kind_ = MsgKind::Directory;
+			// ports_count_ initially 0 as it hasn't been read yet
+			ports_count_ = 0;
 
 			// create copy of serialized string to tokenize
 			char ser_copy[MAX_BUFFER_SIZE];
 			memset(ser_copy, 0, MAX_BUFFER_SIZE);
 			strcpy(ser_copy, ser);
 
-			// create copy of serialized string to grab the values from
+			// create copy of serialized string to grab the ports from
 			char ser_copy2[MAX_BUFFER_SIZE];
 			memset(ser_copy2, 0, MAX_BUFFER_SIZE);
 			strcpy(ser_copy2, ser);
@@ -82,7 +84,56 @@ class Directory : public Message {
 
 					// if p7 value is found add it as ports_ member
 					if (strncmp("-p7_val::", ser_token, strlen("-p7_val::")) == 0) {
-					
+						char* p7_value = strstr(ser_copy2, "-p7_val::");
+						// ports_count_ will be defined by the time this is reached
+						ports_ = new size_t[ports_count_];
+
+						char* p7_end = strstr(p7_value, ")");
+						int p7_array_length = p7_end - p7_value;
+
+						// first token is entire array
+						char* p7_token = p7_value;
+						char* p7_token_end;
+						int p7_token_length;
+
+						// buffer used to add char* to a string
+						int p7_buffer_size = p7_array_length;
+						char p7_buffer[p7_buffer_size];
+        		memset(p7_buffer, 0, p7_buffer_size);
+
+						size_t p7_index = 0;
+						bool end_of_p7_array = false;
+						p7_token = strstr(p7_token, "(");
+						while (p7_token != NULL && p7_index < ports_count_ && !end_of_p7_array && p7_token - p7_value <= p7_array_length) {
+							// token starts after delimiter
+							p7_token++;
+
+							// get end of token
+							p7_token_end = strstr(p7_token, ",");
+							if (p7_token_end == NULL || p7_token_end - p7_value > p7_array_length) {
+								p7_token_end = strstr(p7_token, ")");
+								end_of_p7_array = true;
+							}
+
+							// calculate token length
+							p7_token_length = p7_token_end - p7_token;
+
+							// add token to p7_buffer
+							memset(p7_buffer, 0, p7_buffer_size);
+							for (int i = 0; i < p7_token_length; i++) {
+								p7_buffer[i] = p7_token[i];
+							}
+
+							// read in value and add to ports_
+							size_t p7_index_value = 0;
+							sscanf(p7_buffer, "%zu", &p7_index_value);
+							ports_[p7_index] = p7_index_value;
+
+							// move to next token
+							p7_token++;
+							p7_index++;
+							p7_token = strstr(p7_token, ",");
+						}
 					}
 
 					// if p8 value is found add it as addresses_count_ member
