@@ -43,6 +43,8 @@ static const int MAX_ARRAY_SIZE_BYTES = MAX_BUFFER_SIZE - 1000;
 // serialization string constants
 static const char* ACK_STRING = "-o_type::Ack";
 static const int ACK_STRING_SIZE = 12;
+static const char* DIRECTORY_STRING = "-o_type::Directory";
+static const int DIRECTORY_STRING_SIZE = 18;
 static const char* STATUS_STRING = "-o_type::Status";
 static const int STATUS_STRING_SIZE = 15;
 static const char* MESSAGE_STRING = "-o_type::Message";

@@ -97,6 +97,8 @@ class Serializer : public Object {
     Object* deserialize() {
       if (strncmp(buffer_, STATUS_STRING, STATUS_STRING_SIZE) == 0) {
         return new Status(buffer_);
+      } else if (strncmp(buffer_, DIRECTORY_STRING, DIRECTORY_STRING_SIZE) == 0) {
+        return new Directory(buffer_);
       } else if (strncmp(buffer_, ACK_STRING, ACK_STRING_SIZE) == 0) {
         return new Ack(buffer_);
       } else if (strncmp(buffer_, MESSAGE_STRING, MESSAGE_STRING_SIZE) == 0) {

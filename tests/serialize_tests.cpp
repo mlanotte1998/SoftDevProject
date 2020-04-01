@@ -271,20 +271,20 @@ void serializeDirectory() {
 	Serializer* directorySer = new Serializer();
 	char* serialized_directory = directorySer->serialize(directory1);
 
-	printf("%s\n", serialized_directory);
+	// printf("%s\n", serialized_directory);
 
 	// deserialize directory message into second directory message object
-	// Directory* directory2 = dynamic_cast<Directory*>(directorySer->deserialize());
+	Directory* directory2 = dynamic_cast<Directory*>(directorySer->deserialize());
 
-	// // two directory messages should be equal
-	// assert(directory1->sender_ == directory2->sender_);
-	// assert(directory1->target_ == directory2->target_);
-	// assert(directory1->id_ == directory2->id_);
+	// two directory messages should be equal
+	assert(directory1->sender_ == directory2->sender_);
+	assert(directory1->target_ == directory2->target_);
+	assert(directory1->id_ == directory2->id_);
 
 	printf("Passed Serialized Directory Test\n");
 
 	delete directory1;
-	// delete directory2;
+	delete directory2;
 	delete directorySer;
 }
 

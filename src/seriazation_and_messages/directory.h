@@ -28,4 +28,16 @@ class Directory : public Message {
 			addresses_count_ = addresses_count;
 		}
 
+		Directory(char* ser) {
+			kind_ = MsgKind::Directory;
+
+			// Create a normal message to extract shared fields.
+			Message* temp = new Message(ser);
+			sender_ = temp->sender_;
+			target_ = temp->target_;
+			id_ = temp->id_;
+
+			delete temp; 
+		}
+
 };
