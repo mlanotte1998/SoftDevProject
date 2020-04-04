@@ -9,6 +9,8 @@
 #include <string.h>
 #include <thread>
 #include "network-helper.h"
+#include "../seriazation_and_messages/serial.h"
+#include "../seriazation_and_messages/message.h"
 
 /**
  * Function for creating a new poll file descriptor struct with a given fd number and array index.
@@ -139,7 +141,6 @@ public:
      */
     Client(char *own_ip, int port, char *server_ip) {
 
-        std::cout << server_ip << std::endl;
         // Set sock to default and the server_length.
         sock_ = 0;
         server_addrlen_ = sizeof(client_addr_);
@@ -194,7 +195,7 @@ public:
  * When the server dies the clients will no longer be able to read from it and
  * so they shut down.
  */
-class RendezvousServer {
+class RendezvousServer : public Object {
 public:
 
     Server *internalServer_; // The server acting as the registrar server.
@@ -205,8 +206,12 @@ public:
     // Need this to delete the created structs.
     bool listener_added_; // boolean to keep track of if run happened to make
     // sure the listener pfd is only deleted if it was created.
-    char **ip_list_; // List of ip addresses for clients that have joined.
     int *sockets_; // List of socket values for every client that has connected.
+
+    // Directory Values
+    String **ip_list_; // List of ip addresses for clients that have joined.
+    size_t *port_list_; // List of ports for clients that have joined.
+    size_t *nodes_list_; // List of node values for clients that have joined;
     int total_socket_count_; // Count of clients that have connected on a socket.
 
     /**
@@ -225,7 +230,9 @@ public:
         max_clients_ = max_clients;
         pfds_ = new struct pollfd[max_clients_ + 1];
         pfds_list_ = new struct pollfd *[max_clients_ + 1];
-        ip_list_ = new char *[max_clients_];
+        ip_list_ = new String *[max_clients_];
+        port_list_ = new size_t[max_clients_];
+        nodes_list_ = new size_t[max_clients_];
         sockets_ = new int[max_clients_];
         total_socket_count_ = 0;
     }
@@ -237,7 +244,7 @@ public:
         delete internalServer_;
         delete[] pfds_;
         for (int i = 0; i < total_socket_count_; i++) {
-            delete[] ip_list_[i];
+            delete ip_list_[i];
             delete pfds_list_[i + 1];
         }
         if (listener_added_) {
@@ -246,6 +253,8 @@ public:
         delete[] pfds_list_;
         delete[] ip_list_;
         delete[] sockets_;
+        delete[] port_list_;
+        delete[] nodes_list_;
     }
 
 
@@ -291,28 +300,38 @@ public:
         // Read in the message that should be the ip of the client.
         internalServer_->socket_read(sockets_[total_socket_count_], buffer, 1024);
 
-        if (total_socket_count_ == 0) {
-            // If the client is the first one to connect then send a First Client message.
-            char first_ip[13] = {0};
-            strcpy(first_ip, "First Client");
-            internalServer_->socket_send(sockets_[total_socket_count_], first_ip);
-        } else {
-            // If not the first client then send it the list of all previous client's
-            // ip addresses.
-            char *ip_list_string = get_ip_list_string(ip_list_, total_socket_count_);
-            internalServer_->socket_send(sockets_[total_socket_count_], ip_list_string);
-            // delete this the list of all ips.
-            delete[] ip_list_string;
-        }
-
         // Create a new string for this ip and store it.
-        char *new_ip = store_client_ip(buffer, ip_list_, total_socket_count_);
-        printf("Client accepted : %s\n", new_ip);
+        char* serial_string = new char[1024];
+        strcpy(serial_string, buffer);
 
-        // Send the new ip to all clients besides the new one.
+        // Create a serializer to then deserialize into a Register.
+        Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
+        Register* reg = dynamic_cast<Register*>(ser->deserialize());
+
+        // Print the ip of the newly accepted client
+        printf("Client accepted : %s\n", reg->client_ip_->c_str());
+
+        ip_list_[total_socket_count_] = reg->client_ip_->clone();
+        port_list_[total_socket_count_] = reg->port_;
+        nodes_list_[total_socket_count_] = reg->sender_;
+
+        delete ser;
+        delete reg;
+
+        // Send the register to all clients besides the new one.
         for (int i = 0; i < total_socket_count_; i++) {
             internalServer_->socket_send(sockets_[i], buffer);
         }
+
+        Directory* dir = new Directory(3, 10, 9999, 3, total_socket_count_, port_list_,
+        total_socket_count_, ip_list_, total_socket_count_, nodes_list_);
+        Serializer* directorySer = new Serializer();
+        char* serialized_directory = directorySer->serialize(dir);
+
+        internalServer_->socket_send(sockets_[total_socket_count_], serialized_directory);
+
+        delete dir;
+        delete directorySer;
     }
 
     /**
@@ -358,7 +377,7 @@ public:
 /**
  * Node class
  */
-class Node {
+class Node: public Object {
 public:
 
     int max_clients_;// The maximum clients that can join the server.
@@ -368,8 +387,11 @@ public:
     int port_; // Port for this node.
     int IC_other_total_client_count_; // Total other clients known to the network.
     char **IC_ip_list_; // List of the total client ips known to the network.
+    size_t * IC_port_list_; // List of total ports for ips known to the network.
+    size_t * IC_nodes_list_; // List of total nodes for nodes known to the network.
     Client **IC_other_client_connections_; // Client objects for connecting to other nodes.
     int IC_other_client_connections_count_; // Count of client objects for connecting to other nodes.
+    char** IC_other_client_connections_ips_;
 
     // Member variables for the internal server.
     Server *internalServer_; // The internal server object for receiving messages from other clients.
@@ -383,7 +405,8 @@ public:
     int *IS_sockets_; // List of socket values for every client that has connected.
     int IS_total_socket_count_; // Count of clients that have connected on a socket.
 
-    Map* store_map_;
+    Map* store_map_; // store map from application.
+    size_t node_; // node number for the application
 
 
     /**
@@ -393,7 +416,7 @@ public:
      * @param server_ip The ip of the rendezvous server.
      * @param max_clients The maximum number of clients that can be added.
      */
-    Node(char *client_ip, int port, char *server_ip, int max_clients, Map* map) {
+    Node(char *client_ip, int port, char *server_ip, int max_clients, Map* map, size_t node) {
 
         max_clients_ = max_clients;
 
@@ -405,8 +428,11 @@ public:
         IC_other_total_client_count_ = 0;
         internalClient_ = new Client(client_ip_, port_, server_ip);
         IC_other_client_connections_ = new Client *[max_clients_];
+        IC_other_client_connections_ips_ = new char*[max_clients_];
         IC_other_client_connections_count_ = 0;
         IC_ip_list_ = new char *[max_clients_];
+        IC_port_list_ = new size_t[max_clients_];
+        IC_nodes_list_ = new size_t[max_clients_];
 
         // Internal Server config
         internalServer_ = new Server(client_ip_, port_);
@@ -437,6 +463,8 @@ public:
             delete [] IC_ip_list_[i];
         }
         delete [] IC_ip_list_;
+        delete [] IC_port_list_;
+        delete [] IC_nodes_list_;
 
         // Delete Internal Server members
         delete internalServer_;
@@ -576,15 +604,6 @@ public:
     // Functions for communication with registrar.
 
     /**
-     * Function for when the list of other clients known to the rendezvous server is received.
-     * @param buffer Char buffer holding the list message.
-     */
-    void received_ip_list_message(char *buffer) {
-        // Build the list of ips from this message.
-        IC_other_total_client_count_ = build_ip_list(buffer, IC_ip_list_);
-    }
-
-    /**
      * Function for sending a message from a client to another client.
      * @param receiver_ip The ip of the other client that should receive the message.
      */
@@ -610,6 +629,44 @@ public:
 
     }
 
+    void send_register() {
+      char buffer[1024] = {0};
+
+      Register* reg = new Register(node_, 3, 0, client_ip_, port_);
+
+      Serializer* registerSer = new Serializer();
+      char* serialized_register = registerSer->serialize(reg);
+
+      // Copy the register message to the buffer and sent it.
+      strcpy(buffer, serialized_register);
+      internalClient_->socket_send(buffer);
+
+      delete reg;
+      delete registerSer;
+    }
+
+    void add_register(Register* reg) {
+
+      IC_ip_list_[IC_other_total_client_count_] = duplicate(reg->client_ip_->c_str());
+      IC_port_list_[IC_other_total_client_count_] = reg->port_;
+      IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
+      IC_other_total_client_count_++;
+
+      // Print the ip of the newly accepted client
+      printf("New Node joined : %s\n", reg->client_ip_->c_str());
+    }
+
+    void add_directory(Directory* dir) {
+
+      for(int i = 0; i < dir->addresses_count_; i++) {
+        Register* temp = new Register(dir->nodes_[i], 0, 0, dir->addresses_[i]->c_str(), dir->ports_[i]);
+        add_register(temp);
+        delete temp;
+      }
+
+      printf("Directory of size %d received \n", dir->ports_count_);
+    }
+
     /**
      * Function for running the implementation for the node communicating with the
      * Rendezvous Server.
@@ -619,10 +676,8 @@ public:
         // Create buffer for incoming and outgoing messages.
         char buffer[1024] = {0};
 
-        // Create the message to send to the server that is this ip with an -ip tag.
-        strcpy(buffer, "-ip ");
-        strcat(buffer, client_ip_);
-        internalClient_->socket_send(buffer);
+        // Start by sending a register message
+        send_register();
 
         // Loop continuously while connected to the server.
         while (kill_switch[0] != '1') {
@@ -635,22 +690,71 @@ public:
                 kill_switch[0] = '1';
                 return;
             }
-            // If message is the First Client message then print this and do nothing.
-            if (strcmp(buffer, "First Client") == 0) {
-                printf("First client registered, no other IPs known\n");
+
+            // Deserialize the string.
+            char* serial_string = new char[1024];
+            strcpy(serial_string, buffer);
+
+            Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
+            Object* deserialized = ser->deserialize();
+
+            // If a Register is the incoming message then add the new nodes data.
+            if (dynamic_cast<Register*>(deserialized) != nullptr) {
+              Register* reg = dynamic_cast<Register*>(deserialized);
+              add_register(reg);
+              delete reg;
             }
-            // List message received
-            else if ((buffer[0] == '-' && buffer[1] == 'l' && buffer[2] == 'i' &&
-                      buffer[3] == 's' && buffer[4] == 't')) {
-                // Handle receiving a list message from the rendezvous server.
-                received_ip_list_message(buffer);
+            // Else if a directory is the incoming message then copy all of the data
+            // to the values of this node.
+            else if (dynamic_cast<Directory*>(deserialized) != nullptr) {
+              Directory* dir = dynamic_cast<Directory*>(deserialized);
+              add_directory(dir);
+              delete dir;
             }
-            // Getting one singular new ip
-            else if (buffer[0] == '-' && buffer[1] == 'i' && buffer[2] == 'p') {
-                // run the function for handling the one new client added to the network
-                new_ip_received_by_client(IC_ip_list_, IC_other_total_client_count_, buffer);
-                IC_other_total_client_count_++;
-            }
+            delete ser;
         }
+    }
+
+    //---------------------------------------------------------------
+    // Application Specific Functions
+
+    void put(Key k, DataFrame* df) {
+
+      char buffer[1024] = {0};
+
+      bool message_sent = false;
+
+      while(!message_sent) {
+        size_t node_idx = max_clients_;
+        for (int i = 0; i < IC_other_total_client_count_; i++) {
+          if (IC_nodes_list_[i] == k.idx_) {
+            node_idx == i;
+            break;
+          }
+        }
+
+        if (node_idx != max_clients_) {
+          char* target_ip = IC_ip_list_[node_idx];
+          for (int i = 0; i < IC_other_client_connections_count_; i++) {
+            if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
+              Client* cur_client = IC_other_client_connections_[i];
+
+              Message* put_message = new Message(MsgKind::Put, node_, k.idx_, df->ncols());
+
+              Serializer* putSer = new Serializer();
+              char* serialized_put = putSer->serialize(put_message);
+
+              // Copy the register message to the buffer and sent it.
+              strcpy(buffer, serialized_put);
+              cur_client->socket_send(buffer);
+
+              delete put_message;
+              delete putSer;
+
+            }
+          }
+        }
+      }
+
     }
 };

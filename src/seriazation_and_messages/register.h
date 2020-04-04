@@ -107,7 +107,7 @@ public:
 			}
 	}
 
-	/** Register destructor */ 
+	/** Register destructor */
 	~Register() {
 		delete client_ip_;
 	}

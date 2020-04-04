@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "../dataframe/dataframe.h"
 #include "message.h"
 #include "message_kind.h"
 #include "ack.h"
@@ -10,6 +9,13 @@
 #include "status.h"
 #include "register.h"
 #include "../dataframe/constants.h"
+#include "../dataframe/column.h"
+#include "../dataframe/bool_column.h"
+#include "../dataframe/double_column.h"
+#include "../dataframe/float_column.h"
+#include "../dataframe/int_column.h"
+#include "../dataframe/string_column.h"
+
 
 /*****************************************************************************
  * Serializer::
@@ -29,6 +35,11 @@ class Serializer : public Object {
     // constructor for deserialization
     Serializer(unsigned char* bytes) {
       buffer_ = reinterpret_cast<char*>(bytes);
+    }
+
+		// constructor for deserialization
+    Serializer(char* bytes) {
+      buffer_ = bytes;
     }
 
     // destructor for serialization
@@ -294,6 +305,12 @@ class Serializer : public Object {
         // append addresses_ parameter
         append("-p9_type", "String**");
         append("-p9_name","addresses_");
+				// append nodes_count_ paremeter
+				append("-p10_type", "size_t");
+        append("-p10_name","nodes_count_");
+        // append nodes_ parameter
+        append("-p11_type", "size_t*");
+        append("-p11_name","nodes_");
       }
 
       // append object values
@@ -381,6 +398,27 @@ class Serializer : public Object {
       strcat(string_arr_str, ")");
 
       append("-p9_val", string_arr_str);
+
+			// append node count
+			append("-p10_val", dir->nodes_count_);
+
+			// append node values
+      char sizet_arr_str2[MAX_ARRAY_SIZE_BYTES];
+      memset(sizet_arr_str2, 0, MAX_ARRAY_SIZE_BYTES);
+      strcat(sizet_arr_str2, "arr(");
+
+      // create serialized array of size_t
+      int sizet_builder_size2 = MAX_SIZET_BYTES;
+      char sizet_builder2[sizet_builder_size2];
+      for (size_t i = 0; i < dir->nodes_count_; i++) {
+          sprintf(sizet_builder2, "%zu", dir->nodes_[i]);
+          if (dir->nodes_count_ - 1 != i) strcat(sizet_builder2, ",");
+          strcat(sizet_arr_str2, sizet_builder2);
+          memset(sizet_builder2, 0, sizet_builder_size2);
+      }
+      strcat(sizet_arr_str2, ")");
+
+      append("-p11_val", sizet_arr_str2);
     }
 
     // method for serializing a BoolColumn

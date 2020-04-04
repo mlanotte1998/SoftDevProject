@@ -286,13 +286,21 @@ void serializeDirectory() {
 	String* three = new String("Three");
 	String* four = new String("Four");
 
+	size_t nodes[5];
+	nodes[0] = 0;
+	nodes[1] = 1;
+	nodes[2] = 2;
+	nodes[3] = 3;
+	nodes[4] = 6;
+
+
 	addresses[0] = one;
 	addresses[1] = two;
 	addresses[2] = three;
 	addresses[3] = four;
 
 	// create directory message
-	Directory* directory1 = new Directory(8, 9, 1111, 2222, 3, ports, 4, addresses);
+	Directory* directory1 = new Directory(8, 9, 1111, 2222, 3, ports, 4, addresses, 5, nodes);
 
 	// serialize directory message
 	Serializer* directorySer = new Serializer();
@@ -313,6 +321,9 @@ void serializeDirectory() {
 	}
 	for (size_t j = 0; j < 4; j++) {
 		assert(directory1->addresses_[j]->equals(directory2->addresses_[j]));
+	}
+	for (size_t i = 0; i < 5; i++) {
+		assert(directory1->nodes_[i] == directory2->nodes_[i]);
 	}
 
 	printf("Passed Serialized Directory Test\n");

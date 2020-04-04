@@ -10,28 +10,37 @@
  */
 class Directory : public Message {
 	public:
-		size_t client_;
-		size_t ports_count_;
-		size_t* ports_;
-		size_t addresses_count_;
-		String** addresses_;
+		size_t client_; // client that this directory is known by.
+		size_t ports_count_; // count of ports.
+		size_t* ports_; // list of ports.
+		size_t addresses_count_; // count of addresses.
+		String** addresses_; // list of addresses.
+		size_t nodes_count_; // count of nodes.
+		size_t* nodes_; // list of node numbers.
 
 		/** Directory constructor */
-		Directory(size_t sender, size_t target, size_t id, size_t client, size_t ports_count, size_t* ports, size_t addresses_count, String** addresses) {
+		Directory(size_t sender, size_t target, size_t id, size_t client,
+			 size_t ports_count, size_t* ports, size_t addresses_count,
+			 String** addresses, size_t nodes_count , size_t* nodes) {
 			kind_ = MsgKind::Directory;
 			sender_ = sender;
 			target_ = target;
 			id_ = id;
 			client_ = client;
 			ports_count_ = ports_count;
-			ports_ = new size_t[ports_count];
+			ports_ = new size_t[ports_count_];
 			for (size_t i = 0; i < ports_count; i++) {
 				ports_[i] = ports[i];
 			}
 			addresses_count_ = addresses_count;
-			addresses_ = new String*[addresses_count];
+			addresses_ = new String*[addresses_count_];
 			for (size_t j = 0; j < addresses_count; j++) {
 				addresses_[j] = new String(*addresses[j]);
+			}
+			nodes_count_ = nodes_count;
+			nodes_ = new size_t[nodes_count_];
+			for (size_t i = 0; i < ports_count; i++) {
+				nodes_[i] = nodes[i];
 			}
 		}
 
@@ -57,6 +66,11 @@ class Directory : public Message {
 			memset(ser_copy3, 0, MAX_BUFFER_SIZE);
 			strcpy(ser_copy3, ser);
 
+			// create copy of serialized string to grab the nodes from
+			char ser_copy4[MAX_BUFFER_SIZE];
+			memset(ser_copy4, 0, MAX_BUFFER_SIZE);
+			strcpy(ser_copy4, ser);
+
 			// Create a normal message to extract shared fields.
 			Message* temp = new Message(ser);
 			sender_ = temp->sender_;
@@ -65,9 +79,14 @@ class Directory : public Message {
 
 			delete temp;
 
+			bool empty_directory = false;
+
 			// loop through tokens split by spaces
 			char *ser_token = strtok(ser_copy, " ");
+
 			while (ser_token != NULL) {
+
+				if (!empty_directory) {
 					// if p5 value is found add it as client_ member
 					if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
 						int p5_key_len = strlen("-p5_val::");
@@ -92,6 +111,10 @@ class Directory : public Message {
 							strlen(ser_token) - p6_key_len
 						);
 						sscanf(ports_count_value, "%zu", &ports_count_);
+
+						if (ports_count_ == 0) {
+							empty_directory = true;
+						}
 					}
 
 					// if p7 value is found add it as ports_ member
@@ -207,17 +230,93 @@ class Directory : public Message {
 							p9_index++;
 							p9_token = strstr(p9_token, "\"],[\"");
 						}
-
 					}
+
+					// if p10 value is found add it as nodes_count_ member
+					if (strncmp("-p10_val::", ser_token, strlen("-p10_val::")) == 0) {
+						int p10_key_len = strlen("-p10_val::");
+						char nodes_count_value[MAX_SIZET_BYTES];
+						memset(nodes_count_value, 0, MAX_SIZET_BYTES);
+						strncpy(
+							nodes_count_value,
+							ser_token + p10_key_len,
+							strlen(ser_token) - p10_key_len
+						);
+						sscanf(nodes_count_value, "%zu", &nodes_count_);
+					}
+
+					// if p11 value is found add it as nodes_ member
+					if (strncmp("-p11_val::", ser_token, strlen("-p11_val::")) == 0) {
+						char* p11_value = strstr(ser_copy4, "-p11_val::");
+						// ports_count_ will be defined by the time this is reached
+						nodes_ = new size_t[nodes_count_];
+
+						char* p11_end = strstr(p11_value, ")");
+						int p11_array_length = p11_end - p11_value;
+
+						// first token is entire array
+						char* p11_token = p11_value;
+						char* p11_token_end;
+						int p11_token_length;
+
+						// buffer used to add char* to a string
+						int p11_buffer_size = p11_array_length;
+						char p11_buffer[p11_buffer_size];
+        		memset(p11_buffer, 0, p11_buffer_size);
+
+						size_t p11_index = 0;
+						bool end_of_p11_array = false;
+						p11_token = strstr(p11_token, "(");
+						while (p11_token != NULL && p11_index < nodes_count_ && !end_of_p11_array && p11_token - p11_value <= p11_array_length) {
+							// token starts after delimiter
+							p11_token++;
+
+							// get end of token
+							p11_token_end = strstr(p11_token, ",");
+							if (p11_token_end == NULL || p11_token_end - p11_value > p11_array_length) {
+								p11_token_end = strstr(p11_token, ")");
+								end_of_p11_array = true;
+							}
+
+							// calculate token length
+							p11_token_length = p11_token_end - p11_token;
+
+							// add token to p11_buffer
+							memset(p11_buffer, 0, p11_buffer_size);
+							for (int i = 0; i < p11_token_length; i++) {
+								p11_buffer[i] = p11_token[i];
+							}
+
+							// read in value and add to nodes_
+							size_t p11_index_value = 0;
+							sscanf(p11_buffer, "%zu", &p11_index_value);
+							nodes_[p11_index] = p11_index_value;
+
+							// move to next token
+							p11_token++;
+							p11_index++;
+							p11_token = strstr(p11_token, ",");
+						}
+					}
+				}
 
 					// continue to next token
 					ser_token = strtok(NULL, " ");
+			}
+
+			if (empty_directory) {
+				addresses_count_ = 0;
+				nodes_count_ = 0;
+				ports_ = new size_t[1];
+				nodes_ = new size_t[1];
+				addresses_ = new String*[1];
 			}
 		}
 
 		/** Directory destructor */
 		~Directory() {
 			delete [] ports_;
+			delete [] nodes_;
 			for(size_t i = 0; i < addresses_count_; i++) {
 				delete addresses_[i];
 			}

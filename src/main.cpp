@@ -13,7 +13,6 @@ char kill_switch[2] = {0};
 void handle_sigint(int sig)
 {
     kill_switch[0] = '1';
-    std::cout << "hello" << std::endl;
 }
 
 /**
