@@ -19,8 +19,8 @@
  * @param pfds List of pollfds to be added to.
  * @param pfds_list List of pollfd pointers needed to delete the structs, also needs to hold the new struct.
  */
-void create_new_pollfd(int fd_number, int index, struct pollfd* pfds,
-                       struct pollfd** pfds_list) {
+void create_new_pollfd(int fd_number, int index, struct pollfd *pfds,
+                       struct pollfd **pfds_list) {
 
     // Create the struct
     struct pollfd *new_fd = new struct pollfd;
@@ -301,12 +301,12 @@ public:
         internalServer_->socket_read(sockets_[total_socket_count_], buffer, 1024);
 
         // Create a new string for this ip and store it.
-        char* serial_string = new char[1024];
+        char *serial_string = new char[1024];
         strcpy(serial_string, buffer);
 
         // Create a serializer to then deserialize into a Register.
-        Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-        Register* reg = dynamic_cast<Register*>(ser->deserialize());
+        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Register *reg = dynamic_cast<Register *>(ser->deserialize());
 
         // Print the ip of the newly accepted client
         printf("Client accepted : %s\n", reg->client_ip_->c_str());
@@ -323,10 +323,10 @@ public:
             internalServer_->socket_send(sockets_[i], buffer);
         }
 
-        Directory* dir = new Directory(3, 10, 9999, 3, total_socket_count_, port_list_,
-        total_socket_count_, ip_list_, total_socket_count_, nodes_list_);
-        Serializer* directorySer = new Serializer();
-        char* serialized_directory = directorySer->serialize(dir);
+        Directory *dir = new Directory(3, 10, 9999, 3, total_socket_count_, port_list_,
+                                       total_socket_count_, ip_list_, total_socket_count_, nodes_list_);
+        Serializer *directorySer = new Serializer();
+        char *serialized_directory = directorySer->serialize(dir);
 
         internalServer_->socket_send(sockets_[total_socket_count_], serialized_directory);
 
@@ -337,7 +337,7 @@ public:
     /**
      * Function for running the rendezvous server.
      */
-    void run(char* kill_switch) {
+    void run(char *kill_switch) {
 
         // Begin listening.
         int listener = internalServer_->socket_listen();
@@ -377,7 +377,7 @@ public:
 /**
  * Node class
  */
-class Node: public Object {
+class Node : public Object {
 public:
 
     int max_clients_;// The maximum clients that can join the server.
@@ -387,11 +387,11 @@ public:
     int port_; // Port for this node.
     int IC_other_total_client_count_; // Total other clients known to the network.
     char **IC_ip_list_; // List of the total client ips known to the network.
-    size_t * IC_port_list_; // List of total ports for ips known to the network.
-    size_t * IC_nodes_list_; // List of total nodes for nodes known to the network.
+    size_t *IC_port_list_; // List of total ports for ips known to the network.
+    size_t *IC_nodes_list_; // List of total nodes for nodes known to the network.
     Client **IC_other_client_connections_; // Client objects for connecting to other nodes.
     int IC_other_client_connections_count_; // Count of client objects for connecting to other nodes.
-    char** IC_other_client_connections_ips_;
+    char **IC_other_client_connections_ips_;
 
     // Member variables for the internal server.
     Server *internalServer_; // The internal server object for receiving messages from other clients.
@@ -405,7 +405,7 @@ public:
     int *IS_sockets_; // List of socket values for every client that has connected.
     int IS_total_socket_count_; // Count of clients that have connected on a socket.
 
-    Map* store_map_; // store map from application.
+    Map *store_map_; // store map from application.
     size_t node_; // node number for the application
 
 
@@ -416,7 +416,7 @@ public:
      * @param server_ip The ip of the rendezvous server.
      * @param max_clients The maximum number of clients that can be added.
      */
-    Node(char *client_ip, int port, char *server_ip, int max_clients, Map* map, size_t node) {
+    Node(char *client_ip, int port, char *server_ip, int max_clients, Map *map, size_t node) {
 
         max_clients_ = max_clients;
 
@@ -428,7 +428,7 @@ public:
         IC_other_total_client_count_ = 0;
         internalClient_ = new Client(client_ip_, port_, server_ip);
         IC_other_client_connections_ = new Client *[max_clients_];
-        IC_other_client_connections_ips_ = new char*[max_clients_];
+        IC_other_client_connections_ips_ = new char *[max_clients_];
         IC_other_client_connections_count_ = 0;
         IC_ip_list_ = new char *[max_clients_];
         IC_port_list_ = new size_t[max_clients_];
@@ -461,18 +461,18 @@ public:
         }
         delete[] IC_other_client_connections_;
         for (int i = 0; i < IC_other_total_client_count_; i++) {
-            delete [] IC_ip_list_[i];
+            delete[] IC_ip_list_[i];
         }
-        delete [] IC_ip_list_;
-        delete [] IC_port_list_;
-        delete [] IC_nodes_list_;
+        delete[] IC_ip_list_;
+        delete[] IC_port_list_;
+        delete[] IC_nodes_list_;
 
         // Delete Internal Server members
         delete internalServer_;
-        delete [] IS_pfds_;
-        delete [] IS_sockets_;
+        delete[] IS_pfds_;
+        delete[] IS_sockets_;
         for (int i = 0; i < IS_total_socket_count_; i++) {
-            delete [] IS_ip_list_[i];
+            delete[] IS_ip_list_[i];
             // Other clients will be at index i + 1 because the first index is the listener.
             delete IS_pfds_list_[i + 1];
         }
@@ -480,15 +480,15 @@ public:
             // Delete the listener if one was added.
             delete IS_pfds_list_[0];
         }
-        delete [] IS_ip_list_;
-        delete [] IS_pfds_list_;
+        delete[] IS_ip_list_;
+        delete[] IS_pfds_list_;
     }
 
     /**
      * Function for running the node implementation.
      * @param kill_switch Int for being able to kill the program gracefully.
      */
-    void run(char* kill_switch) {
+    void run(char *kill_switch) {
 
         // Start two threads, one for the internal server, and one for the
         // rendezvous server connection.
@@ -505,150 +505,127 @@ public:
     //--------------------------------------------------------------------------
 
     void handle_put(int socket_idx, size_t target) {
-      char buffer[1024] = {0};
+        char buffer[1024] = {0};
 
-      Ack* ack = new Ack(node_, target, 0);
+        Ack *ack = new Ack(node_, target, 0);
 
-      Serializer* ackSer = new Serializer();
-      char* serialized_ack = ackSer->serialize(ack);
+        Serializer *ackSer = new Serializer();
+        char *serialized_ack = ackSer->serialize(ack);
 
-      // Copy the ack message to the buffer and sent it.
-      strcpy(buffer, serialized_ack);
+        // Copy the ack message to the buffer and sent it.
+        strcpy(buffer, serialized_ack);
 
-      internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
 
-      delete ack;
-      delete ackSer;
+        delete ack;
+        delete ackSer;
 
 
-      memset(buffer, 0, 1024);
+        memset(buffer, 0, 1024);
 
-      internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+        internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
-      printf("Receive Key %s\n", buffer);
+        char *serial_string = new char[1024];
+        strcpy(serial_string, buffer);
 
-      char* serial_string = new char[1024];
-      strcpy(serial_string, buffer);
+        Serializer *key_ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Object *key = key_ser->deserialize();
 
-      Serializer* key_ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-      Object* key = key_ser->deserialize();
+        if (dynamic_cast<Status *>(key) != nullptr) {
+            Status *stat = dynamic_cast<Status *>(key);
+            handle_put_receive_dataframe(socket_idx, target, stat->msg_->c_str(), stat->id_);
+        }
 
-      if (dynamic_cast<Status*>(key) != nullptr) {
-        Status* stat = dynamic_cast<Status*>(key);
-        handle_put_receive_dataframe(socket_idx, target, stat->msg_->c_str(), stat->id_);
-      }
-
-      delete key_ser;
-      delete key;
+        delete key_ser;
+        delete key;
 
     }
 
-    void handle_put_receive_dataframe(int socket_idx, size_t target, char* key_name, size_t df_length) {
+    void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
 
     }
 
     void handle_wait_and_get(int socket_idx, size_t target) {
-      char buffer[1024] = {0};
+        char buffer[1024] = {0};
 
-      Ack* ack = new Ack(node_, target, 0);
+        Ack *ack = new Ack(node_, target, 0);
 
-      Serializer* ackSer = new Serializer();
-      char* serialized_ack = ackSer->serialize(ack);
+        Serializer *ackSer = new Serializer();
+        char *serialized_ack = ackSer->serialize(ack);
 
-      // Copy the ack message to the buffer and sent it.
-      strcpy(buffer, serialized_ack);
+        // Copy the ack message to the buffer and sent it.
+        strcpy(buffer, serialized_ack);
 
-      internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
 
-      delete ack;
-      delete ackSer;
+        delete ack;
+        delete ackSer;
 
 
-      memset(buffer, 0, 1024);
+        memset(buffer, 0, 1024);
 
-      internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+        internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
-      printf("Receive Key %s\n", buffer);
+        char *serial_string = new char[1024];
+        strcpy(serial_string, buffer);
 
-      char* serial_string = new char[1024];
-      strcpy(serial_string, buffer);
+        Serializer *key_ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Object *key = key_ser->deserialize();
 
-      Serializer* key_ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-      Object* key = key_ser->deserialize();
+        if (dynamic_cast<Status *>(key) != nullptr) {
+            handle_wait_and_get_dataframe_send(socket_idx, target, dynamic_cast<Status *>(key)->msg_->c_str());
+        }
 
-      if (dynamic_cast<Status*>(key) != nullptr) {
-        handle_wait_and_get_dataframe_send(socket_idx, target, dynamic_cast<Status*>(key)->msg_->c_str());
-      }
-
-      delete key_ser;
-      delete key;
+        delete key_ser;
+        delete key;
     }
 
 
-    void handle_wait_and_get_dataframe_send(int socket_idx, size_t target, char* key_name) {
-      printf("%s\n",  key_name);
+    void handle_wait_and_get_dataframe_send(int socket_idx, size_t target, char *key_name) {
 
-      char buffer[1024] = {0};
+        char buffer[1024] = {0};
 
-      Key* key = new Key(key_name, node_);
+        Key *key = new Key(key_name, node_);
 
-      DataFrame* desired_df = nullptr;
+        DataFrame *desired_df = nullptr;
 
-      while(desired_df == nullptr){
+        while (desired_df == nullptr) {
 
-        if (store_map_->contains_key(key)) {
-          Object* ob = store_map_->get(key);
-          desired_df = dynamic_cast<DataFrame*>(ob);
-          printf(" num cols %d\n", desired_df->ncols() );
+            if (store_map_->contains_key(key)) {
+                Object *ob = store_map_->get(key);
+                desired_df = dynamic_cast<DataFrame *>(ob);
 
-          for (int i = 0; i < desired_df->ncols(); i++) {
-            Column* cur_col = desired_df->cols_[i];
-            Serializer* col_ser = new Serializer();
-            char* col_string = col_ser->serialize(cur_col);
+                for (int i = 0; i < desired_df->ncols(); i++) {
+                    Column *cur_col = desired_df->cols_[i];
+                    Serializer *col_ser = new Serializer();
+                    char *col_string = col_ser->serialize(cur_col);
 
-            printf("%s\n", col_string);
-            // strcpy(buffer, col_string);
+                    Message *wag_for_strlen = new Message(MsgKind::WaitAndGet, node_, target, strlen(col_string));
+                    Serializer *strlen_ser = new Serializer();
+                    char *strlen_string = strlen_ser->serialize(wag_for_strlen);
 
-            Message* wag_for_strlen = new Message(MsgKind::WaitAndGet, node_, target, strlen(col_string));
-            Serializer* strlen_ser = new Serializer();
-            char* strlen_string = strlen_ser->serialize(wag_for_strlen);
+                    strcpy(buffer, strlen_string);
 
-            strcpy(buffer, strlen_string);
+                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
 
-            printf("Buffer : %s\n", buffer);
+                    memset(buffer, 0, 1024);
 
-            internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+                    internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
-            memset(buffer, 0, 1024);
-
-            internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
-
-            printf("Ack : %s\n", buffer);
-
-            std::cout << "Memset above" << std::endl;
-
-            size_t count = 0;
+                    size_t count = 0;
 
 
-            while(count < strlen(col_string)) {
-              memset(buffer, 0, 1024);
-              strncpy(buffer, col_string + count, 1023);
-              buffer[1023] = '\0';
-              internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
-              count += 1023;
+                    while (count < strlen(col_string)) {
+                        memset(buffer, 0, 1024);
+                        strncpy(buffer, col_string + count, 1023);
+                        buffer[1023] = '\0';
+                        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+                        count += 1023;
+                    }
+                }
             }
 
-
-
-
-            //strcpy(buffer, col_string);
-
-
-            std::cout << "socket_send below" << std::endl;
-          }
         }
-
-      }
 
     }
 
@@ -669,22 +646,20 @@ public:
         // Read in the message that should be the ip of the client.
         internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
 
-        printf("%s\n", buffer);
-
         // Deserialize the string.
-        char* serial_string = new char[1024];
+        char *serial_string = new char[1024];
         strcpy(serial_string, buffer);
 
-        Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-        Object* deserialized = ser->deserialize();
+        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Object *deserialized = ser->deserialize();
 
-        if (dynamic_cast<Message*>(deserialized) != nullptr) {
-          Message* mes = dynamic_cast<Message*>(deserialized);
-          if (mes->kind_ == MsgKind::WaitAndGet) {
-            handle_wait_and_get(current_sock_idx, mes->sender_ );
-          } else if (mes->kind_ == MsgKind::Put) {
-            handle_put(current_sock_idx, mes->sender_);
-          }
+        if (dynamic_cast<Message *>(deserialized) != nullptr) {
+            Message *mes = dynamic_cast<Message *>(deserialized);
+            if (mes->kind_ == MsgKind::WaitAndGet) {
+                handle_wait_and_get(current_sock_idx, mes->sender_);
+            } else if (mes->kind_ == MsgKind::Put) {
+                handle_put(current_sock_idx, mes->sender_);
+            }
         }
 
         delete deserialized;
@@ -721,7 +696,7 @@ public:
      * receive messages from other nodes.
      * @param kill_switch
      */
-    void run_internal_server(char* kill_switch) {
+    void run_internal_server(char *kill_switch) {
 
         // Begin listening.
         int listener = internalServer_->socket_listen();
@@ -763,41 +738,41 @@ public:
 
 
     void send_register() {
-      char buffer[1024] = {0};
+        char buffer[1024] = {0};
 
-      Register* reg = new Register(node_, 3, 0, client_ip_, port_);
+        Register *reg = new Register(node_, 3, 0, client_ip_, port_);
 
-      Serializer* registerSer = new Serializer();
-      char* serialized_register = registerSer->serialize(reg);
+        Serializer *registerSer = new Serializer();
+        char *serialized_register = registerSer->serialize(reg);
 
-      // Copy the register message to the buffer and sent it.
-      strcpy(buffer, serialized_register);
-      internalClient_->socket_send(buffer);
+        // Copy the register message to the buffer and sent it.
+        strcpy(buffer, serialized_register);
+        internalClient_->socket_send(buffer);
 
-      delete reg;
-      delete registerSer;
+        delete reg;
+        delete registerSer;
     }
 
-    void add_register(Register* reg) {
+    void add_register(Register *reg) {
 
-      IC_ip_list_[IC_other_total_client_count_] = duplicate(reg->client_ip_->c_str());
-      IC_port_list_[IC_other_total_client_count_] = reg->port_;
-      IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
-      IC_other_total_client_count_++;
+        IC_ip_list_[IC_other_total_client_count_] = duplicate(reg->client_ip_->c_str());
+        IC_port_list_[IC_other_total_client_count_] = reg->port_;
+        IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
+        IC_other_total_client_count_++;
 
-      // Print the ip of the newly accepted client
-      printf("New Node joined : %s\n", reg->client_ip_->c_str());
+        // Print the ip of the newly accepted client
+        printf("New Node joined : %s\n", reg->client_ip_->c_str());
     }
 
-    void add_directory(Directory* dir) {
+    void add_directory(Directory *dir) {
 
-      for(int i = 0; i < dir->addresses_count_; i++) {
-        Register* temp = new Register(dir->nodes_[i], 0, 0, dir->addresses_[i]->c_str(), dir->ports_[i]);
-        add_register(temp);
-        delete temp;
-      }
+        for (int i = 0; i < dir->addresses_count_; i++) {
+            Register *temp = new Register(dir->nodes_[i], 0, 0, dir->addresses_[i]->c_str(), dir->ports_[i]);
+            add_register(temp);
+            delete temp;
+        }
 
-      printf("Directory of size %d received \n", dir->ports_count_);
+        printf("Directory of size %d received \n", dir->ports_count_);
     }
 
     /**
@@ -805,7 +780,7 @@ public:
      * Rendezvous Server.
      * @param kill_switch Int value for knowing when to gracefully kill the program.
      */
-    void run_rendezvous_communication(char* kill_switch) {
+    void run_rendezvous_communication(char *kill_switch) {
         // Create buffer for incoming and outgoing messages.
         char buffer[1024] = {0};
 
@@ -825,24 +800,24 @@ public:
             }
 
             // Deserialize the string.
-            char* serial_string = new char[1024];
+            char *serial_string = new char[1024];
             strcpy(serial_string, buffer);
 
-            Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-            Object* deserialized = ser->deserialize();
+            Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+            Object *deserialized = ser->deserialize();
 
             // If a Register is the incoming message then add the new nodes data.
-            if (dynamic_cast<Register*>(deserialized) != nullptr) {
-              Register* reg = dynamic_cast<Register*>(deserialized);
-              add_register(reg);
-              delete reg;
+            if (dynamic_cast<Register *>(deserialized) != nullptr) {
+                Register *reg = dynamic_cast<Register *>(deserialized);
+                add_register(reg);
+                delete reg;
             }
-            // Else if a directory is the incoming message then copy all of the data
-            // to the values of this node.
-            else if (dynamic_cast<Directory*>(deserialized) != nullptr) {
-              Directory* dir = dynamic_cast<Directory*>(deserialized);
-              add_directory(dir);
-              delete dir;
+                // Else if a directory is the incoming message then copy all of the data
+                // to the values of this node.
+            else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
+                Directory *dir = dynamic_cast<Directory *>(deserialized);
+                add_directory(dir);
+                delete dir;
             }
             delete ser;
         }
@@ -851,329 +826,312 @@ public:
     //---------------------------------------------------------------
     // Application Specific Functions
 
-    void put(Key k, DataFrame* df) {
+    void put(Key k, DataFrame *df) {
 
         char buffer[1024] = {0};
 
         bool message_sent = false;
 
-        while(!message_sent) {
+        while (!message_sent) {
 
-          size_t node_idx = max_clients_;
-          for (int i = 0; i < IC_other_total_client_count_; i++) {
-            if (IC_nodes_list_[i] == k.idx_) {
-              node_idx = i;
-              break;
+            size_t node_idx = max_clients_;
+            for (int i = 0; i < IC_other_total_client_count_; i++) {
+                if (IC_nodes_list_[i] == k.idx_) {
+                    node_idx = i;
+                    break;
+                }
             }
-          }
 
 
-          if (node_idx != max_clients_) {
-            char* target_ip = IC_ip_list_[node_idx];
-            Client* cur_client;
-            for (int i = 0; i < IC_other_client_connections_count_; i++) {
-              if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
-                cur_client = IC_other_client_connections_[i];
+            if (node_idx != max_clients_) {
+                char *target_ip = IC_ip_list_[node_idx];
+                Client *cur_client;
+                for (int i = 0; i < IC_other_client_connections_count_; i++) {
+                    if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
+                        cur_client = IC_other_client_connections_[i];
 
-                Message* wait_message = new Message(MsgKind::Put, node_, k.idx_, 0);
+                        Message *wait_message = new Message(MsgKind::Put, node_, k.idx_, 0);
 
-                Serializer* waitSer = new Serializer();
-                char* serialized_wait = waitSer->serialize(wait_message);
+                        Serializer *waitSer = new Serializer();
+                        char *serialized_wait = waitSer->serialize(wait_message);
 
-                // Copy the register message to the buffer and sent it.
-                strcpy(buffer, serialized_wait);
-                cur_client->socket_send(buffer);
+                        // Copy the register message to the buffer and sent it.
+                        strcpy(buffer, serialized_wait);
+                        cur_client->socket_send(buffer);
 
-                delete wait_message;
-                delete waitSer;
+                        delete wait_message;
+                        delete waitSer;
+
+                        message_sent = true;
+
+                    }
+                }
+
+                if (!message_sent) {
+                    cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
+
+                    IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
+                    IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
+                    IC_other_client_connections_count_++;
+
+                    Message *wait_message = new Message(MsgKind::Put, node_, k.idx_, 0);
+
+                    Serializer *waitSer = new Serializer();
+                    char *serialized_wait = waitSer->serialize(wait_message);
+
+                    // Copy the register message to the buffer and sent it.
+                    strcpy(buffer, serialized_wait);
+                    cur_client->socket_send(buffer);
+
+                    delete wait_message;
+                    delete waitSer;
+                }
 
                 message_sent = true;
 
-              }
+                memset(buffer, 0, 1024);
+
+                cur_client->socket_read(buffer, 1024);
+
+                memset(buffer, 0, 1024);
+
+                String *key_string = new String(k.name_);
+
+                Serializer *df_ser = new Serializer();
+                char *serialized_df = df_ser->serialize(df);
+
+                Status *key_message = new Status(node_, k.idx_, strlen(serialized_df), key_string);
+
+                Serializer *key_ser = new Serializer();
+
+                char *serialized_key = key_ser->serialize(key_message);
+
+                // Copy the register message to the buffer and sent it.
+                strcpy(buffer, serialized_key);
+
+                printf("% Buffer for Put d\n", strlen(buffer));
+                cur_client->socket_send(buffer);
+
+                delete key_message;
+                delete key_ser;
+
+
+                bool end_reached = false;
+
+                Schema s("");
+
+                DataFrame *df = new DataFrame(s);
+
+                while (!end_reached) {
+                    memset(buffer, 0, 1024);
+
+                    cur_client->socket_read(buffer, 1024);
+
+                    // Deserialize the string.
+                    char *serial_string = new char[1024];
+                    strcpy(serial_string, buffer);
+
+                    Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+                    Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
+                    if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
+                        size_t size_of_message = deserialized_mes->id_;
+
+                        Ack *ack = new Ack(node_, k.idx_, 0);
+
+                        Serializer *ackSer = new Serializer();
+                        char *serialized_ack = ackSer->serialize(ack);
+
+                        // Copy the ack message to the buffer and sent it.
+                        strcpy(buffer, serialized_ack);
+
+                        cur_client->socket_send(buffer);
+
+                        delete ack;
+                        delete ackSer;
+
+                        char *new_buffer = new char[size_of_message + 1];
+
+
+                        size_t count = 0;
+
+                        while (count < size_of_message) {
+                            memset(buffer, 0, 1024);
+                            cur_client->socket_read(buffer, 1024);
+                            if (count == 0) {
+                                strcpy(new_buffer, buffer);
+                            } else {
+                                strcat(new_buffer, buffer);
+                            }
+                            count += 1023;
+                        }
+
+                        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
+
+                        df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
+
+
+                        end_reached = true;
+
+                    }
+
+                    delete ser;
+                    delete deserialized_mes;
+
+                }
+            }
+        }
+    }
+
+
+    DataFrame *waitAndGet(Key k) {
+
+        char buffer[1024] = {0};
+
+        bool message_sent = false;
+
+        while (!message_sent) {
+
+            size_t node_idx = max_clients_;
+            for (int i = 0; i < IC_other_total_client_count_; i++) {
+                if (IC_nodes_list_[i] == k.idx_) {
+                    node_idx = i;
+                    break;
+                }
             }
 
-            if (!message_sent) {
-              cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
 
-              IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
-              IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
-              IC_other_client_connections_count_++;
+            if (node_idx != max_clients_) {
+                char *target_ip = IC_ip_list_[node_idx];
+                Client *cur_client;
+                for (int i = 0; i < IC_other_client_connections_count_; i++) {
+                    if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
+                        cur_client = IC_other_client_connections_[i];
 
-              Message* wait_message = new Message(MsgKind::Put, node_, k.idx_, 0);
+                        Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
 
-              Serializer* waitSer = new Serializer();
-              char* serialized_wait = waitSer->serialize(wait_message);
+                        Serializer *waitSer = new Serializer();
+                        char *serialized_wait = waitSer->serialize(wait_message);
 
-              // Copy the register message to the buffer and sent it.
-              strcpy(buffer, serialized_wait);
-              cur_client->socket_send(buffer);
+                        // Copy the register message to the buffer and sent it.
+                        strcpy(buffer, serialized_wait);
+                        cur_client->socket_send(buffer);
 
-              delete wait_message;
-              delete waitSer;
-            }
+                        delete wait_message;
+                        delete waitSer;
 
-            message_sent = true;
+                        message_sent = true;
 
-            memset(buffer, 0 , 1024);
+                    }
+                }
 
-            cur_client->socket_read(buffer, 1024);
+                if (!message_sent) {
+                    cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
 
-            printf("%s\n", buffer);
+                    IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
+                    IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
+                    IC_other_client_connections_count_++;
 
-            memset(buffer, 0 , 1024);
+                    Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
 
-            String* key_string = new String(k.name_);
+                    Serializer *waitSer = new Serializer();
+                    char *serialized_wait = waitSer->serialize(wait_message);
 
-            printf(" node %d\n", node_);
+                    // Copy the register message to the buffer and sent it.
+                    strcpy(buffer, serialized_wait);
+                    cur_client->socket_send(buffer);
 
-            Serializer * df_ser = new Serializer();
-            char* serialized_df = df_ser->serialize(df);
+                    delete wait_message;
+                    delete waitSer;
+                }
 
-            Status* key_message = new Status(node_, k.idx_, strlen(serialized_df), key_string);
+                message_sent = true;
 
-            Serializer* key_ser = new Serializer();
+                memset(buffer, 0, 1024);
 
-            char* serialized_key = key_ser->serialize(key_message);
+                cur_client->socket_read(buffer, 1024);
 
-            // Copy the register message to the buffer and sent it.
-            strcpy(buffer, serialized_key);
+                memset(buffer, 0, 1024);
 
-            printf("% Buffer for Put d\n", strlen(buffer) );
-            cur_client->socket_send(buffer);
+                String *key_string = new String(k.name_);
 
-            delete key_message;
-            delete key_ser;
+                Status *key_message = new Status(node_, k.idx_, k.idx_, key_string);
 
+                Serializer *key_ser = new Serializer();
 
-            bool end_reached = false;
+                char *serialized_key = key_ser->serialize(key_message);
 
-            Schema s("");
-
-            DataFrame* df = new DataFrame(s);
-
-            while(!end_reached) {
-              memset(buffer, 0 , 1024);
-
-              cur_client->socket_read(buffer, 1024);
-
-              printf("%s\n",buffer );
-
-              // Deserialize the string.
-              char* serial_string = new char[1024];
-              strcpy(serial_string, buffer);
-
-              Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-              Message* deserialized_mes = dynamic_cast<Message*>(ser->deserialize());
-              if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
-                size_t size_of_message = deserialized_mes->id_;
-
-                Ack* ack = new Ack(node_, k.idx_, 0);
-
-                Serializer* ackSer = new Serializer();
-                char* serialized_ack = ackSer->serialize(ack);
-
-                // Copy the ack message to the buffer and sent it.
-                strcpy(buffer, serialized_ack);
+                // Copy the register message to the buffer and sent it.
+                strcpy(buffer, serialized_key);
 
                 cur_client->socket_send(buffer);
 
-                delete ack;
-                delete ackSer;
+                delete key_message;
+                delete key_ser;
 
-                char* new_buffer = new char[size_of_message + 1];
+                bool end_reached = false;
+
+                Schema s("");
+
+                DataFrame *df = new DataFrame(s);
+
+                while (!end_reached) {
+                    memset(buffer, 0, 1024);
+
+                    cur_client->socket_read(buffer, 1024);
+
+                    // Deserialize the string.
+                    char *serial_string = new char[1024];
+                    strcpy(serial_string, buffer);
+
+                    Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+                    Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
+                    if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
+                        size_t size_of_message = deserialized_mes->id_;
+
+                        Ack *ack = new Ack(node_, k.idx_, 0);
+
+                        Serializer *ackSer = new Serializer();
+                        char *serialized_ack = ackSer->serialize(ack);
+
+                        // Copy the ack message to the buffer and sent it.
+                        strcpy(buffer, serialized_ack);
+
+                        cur_client->socket_send(buffer);
+
+                        delete ack;
+                        delete ackSer;
+
+                        char *new_buffer = new char[size_of_message + 1];
 
 
-                size_t count = 0;
+                        size_t count = 0;
 
-                while(count < size_of_message) {
-                  memset(buffer, 0, 1024);
-                  cur_client->socket_read(buffer, 1024);
-                  if (count == 0) {
-                    strcpy(new_buffer, buffer);
-                  } else {
-                    strcat(new_buffer, buffer);
-                  }
-                  count += 1023;
+                        while (count < size_of_message) {
+                            memset(buffer, 0, 1024);
+                            cur_client->socket_read(buffer, 1024);
+                            if (count == 0) {
+                                strcpy(new_buffer, buffer);
+                            } else {
+                                strcat(new_buffer, buffer);
+                            }
+                            count += 1023;
+                        }
+
+                        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
+
+                        df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
+
+
+                        end_reached = true;
+
+                    }
+
+                    delete ser;
+                    delete deserialized_mes;
+
+                    return df;
                 }
-
-                printf("%s\n", new_buffer);
-
-                Serializer* col_ser = new Serializer(reinterpret_cast<unsigned char*>(new_buffer));
-
-                df->add_column(dynamic_cast<Column*>(col_ser->deserialize()));
-
-
-                end_reached = true;
-
-              }
-
-              delete ser;
-              delete deserialized_mes;
-
             }
-          }
         }
-      }
-
-
-    DataFrame* waitAndGet(Key k) {
-
-      char buffer[1024] = {0};
-
-      bool message_sent = false;
-
-      while(!message_sent) {
-
-        size_t node_idx = max_clients_;
-        for (int i = 0; i < IC_other_total_client_count_; i++) {
-          if (IC_nodes_list_[i] == k.idx_) {
-            node_idx = i;
-            break;
-          }
-        }
-
-
-        if (node_idx != max_clients_) {
-          char* target_ip = IC_ip_list_[node_idx];
-          Client* cur_client;
-          for (int i = 0; i < IC_other_client_connections_count_; i++) {
-            if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
-              cur_client = IC_other_client_connections_[i];
-
-              Message* wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
-
-              Serializer* waitSer = new Serializer();
-              char* serialized_wait = waitSer->serialize(wait_message);
-
-              // Copy the register message to the buffer and sent it.
-              strcpy(buffer, serialized_wait);
-              cur_client->socket_send(buffer);
-
-              delete wait_message;
-              delete waitSer;
-
-              message_sent = true;
-
-            }
-          }
-
-          if (!message_sent) {
-            cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
-
-            IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
-            IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
-            IC_other_client_connections_count_++;
-
-            Message* wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
-
-            Serializer* waitSer = new Serializer();
-            char* serialized_wait = waitSer->serialize(wait_message);
-
-            // Copy the register message to the buffer and sent it.
-            strcpy(buffer, serialized_wait);
-            cur_client->socket_send(buffer);
-
-            delete wait_message;
-            delete waitSer;
-          }
-
-          message_sent = true;
-
-          memset(buffer, 0 , 1024);
-
-          cur_client->socket_read(buffer, 1024);
-
-          printf("%s\n", buffer);
-
-          memset(buffer, 0 , 1024);
-
-          String* key_string = new String(k.name_);
-
-          printf(" node %d\n", node_);
-
-          Status* key_message = new Status(node_, k.idx_, k.idx_, key_string);
-
-          Serializer* key_ser = new Serializer();
-
-          char* serialized_key = key_ser->serialize(key_message);
-
-          // Copy the register message to the buffer and sent it.
-          strcpy(buffer, serialized_key);
-
-          printf("%d\n", strlen(buffer) );
-          cur_client->socket_send(buffer);
-
-          delete key_message;
-          delete key_ser;
-
-          bool end_reached = false;
-
-          Schema s("");
-
-          DataFrame* df = new DataFrame(s);
-
-          while(!end_reached) {
-            memset(buffer, 0 , 1024);
-
-            cur_client->socket_read(buffer, 1024);
-
-            printf("%s\n",buffer );
-
-            // Deserialize the string.
-            char* serial_string = new char[1024];
-            strcpy(serial_string, buffer);
-
-            Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
-            Message* deserialized_mes = dynamic_cast<Message*>(ser->deserialize());
-            if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
-              size_t size_of_message = deserialized_mes->id_;
-
-              Ack* ack = new Ack(node_, k.idx_, 0);
-
-              Serializer* ackSer = new Serializer();
-              char* serialized_ack = ackSer->serialize(ack);
-
-              // Copy the ack message to the buffer and sent it.
-              strcpy(buffer, serialized_ack);
-
-              cur_client->socket_send(buffer);
-
-              delete ack;
-              delete ackSer;
-
-              char* new_buffer = new char[size_of_message + 1];
-
-
-              size_t count = 0;
-
-              while(count < size_of_message) {
-                memset(buffer, 0, 1024);
-                cur_client->socket_read(buffer, 1024);
-                if (count == 0) {
-                  strcpy(new_buffer, buffer);
-                } else {
-                  strcat(new_buffer, buffer);
-                }
-                count += 1023;
-              }
-
-              printf("%s\n", new_buffer);
-
-              Serializer* col_ser = new Serializer(reinterpret_cast<unsigned char*>(new_buffer));
-
-              df->add_column(dynamic_cast<Column*>(col_ser->deserialize()));
-
-
-              end_reached = true;
-
-            }
-
-            delete ser;
-            delete deserialized_mes;
-
-            return df;
-          }
-        }
-      }
     }
 };

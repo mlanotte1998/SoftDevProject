@@ -131,7 +131,6 @@ public:
         bool valid = col->size() == nrows() || nrows() == 0;
         exit_if_not(valid, invalid_col_size);
         if (nrows() == 0) length_ = col->size();
-        std::cout << length_ << "Length : " << std::endl; 
         // add column data to dataframe
         Column **grow_cols_ = new Column *[schema_->width() + 1];
         for (size_t col_idx = 0; col_idx < schema_->width(); col_idx++) {
@@ -170,7 +169,6 @@ public:
         exit_if_not(col < ncols(), col_index_out_of_bounds);
         DoubleColumn *column = cols_[col]->as_double();
         exit_if_not(column != nullptr, non_double_col);
-        std::cout << "Size :" << column->size_ << std::endl;
         exit_if_not(row < column->size(), row_index_out_of_bounds);
         return column->get(row);
     }

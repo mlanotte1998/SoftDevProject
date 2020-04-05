@@ -98,12 +98,10 @@ public:
             Map_Node* iterator = bucket_value;
             while (iterator != nullptr) {
                 // if hash is found return associated value
-                printf("%s\n", "Weird as shit Maybe" );
                 if (iterator->hash_ == key_hash) return iterator->get_value();
                 iterator = iterator->next_;
             }
         }
-        printf("%s\n", "Weird as shit" );
         return nullptr;
     }
 

@@ -100,7 +100,6 @@ class Serializer : public Object {
       }
       DoubleColumn* double_col = dynamic_cast<DoubleColumn*>(obj);
       if (double_col != nullptr) {
-				std::cout << "Whats up?? " << std::endl;
         serialize_double_col(double_col);
         return buffer_;
       }

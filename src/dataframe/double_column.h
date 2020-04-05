@@ -73,8 +73,6 @@ public:
             }
             ser_token = strtok(NULL, " ");
         }
-
-        std::cout << "size? " << size_ << std::endl; 
     }
 
     /***
