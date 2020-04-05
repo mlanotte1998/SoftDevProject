@@ -33,8 +33,6 @@ public:
         DataFrame* d1 = DataFrame::fromArray(&main, kv, SZ, vals);
         DataFrame* d2 = DataFrame::fromScalar(&check, kv, sum);
 
-        delete d1;
-        delete d2;
         delete [] vals;
     }
 

@@ -104,8 +104,6 @@ public:
         delete row;
         kdStore->put(*key, df);
 
-        std::cout << val << std::endl;
-
         return df;
     }
 

@@ -98,10 +98,12 @@ public:
             Map_Node* iterator = bucket_value;
             while (iterator != nullptr) {
                 // if hash is found return associated value
+                printf("%s\n", "Weird as shit Maybe" );
                 if (iterator->hash_ == key_hash) return iterator->get_value();
                 iterator = iterator->next_;
             }
         }
+        printf("%s\n", "Weird as shit" );
         return nullptr;
     }
 
@@ -114,6 +116,7 @@ public:
     bool contains_key(Object* key) {
         // find the index where this key would be stored based on its hash
         size_t key_hash = key->hash();
+        printf("%d\n", key_hash);
         int key_idx = key_hash % bucket_size_;
         // if data exists at this index search for key hash in linked list
         Map_Node* bucket_value = map_[key_idx];
@@ -149,7 +152,7 @@ public:
             if (bucket_value->hash_ == key_hash) {
                 target = bucket_value;
                 map_[key_idx] = bucket_value->next_;
-            } 
+            }
             // search the rest of the list for the target and remove it from list
             else {
                 Map_Node* iterator = bucket_value;
@@ -260,7 +263,7 @@ public:
             // if it does replace its value
             if (iterator->hash_ == key_hash) {
                 iterator->replace_value(val);
-            } 
+            }
             // if it does not add it to end of the list
             else {
                 iterator->next_ = new Map_Node(key_hash, val);

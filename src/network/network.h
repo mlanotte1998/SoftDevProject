@@ -445,6 +445,7 @@ public:
         IS_total_socket_count_ = 0;
 
         store_map_ = map;
+        node_ = node;
     }
 
     /**
@@ -516,16 +517,56 @@ public:
 
       internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
 
+      delete ack;
+      delete ackSer;
+
+
+      memset(buffer, 0, 1024);
+
+      internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+
+      printf("Receive Key %s\n", buffer);
+
+      char* serial_string = new char[1024];
+      strcpy(serial_string, buffer);
+
+      Serializer* key_ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
+      Object* key = key_ser->deserialize();
+
+      if (dynamic_cast<Status*>(key) != nullptr) {
+        handle_wait_and_get_dataframe_send(socket_idx, dynamic_cast<Status*>(key)->msg_->c_str());
+      }
+
+      delete key_ser;
+      delete key;
     }
+
+
+    void handle_wait_and_get_dataframe_send(int socket_idx, char* key_name) {
+      printf("%s\n",  key_name);
+
+      Key* key = new Key(key_name, node_);
+
+      DataFrame* desired_df = nullptr;
+
+      while(desired_df == nullptr){
+
+        if (store_map_->contains_key(key)) {
+          printf("  %s\n", "Fuck???");
+          Object* ob = store_map_->get(key);
+          desired_df = dynamic_cast<DataFrame*>(ob);
+          //printf(" num cols %d\n", desired_df->ncols() );
+        }
+        printf("  %s\n", "Fuck");
+
+      }
+
+    }
+
 
     /**
      * Handles a client joining the network
-     * @param s Server object.
-     * @param sockets List of sockets.
-     * @param total_socket_count Number of sockets not the listener.
-     * @param fd_count Count of all sockets including the listener.
      * @param buffer A string buffer that is being passed around for handling most messages.
-     * @param ip_list List of ips that have connected to the server.
      */
     void accept_new_client(char *buffer) {
         // Accept the socket or error if bad acception which is a return of -1
@@ -853,8 +894,26 @@ public:
 
           printf("%s\n", buffer);
 
+          memset(buffer, 0 , 1024);
 
+          String* key_string = new String(k.name_);
 
+          printf(" node %d\n", node_);
+
+          Status* key_message = new Status(node_, k.idx_, k.idx_, key_string);
+
+          Serializer* key_ser = new Serializer();
+
+          char* serialized_key = key_ser->serialize(key_message);
+
+          // Copy the register message to the buffer and sent it.
+          strcpy(buffer, serialized_key);
+
+          printf("%d\n", strlen(buffer) );
+          cur_client->socket_send(buffer);
+
+          delete key_message;
+          delete key_ser;
 
         }
       }

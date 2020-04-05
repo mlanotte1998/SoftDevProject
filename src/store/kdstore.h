@@ -82,6 +82,7 @@ void KDStore::put(Key key, DataFrame* value) {
     size_t key_idx = key.get_idx();
     if (key_idx == idx_) {
         map_->put(&key, value);
+        map_->contains_key(&key); 
     } else {
       n_->put(key, value);
     }
