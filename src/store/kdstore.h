@@ -23,7 +23,7 @@ public:
     KDStore(size_t idx);
 
     /** KDStore destructor */
-    ~KDStore(); 
+    ~KDStore();
 
     /** Get Dataframe from KDStore by Kev object */
     DataFrame* get(Key key);
@@ -70,9 +70,10 @@ DataFrame* KDStore::waitAndGet(Key key) {
       while(n_ == nullptr) {
         // do nothing but wait
       }
+      n_->waitAndGet(key);
       std::cout << "cool" << std::endl;
-      strcpy(node_ip, "127.0.0.2");
-      n_->ask_other_node_for_dataframe(node_ip, "hello");
+      //strcpy(node_ip, "127.0.0.2");
+      //n_->ask_other_node_for_dataframe(node_ip, "hello");
       return nullptr;
     }
 }
@@ -93,17 +94,17 @@ void KDStore::run_network(char* kill_switch) {
     if (idx_ == 0) {
       char node_ip[10] = {0};
       strcpy(node_ip, "127.0.0.2");
-      n_ = new Node(node_ip, 8080, rendezvous_ip, 5, map_, idx_);
+      n_ = new Node(node_ip, 8081, rendezvous_ip, 5, map_, idx_);
       n_->run(kill_switch);
     } else if (idx_ == 1) {
         char node_ip[10] = {0};
         strcpy(node_ip, "127.0.0.3");
-        n_ = new Node(node_ip, 8080, rendezvous_ip, 5, map_, idx_);
+        n_ = new Node(node_ip, 8081, rendezvous_ip, 5, map_, idx_);
         n_->run(kill_switch);
     } else if (idx_ == 2) {
         char node_ip[10] = {0};
         strcpy(node_ip, "127.0.0.4");
-        n_ = new Node(node_ip, 8080, rendezvous_ip,  5, map_, idx_);
+        n_ = new Node(node_ip, 8081, rendezvous_ip,  5, map_, idx_);
         n_->run(kill_switch);
     }
 }

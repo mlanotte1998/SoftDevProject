@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     if (x == 3) {
       char rendezvous_ip[10] = {0};
       strcpy(rendezvous_ip, "127.0.0.1");
-      RendezvousServer r(rendezvous_ip, 8080, 5);
+      RendezvousServer r(rendezvous_ip, 8081, 5);
       r.run(kill_switch);
     } else {
 

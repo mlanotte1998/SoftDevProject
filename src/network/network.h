@@ -501,6 +501,23 @@ public:
         rendezvous_server_thread.join();
     }
 
+    //--------------------------------------------------------------------------
+
+    void handle_wait_and_get(int socket_idx, size_t target) {
+      char buffer[1024] = {0};
+
+      Ack* ack = new Ack(node_, target, 0);
+
+      Serializer* ackSer = new Serializer();
+      char* serialized_ack = ackSer->serialize(ack);
+
+      // Copy the ack message to the buffer and sent it.
+      strcpy(buffer, serialized_ack);
+
+      internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+
+    }
+
     /**
      * Handles a client joining the network
      * @param s Server object.
@@ -517,20 +534,29 @@ public:
             exit(EXIT_FAILURE);
         }
 
+        int current_sock_idx = IS_total_socket_count_;
+
         // Read in the message that should be the ip of the client.
-        internalServer_->socket_read(IS_sockets_[IS_total_socket_count_], buffer, 1024);
+        internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
 
-        // Send an acknowledge message back
-        char ack[13] = {0};
-        strcpy(ack, "-acknowledge");
-        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], ack);
-
-        // Create a new string for this ip and store it.
-        char* new_ip_from_message = get_ip_from_client_message(buffer);
-        char *new_ip = store_client_ip(new_ip_from_message, IS_ip_list_, IS_total_socket_count_);
-        delete [] new_ip_from_message;
-        printf("Other client accepted: %s\n", new_ip);
         printf("%s\n", buffer);
+
+        // Deserialize the string.
+        char* serial_string = new char[1024];
+        strcpy(serial_string, buffer);
+
+        Serializer* ser = new Serializer(reinterpret_cast<unsigned char*>(serial_string));
+        Object* deserialized = ser->deserialize();
+
+        if (dynamic_cast<Message*>(deserialized) != nullptr) {
+          Message* mes = dynamic_cast<Message*>(deserialized);
+          if (mes->kind_ == MsgKind::WaitAndGet) {
+            handle_wait_and_get(current_sock_idx, mes->sender_ );
+          }
+        }
+
+        delete deserialized;
+        delete ser;
     }
 
     /**
@@ -756,5 +782,81 @@ public:
         }
       }
 
+    }
+
+    void waitAndGet(Key k) {
+
+      char buffer[1024] = {0};
+
+      bool message_sent = false;
+
+      while(!message_sent) {
+
+        size_t node_idx = max_clients_;
+        for (int i = 0; i < IC_other_total_client_count_; i++) {
+          if (IC_nodes_list_[i] == k.idx_) {
+            node_idx = i;
+            break;
+          }
+        }
+
+
+        if (node_idx != max_clients_) {
+          char* target_ip = IC_ip_list_[node_idx];
+          Client* cur_client;
+          for (int i = 0; i < IC_other_client_connections_count_; i++) {
+            if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
+              cur_client = IC_other_client_connections_[i];
+
+              Message* wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
+
+              Serializer* waitSer = new Serializer();
+              char* serialized_wait = waitSer->serialize(wait_message);
+
+              // Copy the register message to the buffer and sent it.
+              strcpy(buffer, serialized_wait);
+              cur_client->socket_send(buffer);
+
+              delete wait_message;
+              delete waitSer;
+
+              message_sent = true;
+
+            }
+          }
+
+          if (!message_sent) {
+            cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
+
+            IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
+            IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
+            IC_other_client_connections_count_++;
+
+            Message* wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
+
+            Serializer* waitSer = new Serializer();
+            char* serialized_wait = waitSer->serialize(wait_message);
+
+            // Copy the register message to the buffer and sent it.
+            strcpy(buffer, serialized_wait);
+            cur_client->socket_send(buffer);
+
+            delete wait_message;
+            delete waitSer;
+          }
+
+          message_sent = true;
+
+          memset(buffer, 0 , 1024);
+
+          cur_client->socket_read(buffer, 1024);
+
+          printf("%s\n", buffer);
+
+
+
+
+        }
+      }
     }
 };
