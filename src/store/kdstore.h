@@ -70,11 +70,9 @@ DataFrame* KDStore::waitAndGet(Key key) {
       while(n_ == nullptr) {
         // do nothing but wait
       }
-      n_->waitAndGet(key);
-      std::cout << "cool" << std::endl;
+      return n_->waitAndGet(key);
       //strcpy(node_ip, "127.0.0.2");
       //n_->ask_other_node_for_dataframe(node_ip, "hello");
-      return nullptr;
     }
 }
 
@@ -82,7 +80,7 @@ void KDStore::put(Key key, DataFrame* value) {
     size_t key_idx = key.get_idx();
     if (key_idx == idx_) {
         map_->put(&key, value);
-        map_->contains_key(&key); 
+        map_->contains_key(&key);
     } else {
       n_->put(key, value);
     }

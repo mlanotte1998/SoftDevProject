@@ -22,8 +22,6 @@ class Key : public Object {
 
 		/** Method for calculating Key equality */
 		bool equals(Key other) {
-			printf("%s %s\n", name_, other.name_  );
-			printf("%d %d\n", idx_, other.idx_  );
 			return name_ == other.name_ && idx_ == other.idx_;
 		}
 
@@ -37,9 +35,7 @@ class Key : public Object {
 			size_t hash = 0;
 			for (size_t i = 0; i < strlen(name_); ++i) {
 				hash = name_[i] + (hash << 6) + (hash << 16) - hash;
-						printf("hash %d %d \n", i, hash);
 			}
-			printf("idx %d\n", idx_);
 			hash += idx_;
 			return hash;
 		}

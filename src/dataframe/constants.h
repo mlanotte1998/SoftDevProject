@@ -37,8 +37,10 @@ static const int MAX_DOUBLE_BYTES = 20;
 static const int MAX_STRING_BYTES = 2048;
 
 // maximum byte bounds for serialization
-static const int MAX_BUFFER_SIZE = 10000;
-static const int MAX_ARRAY_SIZE_BYTES = MAX_BUFFER_SIZE - 1000;
+static const int MAX_BUFFER_SIZE_STANDARD = 10000;
+static const int MAX_BUFFER_SIZE_LARGE = 5000000;
+static const int MAX_ARRAY_SIZE_BYTES_STANDARD = MAX_BUFFER_SIZE_STANDARD - 1000;
+static const int MAX_ARRAY_SIZE_BYTES_LARGE = MAX_BUFFER_SIZE_LARGE - 1000;
 
 // serialization string constants
 static const char* ACK_STRING = "-o_type::Ack";

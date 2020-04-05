@@ -28,7 +28,7 @@ class Serializer : public Object {
 
     // constructor for serialization
     Serializer() {
-      buffer_ = new char[MAX_BUFFER_SIZE];
+      buffer_ = new char[MAX_BUFFER_SIZE_STANDARD];
 			strcpy(buffer_, "");
     }
 
@@ -100,6 +100,7 @@ class Serializer : public Object {
       }
       DoubleColumn* double_col = dynamic_cast<DoubleColumn*>(obj);
       if (double_col != nullptr) {
+				std::cout << "Whats up?? " << std::endl;
         serialize_double_col(double_col);
         return buffer_;
       }
@@ -191,6 +192,11 @@ class Serializer : public Object {
     // method for serializing common parameters of columns
     // helper method called by each column serialization method
     void serialize_col_class(const char* type) {
+
+
+			delete [] buffer_;
+			buffer_ = new char[MAX_BUFFER_SIZE_LARGE];
+
       const char* title;
       const char* arr_type;
       if (strncmp(type, "B", 1) == 0) {
@@ -362,8 +368,8 @@ class Serializer : public Object {
       append("-p6_val", dir->ports_count_);
 
       // append ports values
-      char sizet_arr_str[MAX_ARRAY_SIZE_BYTES];
-      memset(sizet_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
+      char sizet_arr_str[MAX_ARRAY_SIZE_BYTES_STANDARD];
+      memset(sizet_arr_str, 0, MAX_ARRAY_SIZE_BYTES_STANDARD);
       strcat(sizet_arr_str, "arr(");
 
       // create serialized array of size_t
@@ -382,8 +388,8 @@ class Serializer : public Object {
       append("-p8_val", dir->addresses_count_);
 
       // append addresses values
-      char string_arr_str[MAX_ARRAY_SIZE_BYTES];
-      memset(string_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
+      char string_arr_str[MAX_ARRAY_SIZE_BYTES_STANDARD];
+      memset(string_arr_str, 0, MAX_ARRAY_SIZE_BYTES_STANDARD);
       strcat(string_arr_str, "arr(");
 
       // create serialized array of strings
@@ -403,8 +409,8 @@ class Serializer : public Object {
 			append("-p10_val", dir->nodes_count_);
 
 			// append node values
-      char sizet_arr_str2[MAX_ARRAY_SIZE_BYTES];
-      memset(sizet_arr_str2, 0, MAX_ARRAY_SIZE_BYTES);
+      char sizet_arr_str2[MAX_ARRAY_SIZE_BYTES_STANDARD];
+      memset(sizet_arr_str2, 0, MAX_ARRAY_SIZE_BYTES_STANDARD);
       strcat(sizet_arr_str2, "arr(");
 
       // create serialized array of size_t
@@ -426,10 +432,10 @@ class Serializer : public Object {
       // append classname and params
       serialize_col_class("B");
 
-      // append column array values
-      char bool_arr_str[MAX_ARRAY_SIZE_BYTES];
-      memset(bool_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
-      strcat(bool_arr_str, "arr(");
+				// append column array values
+	      char bool_arr_str[MAX_ARRAY_SIZE_BYTES_LARGE];
+	      memset(bool_arr_str, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
+	      strcat(bool_arr_str, "arr(");
 
       // create serialized array of bools
       int builder_size = MAX_BOOL_BYTES;
@@ -453,10 +459,12 @@ class Serializer : public Object {
     // append classname and params
     serialize_col_class("I");
 
-    // append column array values
-    char int_arr_str[MAX_ARRAY_SIZE_BYTES];
-    memset(int_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
-    strcat(int_arr_str, "arr(");
+
+			// append column array values
+			char int_arr_str[MAX_ARRAY_SIZE_BYTES_LARGE];
+			memset(int_arr_str, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
+			strcat(int_arr_str, "arr(");
+
 
     // create serialized array of integers
     int builder_size = MAX_INT_BYTES;
@@ -480,10 +488,11 @@ class Serializer : public Object {
     // append classname and params
     serialize_col_class("F");
 
-    // append column array values
-    char float_arr_str[MAX_ARRAY_SIZE_BYTES];
-    memset(float_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
-    strcat(float_arr_str, "arr(");
+			// append column array values
+			char float_arr_str[MAX_ARRAY_SIZE_BYTES_LARGE];
+			memset(float_arr_str, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
+			strcat(float_arr_str, "arr(");
+
 
     // create serialized array of floats
     int builder_size = MAX_FLOAT_BYTES;
@@ -507,10 +516,12 @@ class Serializer : public Object {
     // append classname and params
     serialize_col_class("D");
 
-    // append column array values
-    char double_arr_str[MAX_ARRAY_SIZE_BYTES];
-    memset(double_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
-    strcat(double_arr_str, "arr(");
+
+			// append column array values
+			char double_arr_str[MAX_ARRAY_SIZE_BYTES_LARGE];
+			memset(double_arr_str, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
+			strcat(double_arr_str, "arr(");
+
 
     // create serialized array of doubles
     int builder_size = MAX_DOUBLE_BYTES;
@@ -535,8 +546,8 @@ class Serializer : public Object {
     serialize_col_class("S");
 
     // append column array values
-    char string_arr_str[MAX_ARRAY_SIZE_BYTES];
-    memset(string_arr_str, 0, MAX_ARRAY_SIZE_BYTES);
+    char string_arr_str[MAX_ARRAY_SIZE_BYTES_LARGE];
+    memset(string_arr_str, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
     strcat(string_arr_str, "arr(");
 
     // create serialized array of strings

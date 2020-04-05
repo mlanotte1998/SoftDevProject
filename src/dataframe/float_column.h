@@ -110,12 +110,12 @@ public:
             if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
                 int key_len = strlen("-p1_val::");
                 int arr_len = strlen("arr(");
-                char arr_value[MAX_ARRAY_SIZE_BYTES];
-                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES);
+                char arr_value[MAX_ARRAY_SIZE_BYTES_LARGE];
+                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
                 // Copy the array elements to a new string.
                 strncpy(
-                    arr_value, 
-                    ser_token + key_len + arr_len, 
+                    arr_value,
+                    ser_token + key_len + arr_len,
                     strlen(ser_token) - key_len - arr_len - 1
                 );
                 // Tokenize the string representing the inner array by the commas

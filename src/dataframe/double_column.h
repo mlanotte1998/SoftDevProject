@@ -31,67 +31,6 @@ public:
         array_length_ = 0;
     }
 
-    /***
-    * Constructor for passing any number of arguments
-    * @param n number of arguments
-    * @param ... double values to be added in the array.
-    */
-    DoubleColumn(int n, ...) {
-        int i;
-        double val;
-        va_list vl;
-        // Make sure n is greater than 0
-        if (n > 0) {
-            // Then create an outer array that is the ceiling log of the n value + 1;
-            // The best way to explain this is with an example. If n was 7, then there
-            // will be 7 elements in the array. With our double list structure,
-            // each inner list increases by * 2 , so they have 1 then 2 then 4 then 8 elements
-            // and so on. For 7 you would have 1 + 2 + 4 = 7, so we need an upper array of size 3.
-            // With the current function below you would get 3 for that value. but say n was 8
-            // then you would need another sub array so the upper array needs to be size 4,
-            // but the log2(8) is still 3, which is why it is ceil(log2(n + 1).
-            binary_column_array_ = new double *[int(ceil(log2(n + 1)))];
-            double *cur_array = new double[1];
-
-            int cur_hor = 0;
-            int cur_ver = 0;
-            int cur_power = int(pow(2, cur_hor));
-            va_start(vl, n);
-            // Iterate through each element in the constructor.
-            for (i = 0; i < n; i++) {
-                val = va_arg(vl, double);
-                // If the current vertical index is smaller than the current power, which is the
-                // size of the current inner array, then add this value in and increase the vertical index.
-                if (cur_ver < cur_power) {
-                    cur_array[cur_ver] = val;
-                    cur_ver++;
-                }
-                    // Else, the current inner array is at capacity, so increase the horizontal counter
-                    // reset the vertical counter, and get the size of the newly needed array by
-                    // doing 2 to the power of the horizontal index we are at. This makes sure that
-                    // every time a new array is needed, it is twice the size of the old array.
-                    // Finally set the value into the new array and increase the vertical index.
-                else {
-                    binary_column_array_[cur_hor] = cur_array;
-                    cur_hor++;
-                    cur_ver = 0;
-                    cur_power = int(pow(2, cur_hor));
-                    cur_array = new double[cur_power];
-                    cur_array[cur_ver] = val;
-                    cur_ver++;
-                }
-            }
-            // Incase the last sub array was not added  by hitting the else case on the
-            // last iteration of the for loop, add it here.
-            // Set the array length to be the number of indices plus 1.
-            // the size is n, and end the va.
-            binary_column_array_[cur_hor] = cur_array;
-            array_length_ = cur_hor + 1;
-            size_ = n;
-            va_end(vl);
-        }
-    }
-
     /**
      * Constructor for building a double column from a serialized string.
      * @param ser The serialized string for a Double Column
@@ -111,12 +50,12 @@ public:
             if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
                 int key_len = strlen("-p1_val::");
                 int arr_len = strlen("arr(");
-                char arr_value[MAX_ARRAY_SIZE_BYTES];
-                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES);
+                char arr_value[MAX_ARRAY_SIZE_BYTES_LARGE];
+                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
                 // Copy the array elements to a new string.
                 strncpy(
-                    arr_value, 
-                    ser_token + key_len + arr_len, 
+                    arr_value,
+                    ser_token + key_len + arr_len,
                     strlen(ser_token) - key_len - arr_len - 1
                 );
                 // Tokenize the string representing the inner array by the commas
@@ -134,6 +73,8 @@ public:
             }
             ser_token = strtok(NULL, " ");
         }
+
+        std::cout << "size? " << size_ << std::endl; 
     }
 
     /***

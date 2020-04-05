@@ -39,13 +39,13 @@ public:
 			kind_ = MsgKind::Register;
 
 			// create copy of serialized string to tokenize
-			char ser_copy[MAX_BUFFER_SIZE];
-			memset(ser_copy, 0, MAX_BUFFER_SIZE);
+			char ser_copy[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy, ser);
 
 			// create copy of serialized string to grab the message from
-			char ser_copy2[MAX_BUFFER_SIZE];
-			memset(ser_copy2, 0, MAX_BUFFER_SIZE);
+			char ser_copy2[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy2, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy2, ser);
 
 			// Create a normal message to extract shared fields.

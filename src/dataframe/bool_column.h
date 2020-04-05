@@ -116,11 +116,11 @@ public:
                 int key_len = strlen("-p1_val::");
                 int arr_len = strlen("arr(");
                 // Create a char* for copying over the array values.
-                char arr_value[MAX_ARRAY_SIZE_BYTES];
-                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES);
+                char arr_value[MAX_ARRAY_SIZE_BYTES_LARGE];
+                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
                 strncpy(
-                    arr_value, 
-                    ser_token + key_len + arr_len, 
+                    arr_value,
+                    ser_token + key_len + arr_len,
                     strlen(ser_token) - key_len - arr_len - 1
                 );
                 // Go through tokens of the values that make up the array that are

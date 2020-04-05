@@ -52,23 +52,23 @@ class Directory : public Message {
 			addresses_count_ = 0;
 
 			// create copy of serialized string to tokenize
-			char ser_copy[MAX_BUFFER_SIZE];
-			memset(ser_copy, 0, MAX_BUFFER_SIZE);
+			char ser_copy[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy, ser);
 
 			// create copy of serialized string to grab the ports from
-			char ser_copy2[MAX_BUFFER_SIZE];
-			memset(ser_copy2, 0, MAX_BUFFER_SIZE);
+			char ser_copy2[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy2, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy2, ser);
 
 			// create copy of serialized string to grab the addresses from
-			char ser_copy3[MAX_BUFFER_SIZE];
-			memset(ser_copy3, 0, MAX_BUFFER_SIZE);
+			char ser_copy3[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy3, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy3, ser);
 
 			// create copy of serialized string to grab the nodes from
-			char ser_copy4[MAX_BUFFER_SIZE];
-			memset(ser_copy4, 0, MAX_BUFFER_SIZE);
+			char ser_copy4[MAX_BUFFER_SIZE_STANDARD];
+			memset(ser_copy4, 0, MAX_BUFFER_SIZE_STANDARD);
 			strcpy(ser_copy4, ser);
 
 			// Create a normal message to extract shared fields.
