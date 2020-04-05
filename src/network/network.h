@@ -119,8 +119,8 @@ public:
      * @param sock Socket to send to.
      * @param message Message to send.
      */
-    void socket_send(int sock, char *message) {
-        send(sock, message, strlen(message), 0);
+    void socket_send(int sock, char *message, size_t size) {
+        send(sock, message, size, 0);
     }
 
 };
@@ -178,12 +178,16 @@ public:
         return read(sock_, buffer, buffer_size);
     }
 
+    int socket_recv(char* buffer, int buffer_size) {
+        return recv(sock_, buffer, buffer_size, MSG_DONTWAIT);
+    }
+
     /**
      * Send a message to the server.
      * @param message Message to send.
      */
-    void socket_send(char *message) {
-        send(sock_, message, strlen(message), 0);
+    void socket_send(char *message, size_t size) {
+        send(sock_, message, size, 0);
     }
 
 };
@@ -320,7 +324,7 @@ public:
 
         // Send the register to all clients besides the new one.
         for (int i = 0; i < total_socket_count_; i++) {
-            internalServer_->socket_send(sockets_[i], buffer);
+            internalServer_->socket_send(sockets_[i], buffer, 1024);
         }
 
         Directory *dir = new Directory(3, 10, 9999, 3, total_socket_count_, port_list_,
@@ -328,7 +332,7 @@ public:
         Serializer *directorySer = new Serializer();
         char *serialized_directory = directorySer->serialize(dir);
 
-        internalServer_->socket_send(sockets_[total_socket_count_], serialized_directory);
+        internalServer_->socket_send(sockets_[total_socket_count_], serialized_directory, 1024);
 
         delete dir;
         delete directorySer;
@@ -515,7 +519,7 @@ public:
         // Copy the ack message to the buffer and sent it.
         strcpy(buffer, serialized_ack);
 
-        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
         delete ack;
         delete ackSer;
@@ -523,7 +527,11 @@ public:
 
         memset(buffer, 0, 1024);
 
+        std::cout << "Whats up 2" << std::endl;
+
         internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+
+        std::cout << "Whats up" << std::endl;
 
         char *serial_string = new char[1024];
         strcpy(serial_string, buffer);
@@ -542,6 +550,7 @@ public:
     }
 
     void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
+      std::cout << socket_idx << target << key_name << df_length << std::endl;
 
     }
 
@@ -556,7 +565,7 @@ public:
         // Copy the ack message to the buffer and sent it.
         strcpy(buffer, serialized_ack);
 
-        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
         delete ack;
         delete ackSer;
@@ -606,7 +615,7 @@ public:
 
                     strcpy(buffer, strlen_string);
 
-                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
                     memset(buffer, 0, 1024);
 
@@ -614,14 +623,28 @@ public:
 
                     size_t count = 0;
 
+                    size_t send_count = 0;
+
 
                     while (count < strlen(col_string)) {
                         memset(buffer, 0, 1024);
                         strncpy(buffer, col_string + count, 1023);
-                        buffer[1023] = '\0';
-                        internalServer_->socket_send(IS_sockets_[socket_idx], buffer);
+                        // buffer[1023] = '\0';
+                        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
                         count += 1023;
+                        std::cout << count << std::endl;
+                        send_count++;
                     }
+
+                    memset(buffer, 0, 1024);
+                    strcpy(buffer, strlen_string);
+
+                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer,  1024);
+
+                    std::cout << "sent" << std::endl;
+
+
+                    //std::cout << col_string << std::endl << strlen(col_string) << " " << send_count << std::endl;
                 }
             }
 
@@ -707,6 +730,7 @@ public:
 
         // Loop on true to continuously run the server
         while (kill_switch[0] != '1') {
+
             // Poll the server activity.
             int poll_count = poll(IS_pfds_, IS_total_socket_count_ + 1, 0);
             if (poll_count == -1) {
@@ -747,7 +771,7 @@ public:
 
         // Copy the register message to the buffer and sent it.
         strcpy(buffer, serialized_register);
-        internalClient_->socket_send(buffer);
+        internalClient_->socket_send(buffer, 1024);
 
         delete reg;
         delete registerSer;
@@ -789,11 +813,12 @@ public:
 
         // Loop continuously while connected to the server.
         while (kill_switch[0] != '1') {
+
             // Reset buffer in the while loop so new messages dont have parts of old ones in them.
             memset(buffer, 0, 1024);
 
             // Read from server, if no response than close because that means the server went down.
-            if (internalClient_->socket_read(buffer, 1024) == 0) {
+            if (internalClient_->socket_recv(buffer, 1024) == 0) {
                 // End when the server stops running.
                 kill_switch[0] = '1';
                 return;
@@ -857,7 +882,7 @@ public:
 
                         // Copy the register message to the buffer and sent it.
                         strcpy(buffer, serialized_wait);
-                        cur_client->socket_send(buffer);
+                        cur_client->socket_send(buffer, 1024);
 
                         delete wait_message;
                         delete waitSer;
@@ -881,7 +906,7 @@ public:
 
                     // Copy the register message to the buffer and sent it.
                     strcpy(buffer, serialized_wait);
-                    cur_client->socket_send(buffer);
+                    cur_client->socket_send(buffer, 1024);
 
                     delete wait_message;
                     delete waitSer;
@@ -892,6 +917,13 @@ public:
                 memset(buffer, 0, 1024);
 
                 cur_client->socket_read(buffer, 1024);
+
+                printf("%s\n", buffer);
+
+}
+}
+
+                /*
 
                 memset(buffer, 0, 1024);
 
@@ -980,6 +1012,7 @@ public:
                 }
             }
         }
+        */
     }
 
 
@@ -988,6 +1021,8 @@ public:
         char buffer[1024] = {0};
 
         bool message_sent = false;
+
+        std::cout << "heree 1" << std::endl;
 
         while (!message_sent) {
 
@@ -1014,7 +1049,7 @@ public:
 
                         // Copy the register message to the buffer and sent it.
                         strcpy(buffer, serialized_wait);
-                        cur_client->socket_send(buffer);
+                        cur_client->socket_send(buffer, 1024);
 
                         delete wait_message;
                         delete waitSer;
@@ -1038,7 +1073,7 @@ public:
 
                     // Copy the register message to the buffer and sent it.
                     strcpy(buffer, serialized_wait);
-                    cur_client->socket_send(buffer);
+                    cur_client->socket_send(buffer, 1024);
 
                     delete wait_message;
                     delete waitSer;
@@ -1063,7 +1098,7 @@ public:
                 // Copy the register message to the buffer and sent it.
                 strcpy(buffer, serialized_key);
 
-                cur_client->socket_send(buffer);
+                cur_client->socket_send(buffer, 1024);
 
                 delete key_message;
                 delete key_ser;
@@ -1096,7 +1131,7 @@ public:
                         // Copy the ack message to the buffer and sent it.
                         strcpy(buffer, serialized_ack);
 
-                        cur_client->socket_send(buffer);
+                        cur_client->socket_send(buffer, 1024);
 
                         delete ack;
                         delete ackSer;
@@ -1106,17 +1141,35 @@ public:
 
                         size_t count = 0;
 
-                        while (count < size_of_message) {
+                        size_t recv_count = 0;
+
+                        bool message_unfinished = false;
+
+                        while (!message_unfinished) {
+
+                          std::cout << buffer << std::endl;
+
+                          if (recv_count > 1) {
+                            Serializer* messsss = new Serializer(reinterpret_cast<unsigned char *>(buffer));
+                            if (messsss->deserialize() != nullptr) {
+                              break;
+                            }
+                          }
+
                             memset(buffer, 0, 1024);
+                            std::cout << "bitch" << std::endl;
                             cur_client->socket_read(buffer, 1024);
+
                             if (count == 0) {
-                                strcpy(new_buffer, buffer);
+                                strncpy(new_buffer, buffer, 1024);
                             } else {
-                                strcat(new_buffer, buffer);
+                                strncat(new_buffer, buffer, 1024);
                             }
                             count += 1023;
+                            recv_count++;
                         }
 
+                        std::cout << buffer << std::endl;
                         Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
 
                         df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
@@ -1124,10 +1177,14 @@ public:
 
                         end_reached = true;
 
+                        std::cout << count << std::endl;
+
                     }
 
                     delete ser;
                     delete deserialized_mes;
+
+                    std::cout << "final" << std::endl;
 
                     return df;
                 }

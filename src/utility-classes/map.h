@@ -114,7 +114,6 @@ public:
     bool contains_key(Object* key) {
         // find the index where this key would be stored based on its hash
         size_t key_hash = key->hash();
-        printf("%d\n", key_hash);
         int key_idx = key_hash % bucket_size_;
         // if data exists at this index search for key hash in linked list
         Map_Node* bucket_value = map_[key_idx];

@@ -40,10 +40,13 @@ public:
     void counter() {
 
         DataFrame *v = kv->waitAndGet(main);
+        std::cout << " I hate this" << std::endl;
+        /*
         size_t sum = 0;
         for (size_t i = 0; i < 100 * 1000; ++i) sum += v->get_double(0, i);
         p("The sum is  ").pln(sum);
         DataFrame::fromScalar(&verify, kv, sum);
+        */
     }
 
     void summarizer() {
