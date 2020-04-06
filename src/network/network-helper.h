@@ -40,16 +40,16 @@ Serializer *get_register_serializer(size_t sender, size_t target, size_t id,
         char* client_ip, size_t port ) {
 
     // Create the register object.
-    Register *reg = new Register(sender, target, id, client_ip_, port_);
+    Register *reg = new Register(sender, target, id, client_ip, port);
 
     // Add the register to the serializer
-    Serializer *ack_ser = new Serializer();
-    ack_ser->serialize(ack);
+    Serializer *reg_ser = new Serializer();
+    reg_ser->serialize(reg);
 
-    delete ack;
+    delete reg;
 
     // Return the serializer.
-    return ack_ser;
+    return reg_ser;
 
 }
 
