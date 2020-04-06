@@ -4,8 +4,11 @@
 
 #include <stdlib.h>
 
+
+
 /**
  * Demo Application given in Project Milestone 1
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class Demo : public Application {
 public:

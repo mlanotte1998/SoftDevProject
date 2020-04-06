@@ -109,7 +109,7 @@ Currently, the Register and Directory are still unfinished so those need to be a
 ## Use Cases  
   
 Creation of Dataframe:  
-```
+```c++
 Schema builder("IFFSB");  
 builder.add_row(nullptr);  
 builder.add_row(nullptr);  
@@ -134,7 +134,7 @@ dframe.add_row(r);
 ```
 
 Usage of KDStore and fromArray in Application layer:  
-```
+```c++
 size_t SZ = 10;  
 double* vals = new double[SZ];  
 for (size_t i = 0; i < SZ; ++i) vals[i] = i;  
@@ -147,7 +147,7 @@ delete[] vals;
 ```
 
 Demo Usage (Not currently working) of basic Distributed System Functionality 
-```
+```c++
 class Demo : public Application {
 public:
     Key main{"main",0};
@@ -197,14 +197,7 @@ public:
 ```
 
 ## Open Questions
-Is our implementation of having the main file create a Node* and run it in a thread separate from the demo specific
-code far off from what other teams are doing or is it a common implementation? 
-What is the point of possibly splitting up certain columns of one DataFrame into different nodes? There have
-been comments about this being something that could be done but we are not sure why and if we should or
-really how one would go about managing all of that. 
-Should we send messages in chunks if they are large or send some first message to alert the receiver of how many
-bytes the full incoming message is going to be for large columns? 
-Is our Makefile structure okay? Should valgrind be running by default? 
+Are they any huge problems or design decisions that you would recommend staying away from in our network code? 
 
 
 ## Status
@@ -216,15 +209,47 @@ that are used by the DataFrame; this folder has all of the classes that were new
 network specific code, this is in the network folder, and related to that, the serialization code along with
 classes to be used as serialized messages are in their own folder. There is also a folder called store to hold objects
 pertaining to the KVStore / KDStore. An application folder exists to hold the Application class as well as subclasses 
-of Application. The trivial application is included here. Lastly there is a folder for sorer code that came from the 
-group 45000NE. There is one main.cpp file in the top level project directory that tests out reading in a file and 
-creating a DataFrame with it along with running a simple map function on it. The tests have been run with valgrind 
-to ensure that any memory issues that were in the code for the previous assignments have been fixed. When running the
-main executable with valgrind and the megabyte.sor file there is no memory leaks or memory errors. 
-Currently the network functionality is incomplete. Code debt for the serialization classes was forgotten about until
-recently so a lot of time was spent on cleaning up some of that along with planning how to go at the network
-functionality. For the moment, the planned implementation of the network behavior is to have each KDStore hold
-a Node pointer so that the each acts as it's own node. There will be a thread in the application for running the 
-application specific code (for example the given Demo code), and then another thread for running the Node server
-so that it will be able to handle another node waiting to get a DataFrame from it. It took a while to come to this idea
-after messing around with threads in different places and having the store not be a pointer in the Application class. 
+of Application. Lastly there is a folder for sorer code that came from the 
+group 45000NE. There is one main.cpp file in the top level directory that is currently used to run the Demo
+application that was meant to be functional for the last assignment. 
+The tests have been run with valgrind 
+to ensure that any memory issues that were in the code for the previous assignments have been fixed.
+
+This week a lot of unused code was removed including the classes related to the Modified DataFrame and the 
+multiple input Column constructors. 
+
+At the current state, the Demo application can be run successfully but it needs to be run in a more specific way
+then what we will want going forward. To currently run it, there needs to be a Node of index 3 that is started 
+with the main executable to run the Rendezvous Server. The other three nodes (0, 1, and 2) can then be run with
+their own usage of the executable. Also Nodes 0 and 1 can be run in any order, but to run Node 2, we need to wait 
+for the other two to finish there back and forth because there is a problem with things getting blocked (likely 
+the cause is a node trying to read but with nothing to read) and then they all stall. 
+
+We have a TODO list of tasks to get the code in good shape before looking at MileStone 4 and 5 requirements. 
+1. Fix the blocking problem with the nodes. 
+2. Clean up Network code to have the same functions used for two pairs of situations : 
+    1. receiving a put and calling a wait and get
+    2. receiving a wait and get and calling a put
+    
+    The pairs are similar because for the first pair both are taking in a DataFrame and thus have similar function.
+    The second pair both send a DataFrame. The problem right now is the use of a Server object when receiving 
+    and a Client object when calling one of the two functions. 
+    So it might be best to have a Server be a type of Client or have some parent class so that the functions 
+    can be made more versatile to be able to handle using both. 
+    
+3. Clean up Node code to remove not needed members (most of the IS fields that are not really used for this
+but were added incase they would be). The idea was to be able to have less Clients be made by checking if one Node
+already connected to you to then send a message to but that is too complicated, so there does not need to be
+information held for who has connected to each Node. 
+4. Make Node 0 a Rendezvous server. Maybe make a Rendezvous Server a type of Node so then need to have Node have virtual
+function and in doing this hopefully we will not add a lot of repetition. 
+
+Once all of these are complete we will move onto the further milestones because we want our code to be safe
+moving forward incase things case more complicated.
+
+This week a lot of time was spent with running into memory issues trying to set up the put and wait functionality. 
+For the most part, the memory issues have been fixed. A big issue we had was trying to have the column serialization 
+be able to handle large columns but not always do that because the Nodes were running out of memory when
+all Columns were created with huge char*'s. 
+
+

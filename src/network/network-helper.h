@@ -1,6 +1,11 @@
 #pragma once
 
 /**
+ * File for utility functions used by network code
+ * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
+ */
+
+/**
  * Creates a serializer object for an message.
  * @param kind Kind of message
  * @param sender Sender node.
