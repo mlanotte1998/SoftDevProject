@@ -1035,6 +1035,11 @@ public:
         return client;
     }
 
+    /**
+     * Handle put functionality.
+     * @param k Key of the DataFrame to put.
+     * @param df The actual DataFrame to put.
+     */
     void put(Key k, DataFrame *df) {
 
         char buffer[1024] = {0};
@@ -1082,6 +1087,12 @@ public:
         }
     }
 
+    /**
+     * Handle sending one column of a DataFrame for the put functionality.
+     * @param cur_client Client to use for sending messages.
+     * @param cur_col Column to send.
+     * @param target Target node id.
+     */
     void put_send_column(Client* cur_client, Column* cur_col, size_t target) {
 
         // TODO find a way to have this be the same function as handle send column
@@ -1132,122 +1143,42 @@ public:
 
         bool message_sent = false;
 
+        // Run a loop until the process has finished.
         while (!message_sent) {
 
-            size_t node_idx = max_clients_;
-            for (
-                    int i = 0;
-                    i < IC_other_total_client_count_;
-                    i++) {
-                if (IC_nodes_list_[i] == k.idx_) {
-                    node_idx = i;
-                    break;
-                }
-            }
+            // Figure out which client object to use for interaction.
+            Client *cur_client = get_client_of_key(k);
 
-
-            if (node_idx != max_clients_) {
-                char *target_ip = IC_ip_list_[node_idx];
-                Client *cur_client;
-                for (
-                        int i = 0;
-                        i < IC_other_client_connections_count_;
-                        i++) {
-                    if (
-                            strcmp(target_ip, IC_other_client_connections_ips_[i]
-                            )) {
-                        cur_client = IC_other_client_connections_[i];
-
-                        Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
-
-                        Serializer *waitSer = new Serializer();
-                        char *serialized_wait = waitSer->serialize(wait_message);
-
-// Copy the register message to the buffer and sent it.
-                        strcpy(buffer, serialized_wait
-                        );
-                        cur_client->
-                                socket_send(buffer,
-                                            1024);
-
-                        delete
-                                wait_message;
-                        delete
-                                waitSer;
-
-                        message_sent = true;
-
-                    }
-                }
-
-                if (!message_sent) {
-                    cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
-
-                    IC_other_client_connections_[IC_other_client_connections_count_] =
-                            cur_client;
-                    IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
-                    IC_other_client_connections_count_++;
-
-                    Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
-
-                    Serializer *waitSer = new Serializer();
-                    char *serialized_wait = waitSer->serialize(wait_message);
-
-// Copy the register message to the buffer and sent it.
-                    strcpy(buffer, serialized_wait
-                    );
-                    cur_client->
-                            socket_send(buffer,
-                                        1024);
-
-                    delete
-                            wait_message;
-                    delete
-                            waitSer;
-                }
-
+            if (cur_client != nullptr) {
 
                 message_sent = true;
 
-                memset(buffer,
-                       0, 1024);
+                // Send the starting put message to start everything off.
+                Serializer *put_ser = get_message_serializer(MsgKind::Put, node_, k.idx_, 0);
+                strcpy(buffer, put_ser->buffer_);
+                cur_client->socket_send(buffer, 1024);
+                delete put_ser;
 
-                cur_client->
-                        socket_read(buffer,
-                                    1024);
+                // TODO Check if actually an ack.
+                // Read in ack message.
+                memset(buffer, 0, 1024);
+                cur_client->socket_read(buffer, 1024);
 
-                memset(buffer,
-                       0, 1024);
-
+                // Create a status message for sending the char identifier for the key.
+                memset(buffer, 0, 1024);
                 String *key_string = new String(k.name_);
+                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
+                strcpy(buffer, key_ser->buffer_);
+                cur_client->socket_send(buffer, 1024);
+                delete key_ser;
 
-                Status *key_message = new Status(node_, k.idx_, k.idx_, key_string);
 
-                Serializer *key_ser = new Serializer();
-
-                char *serialized_key = key_ser->serialize(key_message);
-
-// Copy the register message to the buffer and sent it.
-                strcpy(buffer, serialized_key
-                );
-
-                cur_client->
-                        socket_send(buffer,
-                                    1024);
-
-                delete
-                        key_message;
-                delete
-                        key_ser;
-
+                // Create DataFrame and boolean for going through receving columns.
                 bool end_reached = false;
-
                 Schema s("");
-
                 DataFrame *df = new DataFrame(s);
-
-                std::cout << "Hello" <<
-                          std::endl;
+                
+                // TODO handle actually checking how big the dataframe is
 
                 while (!end_reached) {
                     memset(buffer,
