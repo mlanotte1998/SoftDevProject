@@ -8,9 +8,9 @@
 #include <poll.h>
 #include <string.h>
 #include <thread>
-#include "network-helper.h"
 #include "../seriazation_and_messages/serial.h"
 #include "../seriazation_and_messages/message.h"
+#include "network-helper.h"
 
 /**
  * Function for creating a new poll file descriptor struct with a given fd number and array index.
@@ -511,45 +511,35 @@ public:
     void handle_put(int socket_idx, size_t target) {
         char buffer[1024] = {0};
 
-        Ack *ack = new Ack(node_, target, 0);
 
-        Serializer *ackSer = new Serializer();
-        char *serialized_ack = ackSer->serialize(ack);
-
-        // Copy the ack message to the buffer and sent it.
+        Serializer* ackSer = get_ack_serializer(node_ ,target, 0);
+        char *serialized_ack = ackSer->buffer_;
         strcpy(buffer, serialized_ack);
 
         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
-        delete ack;
         delete ackSer;
-
 
         memset(buffer, 0, 1024);
 
         internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
+        Object *key = deserialize_buffer(buffer);
 
-        std::cout << buffer << std::endl;
-
-        Serializer *key_ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Object *key = key_ser->deserialize();
 
         if (dynamic_cast<Status *>(key) != nullptr) {
             Status *stat = dynamic_cast<Status *>(key);
             handle_put_receive_dataframe(socket_idx, target, stat->msg_->c_str(), stat->id_);
+
         }
 
-        delete key_ser;
         delete key;
 
     }
 
     void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
 
-      char buffer[1024] = {0};
+      char* buffer = new char[1024];
 
       bool end_reached = false;
 
@@ -562,7 +552,7 @@ public:
 
           internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
-          std::cout << "Past Here1" <<  buffer << std::endl;
+            DoubleColumn* col;
 
           // Deserialize the string.
           char *serial_string = new char[1024];
@@ -572,8 +562,10 @@ public:
           Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
           if (deserialized_mes->kind_ == MsgKind::Put) {
 
-              std::cout << "Past Here" << std::endl;
               size_t size_of_message = deserialized_mes->id_;
+
+              delete deserialized_mes;
+              delete ser;
 
               Ack *ack = new Ack(node_, target, 0);
 
@@ -585,13 +577,16 @@ public:
 
               internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
-                  std::cout << "Past Here 2" << std::endl;
-
               delete ack;
               delete ackSer;
 
+              if (size_of_message < 1024) {
+                size_of_message = 1024;
+              }
+
               char *new_buffer = new char[size_of_message + 1];
 
+              memset(new_buffer, 0, size_of_message + 1);
 
               size_t count = 0;
 
@@ -605,10 +600,15 @@ public:
                   internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
                   if (recv_count > 0) {
-                    Serializer* messsss = new Serializer(reinterpret_cast<unsigned char *>(buffer));
+                    char *serial_string2 = new char[1100];
+                    strcpy(serial_string2, buffer);
+                    std::cout << serial_string2 << std::endl;
+                    Serializer* messsss = new Serializer(serial_string2);
                     if (messsss->deserialize() != nullptr) {
+                      delete messsss;
                       break;
                     }
+
                   }
 
                   if (count == 0) {
@@ -619,12 +619,23 @@ public:
                   count += 1023;
                   recv_count++;
 
-                  std::cout << new_buffer << std::endl;
+
               }
 
-              Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
+              unsigned char* casted = reinterpret_cast<unsigned char *>(new_buffer);
 
-              df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
+
+              Serializer *col_ser = new Serializer(casted);
+
+              std::cout << "put buffer" << new_buffer << std:: endl;
+
+
+              col = dynamic_cast<DoubleColumn*>(col_ser->deserialize());
+
+
+              df->add_column(col);
+
+              std::cout << "Get Double" << df->get_double(0,0) << std::endl;
 
 
               end_reached = true;
@@ -632,16 +643,20 @@ public:
 
           }
 
-          delete ser;
-          delete deserialized_mes;
+            std::cout << "Get Double" << df->get_double(0,0) << std::endl;
+
 
           Key* new_key = new Key(key_name, node_);
 
           store_map_->put(new_key ,df);
+
+          std::cout << "Finished put" << std::endl;
         }
     }
 
     void handle_wait_and_get(int socket_idx, size_t target) {
+
+        std::cout << "Handle wait and get" << std::endl;
         char buffer[1024] = {0};
 
         Ack *ack = new Ack(node_, target, 0);
@@ -696,6 +711,8 @@ public:
                     Serializer *col_ser = new Serializer();
                     char *col_string = col_ser->serialize(cur_col);
 
+                    std::cout << "col string" << col_string << std::endl;
+
                     Message *wag_for_strlen = new Message(MsgKind::WaitAndGet, node_, target, strlen(col_string));
                     Serializer *strlen_ser = new Serializer();
                     char *strlen_string = strlen_ser->serialize(wag_for_strlen);
@@ -716,7 +733,7 @@ public:
                     while (count < strlen(col_string)) {
                         memset(buffer, 0, 1024);
                         strncpy(buffer, col_string + count, 1023);
-                        // buffer[1023] = '\0';
+                        std::cout << "sent" << std::endl;
                         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
                         count += 1023;
 
@@ -726,7 +743,15 @@ public:
                     memset(buffer, 0, 1024);
                     strcpy(buffer, strlen_string);
 
+                      std::cout << "sent2" << std::endl;
+
                     internalServer_->socket_send(IS_sockets_[socket_idx], buffer,  1024);
+
+                    delete col_ser;
+
+                    delete wag_for_strlen;
+
+                    delete strlen_ser;
                 }
             }
 
@@ -917,15 +942,14 @@ public:
             if (dynamic_cast<Register *>(deserialized) != nullptr) {
                 Register *reg = dynamic_cast<Register *>(deserialized);
                 add_register(reg);
-                delete reg;
             }
                 // Else if a directory is the incoming message then copy all of the data
                 // to the values of this node.
             else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
                 Directory *dir = dynamic_cast<Directory *>(deserialized);
                 add_directory(dir);
-                delete dir;
             }
+            delete deserialized;
             delete ser;
         }
     }
@@ -1041,7 +1065,7 @@ public:
 
                     delete wag_for_strlen;
 
-                    delete strlen_ser; 
+
 
                     cur_client->socket_read( buffer, 1024);
 
@@ -1067,6 +1091,8 @@ public:
                       std::cout << "Past Here Yo 2" << std::endl;
 
                       delete col_ser;
+
+                      delete strlen_ser;
                 }
 
 
@@ -1183,6 +1209,10 @@ public:
                     if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
                         size_t size_of_message = deserialized_mes->id_;
 
+                        if (size_of_message < 1024) {
+                          size_of_message = 1024;
+                        }
+
                         Ack *ack = new Ack(node_, k.idx_, 0);
 
                         Serializer *ackSer = new Serializer();
@@ -1205,19 +1235,25 @@ public:
 
                         bool message_unfinished = false;
 
-                            std::cout << "Hello!!!!!!!!!!!!!" << std::endl;
-
                         while (!message_unfinished) {
+
+                          std::cout << "Hello!!!!!!!!!!!!!" << std::endl;
 
 
                             memset(buffer, 0, 1024);
                             cur_client->socket_read(buffer, 1024);
 
                             if (recv_count > 0) {
-                              Serializer* messsss = new Serializer(reinterpret_cast<unsigned char *>(buffer));
+                              std::cout << buffer << std::endl;
+                              char* serial_string2 = new char[1024];
+                              strcpy(serial_string2, buffer);
+
+                              Serializer* messsss = new Serializer(reinterpret_cast<unsigned char *>(serial_string2));
                               if (messsss->deserialize() != nullptr) {
+                                delete messsss;
                                 break;
                               }
+                              delete messsss;
                             }
 
                             if (count == 0) {
@@ -1231,7 +1267,7 @@ public:
 
                           std::cout << new_buffer << std::endl;
 
-                          std::cout << "Hello!!!!!!!!!!!!!" << std::endl;
+                          std::cout << "Hello@@@@@@" << std::endl;
 
                         Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
 
@@ -1247,6 +1283,8 @@ public:
 
                     delete ser;
                     delete deserialized_mes;
+
+                      std::cout << "Hello!!!!!!!!!!!!!" << std::endl;
 
 
                     return df;

@@ -43,6 +43,17 @@ public:
         array_length_ = 0;
         size_ = 0;
 
+
+        size_t bytes = MAX_ARRAY_SIZE_BYTES_STANDARD;
+
+        std::cout << strlen(ser) << std::endl; 
+
+        if (strlen(ser) > 10000) {
+          std::cout << "What the fuck" << std::endl;
+          bytes = MAX_ARRAY_SIZE_BYTES_LARGE;
+        }
+
+
         // Split up the message by spaces.
         char* ser_token = strtok(ser, " ");
         // Loop through until reaching the p1 that represents the inner array.
@@ -50,8 +61,8 @@ public:
             if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
                 int key_len = strlen("-p1_val::");
                 int arr_len = strlen("arr(");
-                char arr_value[MAX_ARRAY_SIZE_BYTES_LARGE];
-                memset(arr_value, 0, MAX_ARRAY_SIZE_BYTES_LARGE);
+                char arr_value[bytes];
+                memset(arr_value, 0, bytes);
                 // Copy the array elements to a new string.
                 strncpy(
                     arr_value,

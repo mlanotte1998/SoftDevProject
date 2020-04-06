@@ -3,6 +3,32 @@
 //=============================================================
 // Common helper function
 
+
+
+Serializer* get_ack_serializer(size_t sender, size_t target, size_t id) {
+
+  Ack *ack = new Ack(sender, target, 0);
+
+  Serializer *ackSer = new Serializer();
+  ackSer->serialize(ack);
+
+  delete ack;
+
+  return ackSer;
+
+}
+
+Object* deserialize_buffer(char* buffer) {
+  char *serial_string = new char[1024];
+  strcpy(serial_string, buffer);
+
+  Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+  Object *obj = ser->deserialize();
+  delete ser;
+
+  return obj;
+}
+
 /**
  * Gets the ip from the command line arguments.
  * @param argc Argument count.
