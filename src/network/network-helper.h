@@ -33,7 +33,7 @@ Serializer *get_message_serializer(MsgKind kind, size_t sender, size_t target, s
 Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
 
     // Create the ack
-    Ack *ack = new Ack(sender, target, 0);
+    Ack *ack = new Ack(sender, target, id);
 
     // Add the ack to the serializer
     Serializer *ack_ser = new Serializer();
