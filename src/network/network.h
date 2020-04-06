@@ -596,9 +596,9 @@ public:
                 memset(new_buffer, 0, size_of_message + 1);
 
                 size_t recv_count = 0;
-                bool message_unfinished = false;
+                bool message_unfinished = true;
 
-                while (!message_unfinished) {
+                while (message_unfinished) {
 
                     message_unfinished = read_in_put_column(new_buffer, socket_idx, recv_count);
                     recv_count++;
@@ -608,7 +608,7 @@ public:
                 Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
 
 
-                df->add_column(col_ser->deserialize());
+                df->add_column(dynamic_cast<Column*>(col_ser->deserialize()));
 
                 end_reached = true;
 
@@ -629,7 +629,7 @@ public:
      * @param recv_count
      * @return
      */
-    bool read_in_put_column(char* append_buffer, size_t socket_idx, sise_t recv_count) {
+    bool read_in_put_column(char* append_buffer, size_t socket_idx, size_t recv_count) {
 
         // Create a buffer to read in the message.
         char buffer[1024] = {0};
@@ -646,7 +646,7 @@ public:
                 // return false to stop the loop.
                 return false;
             }
-            delete finish_mes
+            delete finish_mes;
         }
 
         // If first recv then copy, else concat onto end of the buffer used to form the whole column.
