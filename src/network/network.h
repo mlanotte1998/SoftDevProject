@@ -1153,8 +1153,8 @@ public:
 
                 message_sent = true;
 
-                // Send the starting put message to start everything off.
-                Serializer *put_ser = get_message_serializer(MsgKind::Put, node_, k.idx_, 0);
+                // Send the starting wait and get message to start everything off.
+                Serializer *put_ser = get_message_serializer(MsgKind::WaitAndGet, node_, k.idx_, 0);
                 strcpy(buffer, put_ser->buffer_);
                 cur_client->socket_send(buffer, 1024);
                 delete put_ser;
@@ -1177,7 +1177,7 @@ public:
                 bool end_reached = false;
                 Schema s("");
                 DataFrame *df = new DataFrame(s);
-                
+
                 // TODO handle actually checking how big the dataframe is
 
                 while (!end_reached) {
