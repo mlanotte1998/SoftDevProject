@@ -52,10 +52,10 @@ Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
  * @param id Message Id.
  * @param client_ip Ip of client that is attempting to register.
  * @param port Port of the client that is attempting to register.
- * @return returns the serializer object for the Ack.
+ * @return returns the serializer object for the register.
  */
 Serializer *get_register_serializer(size_t sender, size_t target, size_t id,
-        char* client_ip, size_t port ) {
+                                    char *client_ip, size_t port) {
 
     // Create the register object.
     Register *reg = new Register(sender, target, id, client_ip, port);
@@ -68,6 +68,31 @@ Serializer *get_register_serializer(size_t sender, size_t target, size_t id,
 
     // Return the serializer.
     return reg_ser;
+
+}
+
+/**
+ * Creates a serializer object for an Ack message.
+ * @param sender Sender node.
+ * @param target Target node.
+ * @param id Message Id.
+ * @param msg Status message.
+ * @param port Port of the client that is attempting to register.
+ * @return returns the serializer object for the status.
+ */
+Serializer *get_status_serializer(size_t sender, size_t target, size_t id, String *msg) {
+
+    // Create the status object.
+    Status *stat = new Register(sender, target, id, client_ip);
+
+    // Add the status to the serializer
+    Serializer *stat_ser = new Serializer();
+    stat_ser->serialize(stat);
+
+    delete stat;
+
+    // Return the serializer.
+    return stat_ser;
 
 }
 

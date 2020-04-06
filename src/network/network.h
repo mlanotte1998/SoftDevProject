@@ -1040,50 +1040,37 @@ public:
 
         bool message_sent = false;
 
+        // Run a loop until the process has finished.
         while (!message_sent) {
 
+            // Figure out which client object to use for interaction.
             Client *cur_client = get_client_of_key(k);
 
             if (cur_client != nullptr) {
-                Message *wait_message = new Message(MsgKind::Put, node_, k.idx_, 0);
-
-                Serializer *waitSer = new Serializer();
-                char *serialized_wait = waitSer->serialize(wait_message);
-
-                // Copy the register message to the buffer and sent it.
-                strcpy(buffer, serialized_wait);
-                cur_client->socket_send(buffer, 1024);
-
-                delete wait_message;
-                delete waitSer;
 
                 message_sent = true;
 
-                memset(buffer, 0, 1024);
+                // TODO can send df length here
+                // Send the starting put message to start everything off.
+                Serializer *put_ser = get_message_serializer(MsgKind::Put, node_, k.idx_, 0);
+                strcpy(buffer, put_ser->buffer_);
+                cur_client->socket_send(buffer, 1024);
+                delete put_ser;
 
+                // TODO Check if actually an ack.
+                // Read in ack message.
+                memset(buffer, 0, 1024);
                 cur_client->socket_read(buffer, 1024);
 
-                printf("Put %s\n", buffer);
-
+                // Create a status message for sending the char identifier for the key.
+                memset(buffer, 0, 1024);
                 String *key_string = new String(k.name_);
-
-                Status *stat = new Status(node_, k.idx_, k.idx_, key_string);
-
-                Serializer *key_ser = new Serializer();
-
-                char *serialized_key = key_ser->serialize(stat);
-
-                memset(buffer, 0, 1024);
-
-                strcpy(buffer, serialized_key);
-
+                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string)
+                strcpy(buffer, key_ser->buffer_);
                 cur_client->socket_send(buffer, 1024);
+                delete key_ser;
 
                 memset(buffer, 0, 1024);
-
-                delete stat;
-
-                delete key_ser;
 
                 for (int i = 0; i < df->ncols(); i++) {
                     Column *cur_col = df->cols_[i];
@@ -1115,7 +1102,6 @@ public:
                     while (count < strlen(col_string)) {
                         memset(buffer, 0, 1024);
                         strncpy(buffer, col_string + count, 1023);
-                        // buffer[1023] = '\0';
                         cur_client->socket_send(buffer, 1024);
                         count += 1023;
 
