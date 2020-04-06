@@ -46,10 +46,7 @@ public:
 
         size_t bytes = MAX_ARRAY_SIZE_BYTES_STANDARD;
 
-        std::cout << strlen(ser) << std::endl;
-
         if (strlen(ser) > 10000) {
-            std::cout << "What the fuck" << std::endl;
             bytes = MAX_ARRAY_SIZE_BYTES_LARGE;
         }
 
