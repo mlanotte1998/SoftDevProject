@@ -58,9 +58,18 @@ receive their messages from other Nodes they also need their own Server object a
 need to be simultaneously connected to the Registrar along with being able to receive/send messages, threading is 
 needed to run both of these functions at the same time. 
 
-After spending time thinking of how to go about the actual network functionality, it became apparent that these
-classes will have to be manipulated to work with the application. The message sending structure needs to be updated
-to actually use serialized messages along with including the functionality to send store objects. 
+A lot changed to the Node and Rendezvous Server this week to make the Demo work and a lot more will
+have to happen moving forward. For what is is new, first the Node and Rendezvous Server now interact 
+with Register and Directory objects being serialized. The other big change starts with the Node taking in 
+a node index and the Map in its constructor so that it is tightly coupled with the KDStore. 
+This way, there can be put and waitAndGet functions in the Node. The Node class also has functions for being
+on the receiving end of these requests that handle the other end of the back in forth that goes in between Nodes. 
+The Node to Node interactions involve normal Messages, Status's for passing on a string, Acks for when
+no information needs to be sent but want to let the other know that it is ready to receive, and then the Column's 
+are serialized and then broken up into 1024 byte chunks to be sent. The receiver of a DataFrame is told how many
+bytes the serialized column it is going to receive by that being the ID of a message. It can then have a buffer
+large enough to handle that full message. Once a Column is fully sent, another normal message is sent to show that
+the column is finished and can then be built. 
   
 #### DataFrame:  
 The top level class for data storage in the application. The DataFrame will store data in row/column format. 
