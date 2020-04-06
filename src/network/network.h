@@ -1179,6 +1179,8 @@ public:
 
     DataFrame *wait_and_get_receive_dataframe(Client *cur_client, size_t target) {
 
+        char buffer[1024] = {0};
+
         // Create DataFrame and boolean for going through receving columns.
         bool end_reached = false;
         Schema s("");
@@ -1211,7 +1213,7 @@ public:
     }
 
     void wait_and_get_receive_column(Client *cur_client, size_t target,
-                                     size_t col_size, DataFrame *df) {
+                                     size_t size_of_column_message, DataFrame *df) {
 
         // Buffer for sending ack to start sequence.
         char buffer[1024] = {0};
