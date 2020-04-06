@@ -11,7 +11,7 @@
 Serializer *get_message_serializer(MsgKind kind, size_t sender, size_t target, size_t id) {
 
     // Create the Message
-    Message *mes = new Message(kind, sender, target, 0);
+    Message *mes = new Message(kind, sender, target, id);
 
     // Add the message to the serializer
     Serializer *mes_ser = new Serializer();
@@ -89,4 +89,3 @@ Object *deserialize_buffer(char *buffer) {
 
     return obj;
 }
-

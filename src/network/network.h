@@ -597,7 +597,7 @@ public:
     /**
      * Handle receiving a single column of a DataFrame.
      * @param target Target node id.
-     * @param socket_idx Index of socket that is being interacted with. 
+     * @param socket_idx Index of socket that is being interacted with.
      * @param size_of_column_message Size of column char* that needs to be received.
      * @param df DataFrame to add column to.
      */
@@ -736,7 +736,7 @@ public:
 
                 for (int i = 0; i < desired_df->ncols(); i++) {
                     Column *cur_col = desired_df->cols_[i];
-                    handle_wait_and_get_send_column(cur_col);
+                    handle_wait_and_get_send_column(cur_col, target, socket_idx);
                 }
             }
         }
@@ -759,9 +759,8 @@ public:
 
         // Create Message with id of the length of the column message so that the
         // other node knows how big of a message it will be receiving in chunks.
-        Serializer *strlen_ser = get_message_serializer(MsgKind::WaitAndGet, node_, target, strlen(col_string))
-        char *strlen_string = strlen_ser->serialize(wag_for_strlen);
-        strcpy(buffer, strlen_string);
+        Serializer *strlen_ser = get_message_serializer(MsgKind::WaitAndGet, node_, target, strlen(col_string));
+        strcpy(buffer, strlen_ser->buffer_);
         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
         // TODO Maybe check that this is an ack.
@@ -782,7 +781,7 @@ public:
 
         // Send the same wait and get message from earlier again to show that the column sending is done.
         memset(buffer, 0, 1024);
-        strcpy(buffer, strlen_string);
+        strcpy(buffer, strlen_ser->buffer_);
         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
         delete col_ser;
@@ -1260,6 +1259,8 @@ public:
                         delete ackSer;
 
                         char *new_buffer = new char[size_of_message + 1];
+
+                        std::cout << size_of_message << " size " << std::endl;
 
 
                         size_t count = 0;
