@@ -103,6 +103,7 @@ void test_resize() {
     delete val_3;
     delete h1;
     delete h2;
+    delete [] values_array;
     OK("Resize");
 }
 

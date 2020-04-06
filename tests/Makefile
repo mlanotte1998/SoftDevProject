@@ -4,7 +4,6 @@ test:
 	@ make runSerialize
 	@ make runStore
 	@ make runSorer
-	@ make runTrivial
 
 #===========================================================================================================
 #Data structure tests
@@ -21,6 +20,7 @@ testArray:
 	@ g++ -w -std=c++11 -o array test-array.cpp
 	#----------------------Array Tests------------------------#
 	@ ./array
+	@ valgrind ./array
 	#--------------------End Array Tests----------------------#
 	@ echo ""
 
@@ -28,6 +28,7 @@ testMap:
 	@ g++ -std=c++11 -o map test-map.cpp
 	#-----------------------Map Tests-------------------------#
 	@ ./map
+	@ valgrind ./map
 	#---------------------End Map Tests-----------------------#
 	@ echo ""
 
@@ -35,6 +36,7 @@ testAdditionalMap:
 	@ g++ -std=c++11 -o map test-additional-map.cpp
 	#------------------Additional Map Tests-------------------#
 	@ ./map
+	@ valgrind ./map
 	#----------------End Additional Map Tests-----------------#
 	@ echo ""
 
@@ -56,6 +58,7 @@ buildDataframe:
 testDataframe:
 	#--------------------Dataframe Tests----------------------#
 	@ ./dataframe
+	@ valgrind ./dataframe
 	#------------------End Dataframe Tests--------------------#
 	@ echo ""
 
@@ -75,6 +78,7 @@ buildSerialize:
 testSerialize:
 	#--------------------Serialize Tests----------------------#
 	@ ./serialize
+	@ valgrind ./serialize
 	#------------------End Serialize Tests--------------------#
 	@ echo ""
 
@@ -94,6 +98,7 @@ buildStore:
 testStore:
 	#--------------------Store Tests----------------------#
 	@ ./store
+	@ valgrind ./store
 	#------------------End Store Tests--------------------#
 	@ echo ""
 
@@ -143,36 +148,3 @@ testSorerUnitTests:
 cleanSorer:
 	@ rm -rf sorer
 	@ rm -rf test-sorer
-
-#===================================================================================================================
-
-runNetwork: buildNetwork
-	- make testNetwork
-	- make cleanNetwork
-
-buildNetwork:
-	g++ -std=c++11 -pthread -o server server.cpp
-	g++ -std=c++11 -pthread -o client client.cpp
-
-testNetwork: server client
-
-	# start the server and the clients
-	./server -ip 127.0.0.1 &
-	(./client -ip 127.0.0.2 &) > file1.txt
-	(./client -ip 127.0.0.3 &) > file2.txt
-	pkill -f ./server
-
-
-cleanNetwork:
-	-rm *.o $(objects) *.txt server client
-
-#===================================================================================================================
-
-runTrivial:
-	@ g++ -w -std=c++11 -o trivial ../src/p2main.cpp
-	#------------------Trivial Application--------------------#
-	@ ./trivial
-	#----------------End Trivial Application------------------#
-	@ echo ""
-	
-	@ rm trivial

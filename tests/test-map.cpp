@@ -43,7 +43,7 @@ void test2() {
     h1->put(key_1, val_2);
     t_true(h1->get_size() == 1);
     t_false(val_1 -> equals(h1->get(key_1)));
-    delete key_1; 
+    delete key_1;
     delete val_1;
     delete val_2;
     delete h1;
@@ -77,7 +77,9 @@ void test3() {
  */
 void test4() {
     Map* h1 = new Map();
-    t_true(h1 -> get(new String("1")) == nullptr);
+    String* s = new String("1");
+    t_true(h1 -> get(s) == nullptr);
+    delete s; 
     delete h1;
     OK("4");
 }
@@ -161,6 +163,7 @@ void test7() {
     delete val_2;
     delete val_3;
     delete h1;
+    delete [] values_array;
     OK("7");
 }
 
