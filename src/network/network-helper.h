@@ -83,7 +83,7 @@ Serializer *get_register_serializer(size_t sender, size_t target, size_t id,
 Serializer *get_status_serializer(size_t sender, size_t target, size_t id, String *msg) {
 
     // Create the status object.
-    Status *stat = new Register(sender, target, id, client_ip);
+    Status *stat = new Status(sender, target, id, msg);
 
     // Add the status to the serializer
     Serializer *stat_ser = new Serializer();

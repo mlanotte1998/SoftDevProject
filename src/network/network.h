@@ -1065,7 +1065,7 @@ public:
                 // Create a status message for sending the char identifier for the key.
                 memset(buffer, 0, 1024);
                 String *key_string = new String(k.name_);
-                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string)
+                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
                 strcpy(buffer, key_ser->buffer_);
                 cur_client->socket_send(buffer, 1024);
                 delete key_ser;
