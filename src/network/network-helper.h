@@ -4,31 +4,47 @@
 // Common helper function
 
 
+/**
+ * Creates a serializer object for an Ack message.
+ * @param sender Sender node.
+ * @param target Target node.
+ * @param id Message Id.
+ * @return returns the serializer object for the Ack.
+ */
+Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
 
-Serializer* get_ack_serializer(size_t sender, size_t target, size_t id) {
+    // Create the ack
+    Ack *ack = new Ack(sender, target, 0);
 
-  Ack *ack = new Ack(sender, target, 0);
+    // Add the ack to the serializer
+    Serializer *ack_ser = new Serializer();
+    ack_ser->serialize(ack);
 
-  Serializer *ackSer = new Serializer();
-  ackSer->serialize(ack);
+    delete ack;
 
-  delete ack;
-
-  return ackSer;
+    // Return the serializer.
+    return ack_ser;
 
 }
 
-Object* deserialize_buffer(char* buffer) {
-  char *serial_string = new char[1024];
-  strcpy(serial_string, buffer);
+/**
+ * Deserialize a buffer and return the object.
+ * @param buffer buffer with message to deserialize.
+ * @return deserialized object.
+ */
+Object *deserialize_buffer(char *buffer) {
 
-  Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-  Object *obj = ser->deserialize();
-  delete ser;
+    // Create a string to copy the buffer to and then pass to the Serializer.
+    char *serial_string = new char[1024];
+    strcpy(serial_string, buffer);
 
-  return obj;
+    // Create the serializer object and deserialize it.
+    Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+    Object *obj = ser->deserialize();
+    delete ser;
+
+    return obj;
 }
-
 
 
 /**
@@ -74,7 +90,7 @@ int get_ip_from_arguments(int argc, char **argv, char *ip_buffer) {
  * @param index The index that the ip should be added to the list.
  * @return Returns the new char* for the ip.
  */
-char *store_client_ip(char *ip_buffer, char** ip_list, int index) {
+char *store_client_ip(char *ip_buffer, char **ip_list, int index) {
     // Create a new string for this ip and store it.
     char *new_ip = new char[30];
     strcpy(new_ip, ip_buffer);
@@ -110,7 +126,7 @@ char *get_ip_from_client_message(char *message) {
         if (message[count] != ' ') {
             new_ip_string[count - 4] = message[count];
         } else {
-          break;
+            break;
         }
     }
     new_ip_string[count + 1] = '\0';
@@ -151,12 +167,12 @@ char *get_ip_list_string(char **list_of_ips, int size) {
  */
 int locate_ip_in_list(char **ip_list, int ip_count, char *ip_to_locate) {
     for (int i = 0; i < ip_count; i++) {
-        char* current = remove_ip_tag(ip_list[i]);
+        char *current = remove_ip_tag(ip_list[i]);
         if (strcmp(current, ip_to_locate) == 0) {
-            delete [] current;
+            delete[] current;
             return i;
         }
-        delete [] current;
+        delete[] current;
     }
     return -1;
 }
@@ -196,7 +212,7 @@ int build_ip_list(char *ip_list_string, char **ip_list) {
 
     // Messages always end in a space, so the final current ip char*
     // will be empty so delete it.
-    delete [] current_ip;
+    delete[] current_ip;
 
     return current_ip_count;
 }
