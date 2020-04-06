@@ -28,6 +28,32 @@ Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
 }
 
 /**
+ * Creates a serializer object for an Ack message.
+ * @param sender Sender node.
+ * @param target Target node.
+ * @param id Message Id.
+ * @param client_ip Ip of client that is attempting to register.
+ * @param port Port of the client that is attempting to register.
+ * @return returns the serializer object for the Ack.
+ */
+Serializer *get_register_serializer(size_t sender, size_t target, size_t id,
+        char* client_ip, size_t port ) {
+
+    // Create the register object.
+    Register *reg = new Register(sender, target, id, client_ip_, port_);
+
+    // Add the register to the serializer
+    Serializer *ack_ser = new Serializer();
+    ack_ser->serialize(ack);
+
+    delete ack;
+
+    // Return the serializer.
+    return ack_ser;
+
+}
+
+/**
  * Deserialize a buffer and return the object.
  * @param buffer buffer with message to deserialize.
  * @return deserialized object.

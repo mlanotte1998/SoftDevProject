@@ -508,6 +508,7 @@ public:
 
     //--------------------------------------------------------------------------
 
+    // Put Handling Methods
 
     /**
      * Function for handling a put request coming in.
@@ -545,6 +546,13 @@ public:
         delete key;
     }
 
+    /**
+     * Function for handling needing to receive a DataFrame for a put.
+     * @param socket_idx index of socket to interact with.
+     * @param target target node id.
+     * @param key_name name of the key needed for the put.
+     * @param df_length
+     */
     void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
 
         // Buffer for reading in message,
@@ -586,13 +594,13 @@ public:
     }
 
     /**
-     * Handle receiving a single column of a dataframe.
+     * Handle receiving a single column of a DataFrame.
      * @param target Target node id.
      * @param socket_idx Index of socket that is being interacted with. 
      * @param size_of_column_message Size of column char* that needs to be received.
      * @param df DataFrame to add column to.
      */
-    void handle_put_receive_column(size_t target, size_t socket_idx,  size_t size_of_column_message, DataFrame* df) {
+    void handle_put_receive_column(size_t target, size_t socket_idx, size_t size_of_column_message, DataFrame *df) {
 
         // Buffer for sending ack to start sequence.
         char buffer[1024] = {0};
@@ -624,7 +632,7 @@ public:
 
         // Create a serializer for the column and then add the deserialized column to the dataframe.
         Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
-        df->add_column(dynamic_cast<Column*>(col_ser->deserialize()));
+        df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
 
         delete col_ser;
         delete ack_ser;
@@ -632,12 +640,12 @@ public:
 
     /**
      * Fucction for reading in a part of a column during a put.
-     * @param append_buffer
-     * @param socket_idx
-     * @param recv_count
-     * @return
+     * @param append_buffer Buffer to append incoming messages to to build DataFrame.
+     * @param socket_idx Index of socket to interact with.
+     * @param recv_count Count of read iterations.
+     * @return Returns a bool, true if continue reading, false to stop.
      */
-    bool read_in_put_column(char* append_buffer, size_t socket_idx, size_t recv_count) {
+    bool read_in_put_column(char *append_buffer, size_t socket_idx, size_t recv_count) {
 
         // Create a buffer to read in the message.
         char buffer[1024] = {0};
@@ -645,7 +653,7 @@ public:
 
         // If the recv_count > 0 then check if the end column full message is sent.
         if (recv_count > 0) {
-            Object* deserialized_mes = deserialize_buffer(buffer);
+            Object *deserialized_mes = deserialize_buffer(buffer);
             // If deserialize works then the message received was the end column message.
             if (deserialized_mes != nullptr) {
                 delete deserialized_mes;
@@ -767,9 +775,7 @@ public:
                     delete strlen_ser;
                 }
             }
-
         }
-
     }
 
 
@@ -829,8 +835,6 @@ public:
         // Increase the socket count.
         IS_total_socket_count_++;
 
-        // Reset buffer so that new messages don't overlap.
-        memset(buffer, 0, 1024);
     }
 
 
@@ -880,23 +884,29 @@ public:
     //------------------------------------------------------------------
     // Functions for communication with registrar.
 
-
+    /**
+     * Function for sending a register message.
+     */
     void send_register() {
+
+        // Create a buffer to copy to for sending the message.
         char buffer[1024] = {0};
 
-        Register *reg = new Register(node_, 3, 0, client_ip_, port_);
-
-        Serializer *registerSer = new Serializer();
-        char *serialized_register = registerSer->serialize(reg);
+        // Create register serializer object.
+        Serializer *registerSer = get_register_serializer(node_, 3, 0, client_ip_, port_);
 
         // Copy the register message to the buffer and sent it.
-        strcpy(buffer, serialized_register);
+        strcpy(buffer, registerSer->buffer_);
         internalClient_->socket_send(buffer, 1024);
 
-        delete reg;
         delete registerSer;
     }
 
+    /**
+     * Take in a register as a node and add it to all of the lists needed for
+     * knowledge of other nodes.
+     * @param reg Register to add.
+     */
     void add_register(Register *reg) {
 
         IC_ip_list_[IC_other_total_client_count_] = duplicate(reg->client_ip_->c_str());
@@ -908,8 +918,13 @@ public:
         printf("New Node joined : %s\n", reg->client_ip_->c_str());
     }
 
+    /**
+     * Take in a directory and add each register from it one at a time.
+     * @param dir Directory to add.
+     */
     void add_directory(Directory *dir) {
 
+        // Loop through directory and build registers to add.
         for (int i = 0; i < dir->addresses_count_; i++) {
             Register *temp = new Register(dir->nodes_[i], 0, 0, dir->addresses_[i]->c_str(), dir->ports_[i]);
             add_register(temp);
@@ -944,26 +959,21 @@ public:
                 return;
             }
 
-            // Deserialize the string.
-            char *serial_string = new char[1024];
-            strcpy(serial_string, buffer);
-
-            Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-            Object *deserialized = ser->deserialize();
+            // Deserialize the buffer
+            Object *deserialized = deserialize_buffer(buffer);
 
             // If a Register is the incoming message then add the new nodes data.
             if (dynamic_cast<Register *>(deserialized) != nullptr) {
                 Register *reg = dynamic_cast<Register *>(deserialized);
                 add_register(reg);
             }
-                // Else if a directory is the incoming message then copy all of the data
-                // to the values of this node.
+            // Else if a directory is the incoming message then copy all of the data
+            // to the values of this node.
             else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
                 Directory *dir = dynamic_cast<Directory *>(deserialized);
                 add_directory(dir);
             }
             delete deserialized;
-            delete ser;
         }
     }
 
