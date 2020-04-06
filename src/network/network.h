@@ -700,7 +700,7 @@ public:
 
         // If status received then it is the message we want with the information of the key.
         if (dynamic_cast<Status *>(key) != nullptr) {
-            // Continue to then handle sending the dataframe.
+            // Continue to then handle sending the DataFrame.
             handle_wait_and_get_dataframe_send(socket_idx, target, dynamic_cast<Status *>(key)->msg_->c_str());
             delete key;
         } else {
@@ -711,6 +711,12 @@ public:
     }
 
 
+    /**
+     * Function for handling sending a DataFrame when a wait and get occurs.
+     * @param socket_idx Index of socket to interact with.
+     * @param target Id of target node.
+     * @param key_name Name of key of dataframe.
+     */
     void handle_wait_and_get_dataframe_send(int socket_idx, size_t target, char *key_name) {
 
         char buffer[1024] = {0};
@@ -725,55 +731,62 @@ public:
                 Object *ob = store_map_->get(key);
                 desired_df = dynamic_cast<DataFrame *>(ob);
 
+                //TODO Need to handle telling it how many columns
+                // Currently works because only one
+
                 for (int i = 0; i < desired_df->ncols(); i++) {
                     Column *cur_col = desired_df->cols_[i];
-                    Serializer *col_ser = new Serializer();
-                    char *col_string = col_ser->serialize(cur_col);
-
-                    std::cout << "col string" << col_string << std::endl;
-
-                    Message *wag_for_strlen = new Message(MsgKind::WaitAndGet, node_, target, strlen(col_string));
-                    Serializer *strlen_ser = new Serializer();
-                    char *strlen_string = strlen_ser->serialize(wag_for_strlen);
-
-                    strcpy(buffer, strlen_string);
-
-                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-
-                    memset(buffer, 0, 1024);
-
-                    internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
-
-                    size_t count = 0;
-
-                    size_t send_count = 0;
-
-
-                    while (count < strlen(col_string)) {
-                        memset(buffer, 0, 1024);
-                        strncpy(buffer, col_string + count, 1023);
-                        std::cout << "sent" << std::endl;
-                        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-                        count += 1023;
-
-                        send_count++;
-                    }
-
-                    memset(buffer, 0, 1024);
-                    strcpy(buffer, strlen_string);
-
-                    std::cout << "sent2" << std::endl;
-
-                    internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-
-                    delete col_ser;
-
-                    delete wag_for_strlen;
-
-                    delete strlen_ser;
+                    handle_wait_and_get_send_column(cur_col);
                 }
             }
         }
+    }
+
+    /**
+     * Function for handling sending one column for an wait and get interaction.
+     * @param cur_col Column to send.
+     * @param target Target nodes id.
+     * @param socket_idx Index of socket to interact with.
+     */
+    void handle_wait_and_get_send_column(Column* cur_col, size_t target, size_t socket_idx) {
+
+        // Buffer for sending and receiving messages.
+        char buffer[1024] = {0};
+
+        // Create serialized column.
+        Serializer *col_ser = new Serializer();
+        char *col_string = col_ser->serialize(cur_col);
+
+        // Create Message with id of the length of the column message so that the
+        // other node knows how big of a message it will be receiving in chunks.
+        Serializer *strlen_ser = get_message_serializer(MsgKind::WaitAndGet, node_, target, strlen(col_string))
+        char *strlen_string = strlen_ser->serialize(wag_for_strlen);
+        strcpy(buffer, strlen_string);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+
+        // TODO Maybe check that this is an ack.
+        memset(buffer, 0, 1024);
+        internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+
+        // Keep track of count of message that has been sent to ensure
+        // the entire column is sent.
+        size_t count = 0;
+
+        // Send the column in chunks and increment the count to keep track of how much has been sent.
+        while (count < strlen(col_string)) {
+            memset(buffer, 0, 1024);
+            strncpy(buffer, col_string + count, 1023);
+            internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+            count += 1023;
+        }
+
+        // Send the same wait and get message from earlier again to show that the column sending is done.
+        memset(buffer, 0, 1024);
+        strcpy(buffer, strlen_string);
+        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+
+        delete col_ser;
+        delete strlen_ser;
     }
 
 

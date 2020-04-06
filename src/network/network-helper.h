@@ -1,6 +1,29 @@
 #pragma once
 
 /**
+ * Creates a serializer object for an message.
+ * @param kind Kind of message
+ * @param sender Sender node.
+ * @param target Target node.
+ * @param id Message Id.
+ * @return returns the serializer object for the Message.
+ */
+Serializer *get_message_serializer(MsgKind kind, size_t sender, size_t target, size_t id) {
+
+    // Create the Message
+    Message *mes = new Message(kind, sender, target, 0);
+
+    // Add the message to the serializer
+    Serializer *mes_ser = new Serializer();
+    mes_ser->serialize(mes);
+
+    delete mes;
+
+    // Return the serializer.
+    return mes_ser;
+}
+
+/**
  * Creates a serializer object for an Ack message.
  * @param sender Sender node.
  * @param target Target node.
@@ -20,7 +43,6 @@ Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
 
     // Return the serializer.
     return ack_ser;
-
 }
 
 /**
