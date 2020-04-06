@@ -565,11 +565,11 @@ public:
             internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
 
             // Deserialized message should be a Message. The kind is then what is important.
-            Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer); );
+            Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer));
 
             // If put message then a column needs to be read
             if (deserialized_mes->kind_ == MsgKind::Put) {
-                handle_put_receive_column(target, deserialized_mes->id_, df);
+                handle_put_receive_column(target, socket_idx, deserialized_mes->id_, df);
                 end_reached = true;
             } else {
                 end_reached = true;
@@ -580,18 +580,23 @@ public:
             store_map_->put(new_key, df);
 
             std::cout << "Finished put" << std::endl;
-            
-            delete deserialized_mes
+
+            delete deserialized_mes;
         }
     }
 
     /**
      * Handle receiving a single column of a dataframe.
      * @param target Target node id.
+     * @param socket_idx Index of socket that is being interacted with. 
      * @param size_of_column_message Size of column char* that needs to be received.
      * @param df DataFrame to add column to.
      */
-    void handle_put_receive_column(size_t target, size_t size_of_column_message, DataFrame* df) {
+    void handle_put_receive_column(size_t target, size_t socket_idx,  size_t size_of_column_message, DataFrame* df) {
+
+        // Buffer for sending ack to start sequence.
+        char buffer[1024] = {0};
+
         // Create a buffer for receiving the column based on the info
         // from the received put message. Need size of at least 1024 to read in successfully.
         size_t size_of_message = size_of_column_message;
@@ -603,7 +608,7 @@ public:
 
         // Create and send an ack message to then initiate the start of receiving the column.
         Serializer *ack_ser = get_ack_serializer(node_, target, 0);
-        strcpy(buffer, ackSer->buffer_);
+        strcpy(buffer, ack_ser->buffer_);
         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
 
         // Keep a count of how many reads have been done for this column for use in helper function.
@@ -622,7 +627,7 @@ public:
         df->add_column(dynamic_cast<Column*>(col_ser->deserialize()));
 
         delete col_ser;
-        delete ackSer;
+        delete ack_ser;
     }
 
     /**
@@ -642,12 +647,12 @@ public:
         if (recv_count > 0) {
             Object* deserialized_mes = deserialize_buffer(buffer);
             // If deserialize works then the message received was the end column message.
-            if (deserialized_mes->deserialize() != nullptr) {
-                delete finish_mes;
+            if (deserialized_mes != nullptr) {
+                delete deserialized_mes;
                 // return false to stop the loop.
                 return false;
             }
-            delete finish_mes;
+            delete deserialized_mes;
         }
 
         // If first recv then copy, else concat onto end of the buffer used to form the whole column.
