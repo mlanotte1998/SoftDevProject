@@ -1135,268 +1135,263 @@ public:
             }
         }
     }
-}
 
 
-        DataFrame
+    DataFrame *waitAndGet(Keyk) {
 
-*
-waitAndGet(Key
-k) {
+        char buffer[1024] = {0};
 
-char buffer[1024] = {0};
+        bool message_sent = false;
 
-bool message_sent = false;
+        while (!message_sent) {
 
-while (!message_sent) {
-
-size_t node_idx = max_clients_;
-for (
-int i = 0;
-i<IC_other_total_client_count_;
-i++) {
-if (IC_nodes_list_[i] == k.idx_) {
-node_idx = i;
-break;
-}
-}
+            size_t node_idx = max_clients_;
+            for (
+                    int i = 0;
+                    i < IC_other_total_client_count_;
+                    i++) {
+                if (IC_nodes_list_[i] == k.idx_) {
+                    node_idx = i;
+                    break;
+                }
+            }
 
 
-if (node_idx != max_clients_) {
-char *target_ip = IC_ip_list_[node_idx];
-Client *cur_client;
-for (
-int i = 0;
-i<IC_other_client_connections_count_;
-i++) {
-if (
-strcmp(target_ip, IC_other_client_connections_ips_[i]
-)) {
-cur_client = IC_other_client_connections_[i];
+            if (node_idx != max_clients_) {
+                char *target_ip = IC_ip_list_[node_idx];
+                Client *cur_client;
+                for (
+                        int i = 0;
+                        i < IC_other_client_connections_count_;
+                        i++) {
+                    if (
+                            strcmp(target_ip, IC_other_client_connections_ips_[i]
+                            )) {
+                        cur_client = IC_other_client_connections_[i];
 
-Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
+                        Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
 
-Serializer *waitSer = new Serializer();
-char *serialized_wait = waitSer->serialize(wait_message);
+                        Serializer *waitSer = new Serializer();
+                        char *serialized_wait = waitSer->serialize(wait_message);
 
 // Copy the register message to the buffer and sent it.
-strcpy(buffer, serialized_wait
-);
-cur_client->
-socket_send(buffer,
-1024);
+                        strcpy(buffer, serialized_wait
+                        );
+                        cur_client->
+                                socket_send(buffer,
+                                            1024);
 
-delete
-wait_message;
-delete
-waitSer;
+                        delete
+                                wait_message;
+                        delete
+                                waitSer;
 
-message_sent = true;
+                        message_sent = true;
 
-}
-}
+                    }
+                }
 
-if (!message_sent) {
-cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
+                if (!message_sent) {
+                    cur_client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
 
-IC_other_client_connections_[IC_other_client_connections_count_] =
-cur_client;
-IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
-IC_other_client_connections_count_++;
+                    IC_other_client_connections_[IC_other_client_connections_count_] =
+                            cur_client;
+                    IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
+                    IC_other_client_connections_count_++;
 
-Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
+                    Message *wait_message = new Message(MsgKind::WaitAndGet, node_, k.idx_, 0);
 
-Serializer *waitSer = new Serializer();
-char *serialized_wait = waitSer->serialize(wait_message);
-
-// Copy the register message to the buffer and sent it.
-strcpy(buffer, serialized_wait
-);
-cur_client->
-socket_send(buffer,
-1024);
-
-delete
-wait_message;
-delete
-waitSer;
-}
-
-
-message_sent = true;
-
-memset(buffer,
-0, 1024);
-
-cur_client->
-socket_read(buffer,
-1024);
-
-memset(buffer,
-0, 1024);
-
-String *key_string = new String(k.name_);
-
-Status *key_message = new Status(node_, k.idx_, k.idx_, key_string);
-
-Serializer *key_ser = new Serializer();
-
-char *serialized_key = key_ser->serialize(key_message);
+                    Serializer *waitSer = new Serializer();
+                    char *serialized_wait = waitSer->serialize(wait_message);
 
 // Copy the register message to the buffer and sent it.
-strcpy(buffer, serialized_key
-);
+                    strcpy(buffer, serialized_wait
+                    );
+                    cur_client->
+                            socket_send(buffer,
+                                        1024);
 
-cur_client->
-socket_send(buffer,
-1024);
+                    delete
+                            wait_message;
+                    delete
+                            waitSer;
+                }
 
-delete
-key_message;
-delete
-key_ser;
 
-bool end_reached = false;
+                message_sent = true;
 
-Schema s("");
+                memset(buffer,
+                       0, 1024);
 
-DataFrame *df = new DataFrame(s);
+                cur_client->
+                        socket_read(buffer,
+                                    1024);
 
-std::cout << "Hello" <<
-std::endl;
+                memset(buffer,
+                       0, 1024);
 
-while (!end_reached) {
-memset(buffer,
-0, 1024);
+                String *key_string = new String(k.name_);
 
-cur_client->
-socket_read(buffer,
-1024);
+                Status *key_message = new Status(node_, k.idx_, k.idx_, key_string);
+
+                Serializer *key_ser = new Serializer();
+
+                char *serialized_key = key_ser->serialize(key_message);
+
+// Copy the register message to the buffer and sent it.
+                strcpy(buffer, serialized_key
+                );
+
+                cur_client->
+                        socket_send(buffer,
+                                    1024);
+
+                delete
+                        key_message;
+                delete
+                        key_ser;
+
+                bool end_reached = false;
+
+                Schema s("");
+
+                DataFrame *df = new DataFrame(s);
+
+                std::cout << "Hello" <<
+                          std::endl;
+
+                while (!end_reached) {
+                    memset(buffer,
+                           0, 1024);
+
+                    cur_client->
+                            socket_read(buffer,
+                                        1024);
 
 // Deserialize the string.
-char *serial_string = new char[1024];
-strcpy(serial_string, buffer
-);
+                    char *serial_string = new char[1024];
+                    strcpy(serial_string, buffer
+                    );
 
-Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
-if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
-size_t size_of_message = deserialized_mes->id_;
+                    Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+                    Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
+                    if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
+                        size_t size_of_message = deserialized_mes->id_;
 
-if (size_of_message < 1024) {
-size_of_message = 1024;
-}
+                        if (size_of_message < 1024) {
+                            size_of_message = 1024;
+                        }
 
-Ack *ack = new Ack(node_, k.idx_, 0);
+                        Ack *ack = new Ack(node_, k.idx_, 0);
 
-Serializer *ackSer = new Serializer();
-char *serialized_ack = ackSer->serialize(ack);
+                        Serializer *ackSer = new Serializer();
+                        char *serialized_ack = ackSer->serialize(ack);
 
 // Copy the ack message to the buffer and sent it.
-strcpy(buffer, serialized_ack
-);
+                        strcpy(buffer, serialized_ack
+                        );
 
-cur_client->
-socket_send(buffer,
-1024);
+                        cur_client->
+                                socket_send(buffer,
+                                            1024);
 
-delete
-ack;
-delete
-ackSer;
+                        delete
+                                ack;
+                        delete
+                                ackSer;
 
-char *new_buffer = new char[size_of_message + 1];
+                        char *new_buffer = new char[size_of_message + 1];
 
-std::cout << size_of_message << " size " <<
-std::endl;
-
-
-size_t count = 0;
-
-size_t recv_count = 0;
-
-bool message_unfinished = false;
-
-while (!message_unfinished) {
-
-std::cout << "Hello!!!!!!!!!!!!!" <<
-std::endl;
+                        std::cout << size_of_message << " size " <<
+                                  std::endl;
 
 
-memset(buffer,
-0, 1024);
-cur_client->
-socket_read(buffer,
-1024);
+                        size_t count = 0;
 
-if (recv_count > 0) {
-std::cout << buffer <<
-std::endl;
-char *serial_string2 = new char[1024];
-strcpy(serial_string2, buffer
-);
+                        size_t recv_count = 0;
 
-Serializer *messsss = new Serializer(reinterpret_cast<unsigned char *>(serial_string2));
-if (messsss->
+                        bool message_unfinished = false;
 
-deserialize()
+                        while (!message_unfinished) {
 
-!= nullptr) {
-delete
-messsss;
-break;
-}
-delete
-messsss;
-}
-
-if (count == 0) {
-strncpy(new_buffer, buffer,
-1024);
-} else {
-strncat(new_buffer, buffer,
-1024);
-}
-count += 1023;
-recv_count++;
-}
-
-std::cout << new_buffer <<
-std::endl;
-
-std::cout << "Hello@@@@@@" <<
-std::endl;
-
-Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
-
-df->add_column(dynamic_cast<Column *>(col_ser->
-
-deserialize()
-
-));
-
-delete
-col_ser;
+                            std::cout << "Hello!!!!!!!!!!!!!" <<
+                                      std::endl;
 
 
-end_reached = true;
+                            memset(buffer,
+                                   0, 1024);
+                            cur_client->
+                                    socket_read(buffer,
+                                                1024);
+
+                            if (recv_count > 0) {
+                                std::cout << buffer <<
+                                          std::endl;
+                                char *serial_string2 = new char[1024];
+                                strcpy(serial_string2, buffer
+                                );
+
+                                Serializer *messsss = new Serializer(reinterpret_cast<unsigned char *>(serial_string2));
+                                if (messsss->
+
+                                        deserialize()
+
+                                    != nullptr) {
+                                    delete
+                                            messsss;
+                                    break;
+                                }
+                                delete
+                                        messsss;
+                            }
+
+                            if (count == 0) {
+                                strncpy(new_buffer, buffer,
+                                        1024);
+                            } else {
+                                strncat(new_buffer, buffer,
+                                        1024);
+                            }
+                            count += 1023;
+                            recv_count++;
+                        }
+
+                        std::cout << new_buffer <<
+                                  std::endl;
+
+                        std::cout << "Hello@@@@@@" <<
+                                  std::endl;
+
+                        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
+
+                        df->add_column(dynamic_cast<Column *>(col_ser->
+
+                                deserialize()
+
+                                       ));
+
+                        delete
+                                col_ser;
 
 
-}
-
-delete
-ser;
-delete
-deserialized_mes;
-
-std::cout << "Hello!!!!!!!!!!!!!" <<
-std::endl;
+                        end_reached = true;
 
 
-return
-df;
-}
-}
-}
-}
+                    }
+
+                    delete
+                            ser;
+                    delete
+                            deserialized_mes;
+
+                    std::cout << "Hello!!!!!!!!!!!!!" <<
+                              std::endl;
+
+
+                    return
+                            df;
+                }
+            }
+        }
+    }
 };
