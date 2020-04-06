@@ -1137,8 +1137,14 @@ public:
     }
 
 
+    /**
+     * Function for doing a wait and get request.
+     * @param k Key of requested DataFrame.
+     * @return Returns the Dataframe requested.
+     */
     DataFrame *waitAndGet(Key k) {
 
+        // Buffer for reading and sending messages
         char buffer[1024] = {0};
 
         bool message_sent = false;
@@ -1177,8 +1183,15 @@ public:
         }
     }
 
+    /**
+     * Function for receiving the DataFrame during a wait and get.
+     * @param cur_client Client currently interacting with.
+     * @param target Target node id.
+     * @return Returns the DataFrame that is requested.
+     */
     DataFrame *wait_and_get_receive_dataframe(Client *cur_client, size_t target) {
 
+        // Buffer for receiving and sending messages.
         char buffer[1024] = {0};
 
         // Create DataFrame and boolean for going through receving columns.
@@ -1198,7 +1211,7 @@ public:
             // Deserialized message should be a Message. The kind is then what is important.
             Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer));
 
-            // If put message then a column needs to be read
+            // If wait and get message then a column needs to be read
             if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
                 wait_and_get_receive_column(cur_client, target, deserialized_mes->id_, df);
                 end_reached = true;
@@ -1209,9 +1222,17 @@ public:
             delete deserialized_mes;
         }
 
+        // return the DataFrame.
         return df;
     }
 
+    /**
+     * Function for receiving a column during a wait and get.
+     * @param cur_client Client currently interacting with.
+     * @param target Target nodes id.
+     * @param size_of_column_message Size of the column serialized message that will be received.
+     * @param df DataFrame to append column to.
+     */
     void wait_and_get_receive_column(Client *cur_client, size_t target,
                                      size_t size_of_column_message, DataFrame *df) {
 
@@ -1252,6 +1273,13 @@ public:
 
     }
 
+    /**
+    * Function for reading in a part of a column during a wait and get.
+    * @param cur_client Client currently interacting with.
+    * @param append_buffer Buffer to append incoming messages to to build DataFrame.
+    * @param recv_count Count of read iterations.
+    * @return Returns a bool, true if continue reading, false to stop.
+    */
     bool read_in_wait_and_get_column(Client *cur_client, char *append_buffer, size_t recv_count) {
 
         // Create a buffer to read in the message.
@@ -1279,6 +1307,5 @@ public:
 
         // return true to continue loop.
         return true;
-
     }
 };
