@@ -1031,6 +1031,7 @@ public:
             }
         }
 
+        // Return the client
         return client;
     }
 
@@ -1072,54 +1073,56 @@ public:
 
                 memset(buffer, 0, 1024);
 
+                // Loop through columns sending one at a time.
                 for (int i = 0; i < df->ncols(); i++) {
                     Column *cur_col = df->cols_[i];
-                    Serializer *col_ser = new Serializer();
-                    char *col_string = col_ser->serialize(cur_col);
-
-                    Message *wag_for_strlen = new Message(MsgKind::Put, node_, k.idx_, strlen(col_string));
-                    Serializer *strlen_ser = new Serializer();
-                    char *strlen_string = strlen_ser->serialize(wag_for_strlen);
-
-                    strcpy(buffer, strlen_string);
-
-                    cur_client->socket_send(buffer, 1024);
-
-                    std::cout << "Past Here Yo" << std::endl;
-
-                    memset(buffer, 0, 1024);
-
-                    delete wag_for_strlen;
-
-
-                    cur_client->socket_read(buffer, 1024);
-
-                    size_t count = 0;
-
-                    size_t send_count = 0;
-
-
-                    while (count < strlen(col_string)) {
-                        memset(buffer, 0, 1024);
-                        strncpy(buffer, col_string + count, 1023);
-                        cur_client->socket_send(buffer, 1024);
-                        count += 1023;
-
-                        send_count++;
-                    }
-
-                    memset(buffer, 0, 1024);
-                    strcpy(buffer, strlen_string);
-
-                    cur_client->socket_send(buffer, 1024);
-                    std::cout << "Past Here Yo 2" << std::endl;
-
-                    delete col_ser;
-
-                    delete strlen_ser;
+                    put_send_column(cur_client, cur_col, k.idx_);
                 }
             }
         }
+    }
+
+    void put_send_column(Client* cur_client, Column* cur_col, size_t target) {
+
+        // TODO find a way to have this be the same function as handle send column
+        // TODO because this is literally the same code just with different sending of messages.
+
+        // Buffer for sending and receiving messages.
+        char buffer[1024] = {0};
+
+        // Create serialized column.
+        Serializer *col_ser = new Serializer();
+        char *col_string = col_ser->serialize(cur_col);
+
+        // Create Message with id of the length of the column message so that the
+        // other node knows how big of a message it will be receiving in chunks.
+        Serializer *strlen_ser = get_message_serializer(MsgKind::Put, node_, target, strlen(col_string));
+        strcpy(buffer, strlen_ser->buffer_);
+        cur_client->socket_send( buffer, 1024);
+
+        // TODO Maybe check that this is an ack.
+        memset(buffer, 0, 1024);
+        cur_client->socket_read( buffer, 1024);
+
+        // Keep track of count of message that has been sent to ensure
+        // the entire column is sent.
+        size_t count = 0;
+
+        // Send the column in chunks and increment the count to keep track of how much has been sent.
+        while (count < strlen(col_string)) {
+            memset(buffer, 0, 1024);
+            strncpy(buffer, col_string + count, 1023);
+            cur_client->socket_send( buffer, 1024);
+            count += 1023;
+        }
+
+        // Send the same put message from earlier again to show that the column sending is done.
+        memset(buffer, 0, 1024);
+        strcpy(buffer, strlen_ser->buffer_);
+        cur_client->socket_send( buffer, 1024);
+
+        delete col_ser;
+        delete strlen_ser;
     }
 
 
