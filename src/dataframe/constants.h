@@ -38,7 +38,7 @@ static const int MAX_STRING_BYTES = 2048;
 
 // maximum byte bounds for serialization
 static const int MAX_BUFFER_SIZE_STANDARD = 10000;
-static const int MAX_BUFFER_SIZE_LARGE = 5000000;
+static const int MAX_BUFFER_SIZE_LARGE = 2000000;
 static const int MAX_ARRAY_SIZE_BYTES_STANDARD = MAX_BUFFER_SIZE_STANDARD - 1000;
 static const int MAX_ARRAY_SIZE_BYTES_LARGE = MAX_BUFFER_SIZE_LARGE - 1000;
 
