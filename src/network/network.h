@@ -315,6 +315,7 @@ public:
         // Print the ip of the newly accepted client
         printf("Client accepted : %s\n", reg->client_ip_->c_str());
 
+        // Add register to lists for client information.
         ip_list_[total_socket_count_] = reg->client_ip_->clone();
         port_list_[total_socket_count_] = reg->port_;
         nodes_list_[total_socket_count_] = reg->sender_;
@@ -675,41 +676,38 @@ public:
     }
 
 
+    /**
+     *  Handle a wait and get message being received.
+     * @param socket_idx Index of socket to iteract with.
+     * @param target Id of target node.
+     */
     void handle_wait_and_get(int socket_idx, size_t target) {
 
-        std::cout << "Handle wait and get" << std::endl;
+        // Create a buffer for sending and reading messages.
         char buffer[1024] = {0};
 
-        Ack *ack = new Ack(node_, target, 0);
-
-        Serializer *ackSer = new Serializer();
-        char *serialized_ack = ackSer->serialize(ack);
-
-        // Copy the ack message to the buffer and sent it.
-        strcpy(buffer, serialized_ack);
-
+        // Create and send ack to acknowledge that the handle and wait has been received.
+        Serializer *ack_ser = get_ack_serializer(node_, target, 0);
+        strcpy(buffer, ack_ser->buffer_);
         internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+        delete ack_ser;
 
-        delete ack;
-        delete ackSer;
-
-
+        // Reset the buffer to then receive what is hopefully a status message
+        // with information on the key that is being requested.
         memset(buffer, 0, 1024);
-
         internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
+        Object *key = deserialize_buffer(buffer);
 
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
-
-        Serializer *key_ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Object *key = key_ser->deserialize();
-
+        // If status received then it is the message we want with the information of the key.
         if (dynamic_cast<Status *>(key) != nullptr) {
+            // Continue to then handle sending the dataframe.
             handle_wait_and_get_dataframe_send(socket_idx, target, dynamic_cast<Status *>(key)->msg_->c_str());
+            delete key;
+        } else {
+            // Error if anything else received here. Should not happen.
+            delete key;
+            exit(1);
         }
-
-        delete key_ser;
-        delete key;
     }
 
 
@@ -967,8 +965,8 @@ public:
                 Register *reg = dynamic_cast<Register *>(deserialized);
                 add_register(reg);
             }
-            // Else if a directory is the incoming message then copy all of the data
-            // to the values of this node.
+                // Else if a directory is the incoming message then copy all of the data
+                // to the values of this node.
             else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
                 Directory *dir = dynamic_cast<Directory *>(deserialized);
                 add_directory(dir);
