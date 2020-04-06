@@ -36,7 +36,7 @@ public:
         strcpy(ser_copy2, ser);
 
         // Create a normal message to extract shared fields.
-        Message* temp = new Message(ser);
+        Message *temp = new Message(ser);
         sender_ = temp->sender_;
         target_ = temp->target_;
         id_ = temp->id_;
@@ -47,7 +47,7 @@ public:
         char *ser_token = strtok(ser_copy, " ");
         while (ser_token != NULL) {
 
-                // if p5 value is found add it as msg_ member
+            // if p5 value is found add it as msg_ member
             if (strncmp("-p5_val::", ser_token, strlen("-p5_val::")) == 0) {
                 char *p5_value = strstr(ser_copy2, "-p5_val::");
 
@@ -81,7 +81,7 @@ public:
 
     /** Status destructor */
     ~Status() {
-      delete msg_;
+        delete msg_;
     }
 
 };

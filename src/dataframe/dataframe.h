@@ -79,11 +79,11 @@ public:
     /** Create a data frame from an array of doubles and adds the one column dataframe to the
      * given KDStore
     */
-    static DataFrame* fromArray(Key* key, KDStore* kdStore, size_t size, double* vals) {
+    static DataFrame *fromArray(Key *key, KDStore *kdStore, size_t size, double *vals) {
         Schema schm("D");
-        DataFrame* df = new DataFrame(schm);
-        for(size_t i = 0; i < size; i++) {
-            Row* row = new Row(schm);
+        DataFrame *df = new DataFrame(schm);
+        for (size_t i = 0; i < size; i++) {
+            Row *row = new Row(schm);
             row->set(0, vals[i]);
             df->add_row(*row);
             delete row;
@@ -95,10 +95,10 @@ public:
     /** Create a data frame of one double and adds the one column dataframe to the
      * given KDStore
     */
-    static DataFrame* fromScalar(Key* key, KDStore* kdStore, double val) {
+    static DataFrame *fromScalar(Key *key, KDStore *kdStore, double val) {
         Schema schm("D");
-        DataFrame* df = new DataFrame(schm);
-        Row* row = new Row(schm);
+        DataFrame *df = new DataFrame(schm);
+        Row *row = new Row(schm);
         row->set(0, val);
         df->add_row(*row);
         delete row;

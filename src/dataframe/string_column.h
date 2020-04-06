@@ -31,87 +31,26 @@ public:
         array_length_ = 0;
     }
 
-    /***
-    * Constructor for passing any number of arguments
-    * @param n number of arguments
-    * @param ... bool values to be added in the array.
-    */
-    StringColumn(int n, ...) {
-        int i;
-        String *val;
-        va_list vl;
-        // Make sure n is greater than 0
-        if (n > 0) {
-            // Then create an outer array that is the ceiling log of the n value + 1;
-            // The best way to explain this is with an example. If n was 7, then there
-            // will be 7 elements in the array. With our double list structure,
-            // each inner list increases by * 2 , so they have 1 then 2 then 4 then 8 elements
-            // and so on. For 7 you would have 1 + 2 + 4 = 7, so we need an upper array of size 3.
-            // With the current function below you would get 3 for that value. but say n was 8
-            // then you would need another sub array so the upper array needs to be size 4,
-            // but the log2(8) is still 3, which is why it is ceil(log2(n + 1).
-            binary_column_array_ = new String **[int(ceil(log2(n + 1)))];
-            String **cur_array = new String *[1];
-
-            int cur_hor = 0;
-            int cur_ver = 0;
-            int cur_power = int(pow(2, cur_hor));
-            va_start(vl, n);
-            // Iterate through each element in the constructor.
-            for (i = 0; i < n; i++) {
-                val = va_arg(vl, String * );
-                // If the current vertical index is smaller than the current power, which is the
-                // size of the current inner array, then add this value in and increase the vertical index.
-                if (cur_ver < cur_power) {
-                    cur_array[cur_ver] = val->clone();
-                    cur_ver++;
-                }
-                // Else, the current inner array is at capacity, so increase the horizontal counter
-                // reset the vertical counter, and get the size of the newly needed array by
-                // doing 2 to the power of the horizontal index we are at. This makes sure that
-                // every time a new array is needed, it is twice the size of the old array.
-                // Finally set the value into the new array and increase the vertical index.
-                else {
-                    binary_column_array_[cur_hor] = cur_array;
-                    cur_hor++;
-                    cur_ver = 0;
-                    cur_power = int(pow(2, cur_hor));
-                    cur_array = new String *[cur_power];
-                    cur_array[cur_ver] = val->clone();
-                    cur_ver++;
-                }
-            }
-            // Incase the last sub array was not added  by hitting the else case on the
-            // last iteration of the for loop, add it here.
-            // Set the array length to be the number of indices plus 1.
-            // the size is n, and end the va.
-            binary_column_array_[cur_hor] = cur_array;
-            array_length_ = cur_hor + 1;
-            size_ = n;
-            va_end(vl);
-        }
-    }
-
     /**
      * Constructor for building a string column from a serialized string.
      * @param ser The serialized string for a string Column
      */
-    StringColumn(char* ser) {
+    StringColumn(char *ser) {
         // Set initial members
-        String **first_array = new String*[1];
+        String **first_array = new String *[1];
         binary_column_array_ = new String **[1];
         binary_column_array_[0] = first_array;
         array_length_ = 0;
         size_ = 0;
 
         // get start of array
-        char* ser_array = strstr(ser, "-p1_val");
-        char* ser_array_end = strstr(ser_array, "\"])");
+        char *ser_array = strstr(ser, "-p1_val");
+        char *ser_array_end = strstr(ser_array, "\"])");
         int ser_array_length = ser_array_end - ser_array;
 
         // first token is entire array
-        char* ser_token = ser_array;
-        char* ser_token_end;
+        char *ser_token = ser_array;
+        char *ser_token_end;
         int ser_token_length;
 
         // buffer used to add char* to a string
@@ -138,10 +77,10 @@ public:
             }
 
             // create string using token buffer and add to column
-            String* add_str = new String(buffer);
+            String *add_str = new String(buffer);
             push_back(add_str);
 
-            delete add_str; 
+            delete add_str;
             // move to next token
             ser_token++;
             ser_token = strstr(ser_token, "\"],[\"");
@@ -171,7 +110,7 @@ public:
 
         }
         if (size_ == 0) {
-          delete [] binary_column_array_[0];
+            delete[] binary_column_array_[0];
         }
         delete[] binary_column_array_;
     }
@@ -211,10 +150,10 @@ public:
             size_++;
             array_length_++;
         }
-        // Else if the array is at capacity meaning that the floor and log of the
-        // size + 1 is the same (for example size 3 array has an array of 1 and 2 that are full,
-        // 3 + 1 is 4, the log of 4 for both ceiling and floor is the same meaning this
-        // is a power of 2.
+            // Else if the array is at capacity meaning that the floor and log of the
+            // size + 1 is the same (for example size 3 array has an array of 1 and 2 that are full,
+            // 3 + 1 is 4, the log of 4 for both ceiling and floor is the same meaning this
+            // is a power of 2.
         else if (int(ceil(log2(size_ + 1))) == int(floor(log2(size_ + 1)))) {
             String ***new_binary_array = new String **[int(ceil(log2((size_ + 1) + 1)))];
             // Create a new outer array and add the sub arrays to it

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "message.h"
 
 /**
@@ -8,17 +9,17 @@
  * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
  */
 class Ack : public Message {
-	public:
+public:
 
-		/** Ack constructor */
-		Ack(size_t sender, size_t target, size_t id) {
-			kind_ = MsgKind::Ack;
-			sender_ = sender;
-			target_ = target;
-			id_ = id;
-		}
+    /** Ack constructor */
+    Ack(size_t sender, size_t target, size_t id) {
+        kind_ = MsgKind::Ack;
+        sender_ = sender;
+        target_ = target;
+        id_ = id;
+    }
 
-		/** Constructs Ack from serialized Ack string */
-		Ack(char* ser) : Message(ser){};
-		
+    /** Constructs Ack from serialized Ack string */
+    Ack(char *ser) : Message(ser) {};
+
 };

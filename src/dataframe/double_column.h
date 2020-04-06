@@ -35,7 +35,7 @@ public:
      * Constructor for building a double column from a serialized string.
      * @param ser The serialized string for a Double Column
      */
-    DoubleColumn(char* ser) {
+    DoubleColumn(char *ser) {
         // Set initial members
         double *first_array = new double[1];
         binary_column_array_ = new double *[1];
@@ -46,18 +46,18 @@ public:
 
         size_t bytes = MAX_ARRAY_SIZE_BYTES_STANDARD;
 
-        std::cout << strlen(ser) << std::endl; 
+        std::cout << strlen(ser) << std::endl;
 
         if (strlen(ser) > 10000) {
-          std::cout << "What the fuck" << std::endl;
-          bytes = MAX_ARRAY_SIZE_BYTES_LARGE;
+            std::cout << "What the fuck" << std::endl;
+            bytes = MAX_ARRAY_SIZE_BYTES_LARGE;
         }
 
 
         // Split up the message by spaces.
-        char* ser_token = strtok(ser, " ");
+        char *ser_token = strtok(ser, " ");
         // Loop through until reaching the p1 that represents the inner array.
-        while(ser_token != NULL) {
+        while (ser_token != NULL) {
             if (strncmp("-p1_val::", ser_token, strlen("-p1_val::")) == 0) {
                 int key_len = strlen("-p1_val::");
                 int arr_len = strlen("arr(");
@@ -65,14 +65,14 @@ public:
                 memset(arr_value, 0, bytes);
                 // Copy the array elements to a new string.
                 strncpy(
-                    arr_value,
-                    ser_token + key_len + arr_len,
-                    strlen(ser_token) - key_len - arr_len - 1
+                        arr_value,
+                        ser_token + key_len + arr_len,
+                        strlen(ser_token) - key_len - arr_len - 1
                 );
                 // Tokenize the string representing the inner array by the commas
                 // that separate the values.
-                char* arr_token = strtok(arr_value, ",");
-                while(arr_token != NULL) {
+                char *arr_token = strtok(arr_value, ",");
+                while (arr_token != NULL) {
                     double index_value = 0;
                     sscanf(arr_token, "%lf", &index_value);
                     // Push back each value in the string to build up the entire Double Column.
@@ -95,7 +95,7 @@ public:
             delete[] binary_column_array_[i];
         }
         if (size_ == 0) {
-          delete [] binary_column_array_[0];
+            delete[] binary_column_array_[0];
         }
         delete[] binary_column_array_;
     }

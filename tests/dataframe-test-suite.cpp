@@ -35,7 +35,13 @@ bool float_equal(float f1, float f2) {
 
 // test functionality of int column
 void test_int_column() {
-    Column* c = new IntColumn(5,1,2,3,4,25);
+    IntColumn* ic = new IntColumn();
+    ic->push_back(1);
+    ic->push_back(2);
+    ic->push_back(3);
+    ic->push_back(4);
+    ic->push_back(25);
+    Column* c = ic;
     t_true(c->as_bool() == nullptr);
     t_true(c->as_float() == nullptr);
     t_true(c->as_string() == nullptr);
@@ -93,7 +99,13 @@ void test_int_column() {
 
 // test functionality of bool column
 void test_bool_column() {
-    Column* c = new BoolColumn(5,0,1,0,1,1);
+    BoolColumn* bc = new BoolColumn();
+    bc->push_back(0);
+    bc->push_back(1);
+    bc->push_back(0);
+    bc->push_back(1);
+    bc->push_back(1);
+    Column* c = bc;
     t_true(c->as_int() == nullptr);
     t_true(c->as_float() == nullptr);
     t_true(c->as_string() == nullptr);
@@ -151,7 +163,13 @@ void test_bool_column() {
 
 // test functionality of float column
 void test_float_column() {
-    Column* c = new FloatColumn(5,1.1,2.2,3.3,4.4,25.25);
+    FloatColumn* fc = new FloatColumn();
+    fc->push_back(1.1);
+    fc->push_back(2.2);
+    fc->push_back(3.3);
+    fc->push_back(4.4);
+    fc->push_back(25.25);
+    Column* c = fc;
     t_true(c->as_bool() == nullptr);
     t_true(c->as_int() == nullptr);
     t_true(c->as_string() == nullptr);
@@ -214,7 +232,13 @@ void test_string_column() {
     String* s3 = new String("s3");
     String* s4 = new String("s4");
     String* s5 = new String("s5");
-    Column* c = new StringColumn(5,s1,s2,s3,s4,s5);
+    StringColumn* sc = new StringColumn();
+    sc->push_back(s1);
+    sc->push_back(s2);
+    sc->push_back(s3);
+    sc->push_back(s4);
+    sc->push_back(s5);
+    Column* c = sc;
     t_true(c->as_int() == nullptr);
     t_true(c->as_float() == nullptr);
     t_true(c->as_bool() == nullptr);

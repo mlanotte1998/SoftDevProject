@@ -8,24 +8,24 @@
  * authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
 */
 class Application : public Object {
-	public:
-		size_t idx_;
-		KDStore* kv;
+public:
+    size_t idx_; // node id
+    KDStore *kv; // connected network store.
 
-		/** Application constructor */
-		Application(size_t idx, KDStore* kd) {
-			idx_ = idx;
-      kv = kd;
-		}
+    /** Application constructor */
+    Application(size_t idx, KDStore *kd) {
+        idx_ = idx;
+        kv = kd;
+    }
 
-		/** Application destructor */
-		~Application() {}
+    /** Application destructor */
+    ~Application() {}
 
-		/** Returns the node index of this Application */
-		size_t this_node() {
-		    return idx_;
-		}
+    /** Returns the node index of this Application */
+    size_t this_node() {
+        return idx_;
+    }
 
-		/** Run method to be overridden by child class */
-		virtual void run_() {}
+    /** Run method to be overridden by child class */
+    virtual void run_() {}
 };

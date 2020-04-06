@@ -9,9 +9,13 @@
 #include <stdarg.h>
 
 class IntColumn;
+
 class BoolColumn;
+
 class FloatColumn;
+
 class DoubleColumn;
+
 class StringColumn;
 
 /***
@@ -36,33 +40,37 @@ public:
      * for the specific functions override them
      */
 
-    virtual IntColumn* as_int() {
+    virtual IntColumn *as_int() {
         return nullptr;
     }
 
-    virtual BoolColumn*  as_bool() {
+    virtual BoolColumn *as_bool() {
         return nullptr;
     }
 
-    virtual FloatColumn* as_float() {
+    virtual FloatColumn *as_float() {
         return nullptr;
     }
 
-    virtual DoubleColumn* as_double() {
+    virtual DoubleColumn *as_double() {
         return nullptr;
     }
 
-    virtual StringColumn* as_string() {
+    virtual StringColumn *as_string() {
         return nullptr;
     }
 
     /** Type appropriate push_back methods. Calling the wrong method is
       * undefined behavior. **/
     virtual void push_back(int val) {}
+
     virtual void push_back(bool val) {}
+
     virtual void push_back(float val) {}
+
     virtual void push_back(double val) {}
-    virtual void push_back(String* val) {}
+
+    virtual void push_back(String *val) {}
 
     /** Returns the number of elements in the column. */
     virtual size_t size() {
