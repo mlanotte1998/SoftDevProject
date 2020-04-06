@@ -640,7 +640,7 @@ public:
     }
 
     /**
-     * Fucction for reading in a part of a column during a put.
+     * Function for reading in a part of a column during a put.
      * @param append_buffer Buffer to append incoming messages to to build DataFrame.
      * @param socket_idx Index of socket to interact with.
      * @param recv_count Count of read iterations.
@@ -1093,7 +1093,7 @@ public:
      * @param cur_col Column to send.
      * @param target Target node id.
      */
-    void put_send_column(Client* cur_client, Column* cur_col, size_t target) {
+    void put_send_column(Client *cur_client, Column *cur_col, size_t target) {
 
         // TODO find a way to have this be the same function as handle send column
         // TODO because this is literally the same code just with different sending of messages.
@@ -1109,11 +1109,11 @@ public:
         // other node knows how big of a message it will be receiving in chunks.
         Serializer *strlen_ser = get_message_serializer(MsgKind::Put, node_, target, strlen(col_string));
         strcpy(buffer, strlen_ser->buffer_);
-        cur_client->socket_send( buffer, 1024);
+        cur_client->socket_send(buffer, 1024);
 
         // TODO Maybe check that this is an ack.
         memset(buffer, 0, 1024);
-        cur_client->socket_read( buffer, 1024);
+        cur_client->socket_read(buffer, 1024);
 
         // Keep track of count of message that has been sent to ensure
         // the entire column is sent.
@@ -1123,14 +1123,14 @@ public:
         while (count < strlen(col_string)) {
             memset(buffer, 0, 1024);
             strncpy(buffer, col_string + count, 1023);
-            cur_client->socket_send( buffer, 1024);
+            cur_client->socket_send(buffer, 1024);
             count += 1023;
         }
 
         // Send the same put message from earlier again to show that the column sending is done.
         memset(buffer, 0, 1024);
         strcpy(buffer, strlen_ser->buffer_);
-        cur_client->socket_send( buffer, 1024);
+        cur_client->socket_send(buffer, 1024);
 
         delete col_ser;
         delete strlen_ser;
@@ -1172,146 +1172,111 @@ public:
                 cur_client->socket_send(buffer, 1024);
                 delete key_ser;
 
-
-                // Create DataFrame and boolean for going through receving columns.
-                bool end_reached = false;
-                Schema s("");
-                DataFrame *df = new DataFrame(s);
-
-                // TODO handle actually checking how big the dataframe is
-
-                while (!end_reached) {
-                    memset(buffer,
-                           0, 1024);
-
-                    cur_client->
-                            socket_read(buffer,
-                                        1024);
-
-// Deserialize the string.
-                    char *serial_string = new char[1024];
-                    strcpy(serial_string, buffer
-                    );
-
-                    Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-                    Message *deserialized_mes = dynamic_cast<Message *>(ser->deserialize());
-                    if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
-                        size_t size_of_message = deserialized_mes->id_;
-
-                        if (size_of_message < 1024) {
-                            size_of_message = 1024;
-                        }
-
-                        Ack *ack = new Ack(node_, k.idx_, 0);
-
-                        Serializer *ackSer = new Serializer();
-                        char *serialized_ack = ackSer->serialize(ack);
-
-// Copy the ack message to the buffer and sent it.
-                        strcpy(buffer, serialized_ack
-                        );
-
-                        cur_client->
-                                socket_send(buffer,
-                                            1024);
-
-                        delete
-                                ack;
-                        delete
-                                ackSer;
-
-                        char *new_buffer = new char[size_of_message + 1];
-
-                        std::cout << size_of_message << " size " <<
-                                  std::endl;
-
-
-                        size_t count = 0;
-
-                        size_t recv_count = 0;
-
-                        bool message_unfinished = false;
-
-                        while (!message_unfinished) {
-
-                            std::cout << "Hello!!!!!!!!!!!!!" <<
-                                      std::endl;
-
-
-                            memset(buffer,
-                                   0, 1024);
-                            cur_client->
-                                    socket_read(buffer,
-                                                1024);
-
-                            if (recv_count > 0) {
-                                std::cout << buffer <<
-                                          std::endl;
-                                char *serial_string2 = new char[1024];
-                                strcpy(serial_string2, buffer
-                                );
-
-                                Serializer *messsss = new Serializer(reinterpret_cast<unsigned char *>(serial_string2));
-                                if (messsss->
-
-                                        deserialize()
-
-                                    != nullptr) {
-                                    delete
-                                            messsss;
-                                    break;
-                                }
-                                delete
-                                        messsss;
-                            }
-
-                            if (count == 0) {
-                                strncpy(new_buffer, buffer,
-                                        1024);
-                            } else {
-                                strncat(new_buffer, buffer,
-                                        1024);
-                            }
-                            count += 1023;
-                            recv_count++;
-                        }
-
-                        std::cout << new_buffer <<
-                                  std::endl;
-
-                        std::cout << "Hello@@@@@@" <<
-                                  std::endl;
-
-                        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
-
-                        df->add_column(dynamic_cast<Column *>(col_ser->
-
-                                deserialize()
-
-                                       ));
-
-                        delete
-                                col_ser;
-
-
-                        end_reached = true;
-
-
-                    }
-
-                    delete
-                            ser;
-                    delete
-                            deserialized_mes;
-
-                    std::cout << "Hello!!!!!!!!!!!!!" <<
-                              std::endl;
-
-
-                    return
-                            df;
-                }
+                return wait_and_get_receive_dataframe(cur_client, k.idx_);
             }
         }
+    }
+
+    DataFrame *wait_and_get_receive_dataframe(Client *cur_client, size_t target) {
+
+        // Create DataFrame and boolean for going through receving columns.
+        bool end_reached = false;
+        Schema s("");
+        DataFrame *df = new DataFrame(s);
+
+        // TODO handle actually checking how big the dataframe is
+
+        // While the end of the dataframe messages are not reached.
+        while (!end_reached) {
+
+            // Read in message
+            memset(buffer, 0, 1024);
+            cur_client->socket_read(buffer, 1024);
+
+            // Deserialized message should be a Message. The kind is then what is important.
+            Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer));
+
+            // If put message then a column needs to be read
+            if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
+                wait_and_get_receive_column(cur_client, target, deserialized_mes->id_, df);
+                end_reached = true;
+            } else {
+                end_reached = true;
+            }
+
+            delete deserialized_mes;
+        }
+
+        return df;
+    }
+
+    void wait_and_get_receive_column(Client *cur_client, size_t target,
+                                     size_t col_size, DataFrame *df) {
+
+        // Buffer for sending ack to start sequence.
+        char buffer[1024] = {0};
+
+        // Create a buffer for receiving the column based on the info
+        // from the received put message. Need size of at least 1024 to read in successfully.
+        size_t size_of_message = size_of_column_message;
+        if (size_of_message < 1024) {
+            size_of_message = 1024;
+        }
+        char *new_buffer = new char[size_of_message + 1];
+        memset(new_buffer, 0, size_of_message + 1);
+
+        // Create and send an ack message to then initiate the start of receiving the column.
+        Serializer *ack_ser = get_ack_serializer(node_, target, 0);
+        strcpy(buffer, ack_ser->buffer_);
+        cur_client->socket_send(buffer, 1024);
+
+        // Keep a count of how many reads have been done for this column for use in helper function.
+        size_t recv_count = 0;
+        // Keep track of if the while loop should continue.
+        bool message_unfinished = true;
+
+        while (message_unfinished) {
+            // Read in the column message, if not a part of the column then that column is over.
+            message_unfinished = read_in_wait_and_get_column(cur_client, new_buffer, recv_count);
+            recv_count++;
+        }
+
+        // Create a serializer for the column and then add the deserialized column to the dataframe.
+        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
+        df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
+
+        delete col_ser;
+        delete ack_ser;
+
+    }
+
+    bool read_in_wait_and_get_column(Client *cur_client, char *append_buffer, size_t recv_count) {
+
+        // Create a buffer to read in the message.
+        char buffer[1024] = {0};
+        cur_client->socket_read(buffer, 1024);
+
+        // If the recv_count > 0 then check if the end column full message is sent.
+        if (recv_count > 0) {
+            Object *deserialized_mes = deserialize_buffer(buffer);
+            // If deserialize works then the message received was the end column message.
+            if (deserialized_mes != nullptr) {
+                delete deserialized_mes;
+                // return false to stop the loop.
+                return false;
+            }
+            delete deserialized_mes;
+        }
+
+        // If first recv then copy, else concat onto end of the buffer used to form the whole column.
+        if (recv == 0) {
+            strncpy(append_buffer, buffer, 1024);
+        } else {
+            strncat(append_buffer, buffer, 1024);
+        }
+
+        // return true to continue loop.
+        return true;
+
     }
 };
