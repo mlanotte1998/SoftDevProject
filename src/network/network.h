@@ -588,7 +588,7 @@ public:
             store_map_->put(new_key, df);
             delete new_key;
 
-            std::cout << "Finished put" << std::endl;
+            printf("%s\n", "Finished Put" );
 
             delete deserialized_mes;
         }
@@ -725,8 +725,6 @@ public:
 
         DataFrame *desired_df = nullptr;
 
-        while (desired_df == nullptr) {
-
             if (store_map_->contains_key(key)) {
                 Object *ob = store_map_->get(key);
                 desired_df = dynamic_cast<DataFrame *>(ob);
@@ -738,9 +736,14 @@ public:
                     Column *cur_col = desired_df->cols_[i];
                     handle_wait_and_get_send_column(cur_col, target, socket_idx);
                 }
+            } else {
+              // Nack that no dataframe was found yet.
+              Serializer *strlen_ser = get_message_serializer(MsgKind::Nack, node_, target, 0);
+              strcpy(buffer, strlen_ser->buffer_);
+              internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
             }
-        }
-        delete key; 
+
+        delete key;
     }
 
     /**
@@ -803,6 +806,46 @@ public:
 
         int current_sock_idx = IS_total_socket_count_;
 
+        // Create a new pollfd for the socket that client connected on.
+        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
+        // the pfds list.
+        create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1,
+                          IS_pfds_, IS_pfds_list_);
+
+        // Increase the socket count.
+        IS_total_socket_count_++;
+
+        // Read in the message that should be the ip of the client.
+        internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
+
+        // Deserialize the string.
+        char *serial_string = new char[1024];
+        strcpy(serial_string, buffer);
+
+        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Object *deserialized = ser->deserialize();
+
+        if (dynamic_cast<Message *>(deserialized) != nullptr) {
+            Message *mes = dynamic_cast<Message *>(deserialized);
+            if (mes->kind_ == MsgKind::WaitAndGet) {
+                handle_wait_and_get(current_sock_idx, mes->sender_);
+            } else if (mes->kind_ == MsgKind::Put) {
+                handle_put(current_sock_idx, mes->sender_);
+            }
+        }
+
+        delete deserialized;
+        delete ser;
+    }
+
+    /**
+     * Handles a client joining the network
+     * @param buffer A string buffer that is being passed around for handling most messages.
+     */
+    void client_message_received( size_t current_sock_idx) {
+
+        char buffer[1024] = {0};
+
         // Read in the message that should be the ip of the client.
         internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
 
@@ -836,15 +879,6 @@ public:
 
         // Accept the new client that is sending a message to the listener.
         accept_new_client(buffer);
-
-        // Create a new pollfd for the socket that client connected on.
-        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
-        // the pfds list.
-        create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1,
-                          IS_pfds_, IS_pfds_list_);
-
-        // Increase the socket count.
-        IS_total_socket_count_++;
 
     }
 
@@ -884,8 +918,7 @@ public:
                         // trying to connect.
                         message_on_listener();
                     } else {
-                        // Else if a message is not on the listener than this is unexpected as of now.
-                        printf("%s\n", "Received unexpected message from already connected other client");
+                        client_message_received(i - 1);
                     }
                 }
             }
@@ -1015,7 +1048,7 @@ public:
             // Looking for client with the ip at the index found.
             char *target_ip = IC_ip_list_[node_idx];
             for (int i = 0; i < IC_other_client_connections_count_; i++) {
-                if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
+                if (strcmp(target_ip, IC_other_client_connections_ips_[i]) == 0) {
                     // If ip is found then this i is where the client already made is.
                     client = IC_other_client_connections_[i];
                 }
@@ -1149,15 +1182,15 @@ public:
 
         bool message_sent = false;
 
+        int count = 0;
+
         // Run a loop until the process has finished.
-        while (!message_sent) {
+        while (true) {
 
             // Figure out which client object to use for interaction.
             Client *cur_client = get_client_of_key(k);
 
             if (cur_client != nullptr) {
-
-                message_sent = true;
 
                 // Send the starting wait and get message to start everything off.
                 Serializer *put_ser = get_message_serializer(MsgKind::WaitAndGet, node_, k.idx_, 0);
@@ -1176,9 +1209,13 @@ public:
                 Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
                 strcpy(buffer, key_ser->buffer_);
                 cur_client->socket_send(buffer, 1024);
+
                 delete key_ser;
 
-                return wait_and_get_receive_dataframe(cur_client, k.idx_);
+                DataFrame* df =  wait_and_get_receive_dataframe(cur_client, k.idx_);
+                if (df != nullptr) {
+                  return df;
+                }
             }
         }
     }
@@ -1215,8 +1252,11 @@ public:
             if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
                 wait_and_get_receive_column(cur_client, target, deserialized_mes->id_, df);
                 end_reached = true;
-            } else {
-                end_reached = true;
+            } else  if (deserialized_mes->kind_ == MsgKind::Nack){
+              // Nack send meaning no df yet so return nullpr;
+                delete df;
+                delete deserialized_mes;
+                return nullptr;
             }
 
             delete deserialized_mes;
