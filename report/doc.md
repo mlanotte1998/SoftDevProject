@@ -235,8 +235,9 @@ for the other two to finish there back and forth because there is a problem with
 the cause is a node trying to read but with nothing to read) and then they all stall. 
 
 We have a TODO list of tasks to get the code in good shape before looking at MileStone 4 and 5 requirements. 
-1. Fix the blocking problem with the nodes. 
-2. Clean up Network code to have the same functions used for two pairs of situations : 
+1. Fix small memory leak issues that occur when running Demo Nodes (Rendezvous Server is fine). 
+2. Fix the blocking problem with the nodes. 
+3. Clean up Network code to have the same functions used for two pairs of situations : 
     1. receiving a put and calling a wait and get
     2. receiving a wait and get and calling a put
     
@@ -246,11 +247,11 @@ We have a TODO list of tasks to get the code in good shape before looking at Mil
     So it might be best to have a Server be a type of Client or have some parent class so that the functions 
     can be made more versatile to be able to handle using both. 
     
-3. Clean up Node code to remove not needed members (most of the IS fields that are not really used for this
+4. Clean up Node code to remove not needed members (most of the IS fields that are not really used for this
 but were added incase they would be). The idea was to be able to have less Clients be made by checking if one Node
 already connected to you to then send a message to but that is too complicated, so there does not need to be
 information held for who has connected to each Node. 
-4. Make Node 0 a Rendezvous server. Maybe make a Rendezvous Server a type of Node so then need to have Node have virtual
+5. Make Node 0 a Rendezvous server. Maybe make a Rendezvous Server a type of Node so then need to have Node have virtual
 function and in doing this hopefully we will not add a lot of repetition. 
 
 Once all of these are complete we will move onto the further milestones because we want our code to be safe
