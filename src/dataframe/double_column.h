@@ -50,7 +50,6 @@ public:
             bytes = MAX_ARRAY_SIZE_BYTES_LARGE;
         }
 
-
         // Split up the message by spaces.
         char *ser_token = strtok(ser, " ");
         // Loop through until reaching the p1 that represents the inner array.

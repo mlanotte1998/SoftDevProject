@@ -406,7 +406,6 @@ public:
     // Need this to delete the created structs.
     bool IS_listener_added_; // boolean to keep track of if run happened to make
     // sure the listener pfd is only deleted if it was created.
-    char **IS_ip_list_; // List of ip addresses for clients that have joined.
     int *IS_sockets_; // List of socket values for every client that has connected.
     int IS_total_socket_count_; // Count of clients that have connected on a socket.
 
@@ -445,7 +444,6 @@ public:
         IS_pfds_ = new struct pollfd[max_clients_ + 1];
         IS_pfds_list_ = new struct pollfd *[max_clients_ + 1];
         IS_sockets_ = new int[max_clients_];
-        IS_ip_list_ = new char *[max_clients_];
 
         IS_total_socket_count_ = 0;
 
@@ -463,8 +461,11 @@ public:
         delete[] client_ip_;
         for (int i = 0; i < IC_other_client_connections_count_; i++) {
             delete IC_other_client_connections_[i];
+            delete [] IC_other_client_connections_ips_[i];
         }
-        delete[] IC_other_client_connections_;
+        delete [] IC_other_client_connections_;
+        delete [] IC_other_client_connections_ips_;
+
         for (int i = 0; i < IC_other_total_client_count_; i++) {
             delete[] IC_ip_list_[i];
         }
@@ -477,7 +478,6 @@ public:
         delete[] IS_pfds_;
         delete[] IS_sockets_;
         for (int i = 0; i < IS_total_socket_count_; i++) {
-            delete[] IS_ip_list_[i];
             // Other clients will be at index i + 1 because the first index is the listener.
             delete IS_pfds_list_[i + 1];
         }
@@ -485,7 +485,6 @@ public:
             // Delete the listener if one was added.
             delete IS_pfds_list_[0];
         }
-        delete[] IS_ip_list_;
         delete[] IS_pfds_list_;
     }
 
@@ -557,7 +556,7 @@ public:
     void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
 
         // Buffer for reading in message,
-        char *buffer = new char[1024];
+        char buffer[1024] = {0};
 
         // Boolean for keeping track of whether more columns of the receiving dataframe need to be read.
         bool end_reached = false;
@@ -587,6 +586,7 @@ public:
             // Create a key and add it with the completed dataframe to the store.
             Key *new_key = new Key(key_name, node_);
             store_map_->put(new_key, df);
+            delete new_key;
 
             std::cout << "Finished put" << std::endl;
 
@@ -740,6 +740,7 @@ public:
                 }
             }
         }
+        delete key; 
     }
 
     /**
@@ -1013,7 +1014,6 @@ public:
         if (node_idx != max_clients_) {
             // Looking for client with the ip at the index found.
             char *target_ip = IC_ip_list_[node_idx];
-            Client *cur_client;
             for (int i = 0; i < IC_other_client_connections_count_; i++) {
                 if (strcmp(target_ip, IC_other_client_connections_ips_[i])) {
                     // If ip is found then this i is where the client already made is.
@@ -1025,8 +1025,8 @@ public:
             if (client == nullptr) {
                 client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
 
-                IC_other_client_connections_[IC_other_client_connections_count_] = cur_client;
-                IC_other_client_connections_ips_[IC_other_client_connections_count_] = IC_ip_list_[node_idx];
+                IC_other_client_connections_[IC_other_client_connections_count_] = client;
+                IC_other_client_connections_ips_[IC_other_client_connections_count_] = duplicate(IC_ip_list_[node_idx]);
                 IC_other_client_connections_count_++;
             }
         }

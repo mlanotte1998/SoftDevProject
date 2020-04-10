@@ -50,6 +50,11 @@ KDStore::KDStore(size_t idx) {
 
 /** KDStore destructor */
 KDStore::~KDStore() {
+    Object** values = map_->values();
+    for (int i = 0; i < map_->get_size(); i++) {
+      delete values[i];
+    }
+    delete [] values; 
     delete map_;
     if (n_ != nullptr) {
       delete n_;

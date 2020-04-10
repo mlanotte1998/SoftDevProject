@@ -89,6 +89,7 @@ public:
             delete row;
         }
         kdStore->put(*key, df);
+        delete [] vals; 
         return df;
     }
 
