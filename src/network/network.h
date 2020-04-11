@@ -639,7 +639,7 @@ public:
 
         // Read in the intial message with should be one of a put or wait_and_get.
         internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
-        Object *deserialized = deserialize_buffer(buffer)
+        Object *deserialized = deserialize_buffer(buffer);
 
         // Make sure the object is a message and then run the respective function based on its type.
         if (dynamic_cast<Message *>(deserialized) != nullptr) {
