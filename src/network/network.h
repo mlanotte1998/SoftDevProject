@@ -347,6 +347,7 @@ public:
             exit(EXIT_FAILURE);
         }
 
+
         // Read in the message that should be the ip of the client.
         internalServer_->socket_read(sockets_[total_socket_count_], buffer, 1024);
 
@@ -433,7 +434,6 @@ public:
 
     int max_clients_;// The maximum clients that can join the server.
 
-    Client *internalClient_; // Internal client for hitting the rendezvous server.
     char *client_ip_; // Ip of this node.
     int port_; // Port for this node.
     int IC_other_total_client_count_; // Total other clients known to the network.
@@ -481,7 +481,7 @@ public:
         IC_other_client_connections_[0] = internalClient;
         IC_other_client_connections_ips_[0] = duplicate(server_ip);
         IC_other_client_connections_count_ = 1;
-        
+
         IC_ip_list_ = new char *[max_clients_];
         IC_port_list_ = new size_t[max_clients_];
         IC_nodes_list_ = new size_t[max_clients_];
@@ -510,7 +510,6 @@ public:
     ~Node() {
 
         // Delete Internal Client members
-        delete internalClient_;
         delete[] client_ip_;
         for (int i = 0; i < IC_other_client_connections_count_; i++) {
             delete IC_other_client_connections_[i];
@@ -806,7 +805,7 @@ public:
             memset(buffer, 0, 1024);
 
             // Read from server, if no response than close because that means the server went down.
-            if (internalClient_->socket_recv(buffer, 1024) == 0) {
+            if (IC_other_client_connections_[0]->socket_recv(buffer, 1024) == 0) {
                 // End when the server stops running.
                 kill_switch[0] = '1';
                 return;
@@ -843,7 +842,7 @@ public:
 
         // Copy the register message to the buffer and sent it.
         strcpy(buffer, registerSer->buffer_);
-        internalClient_->socket_send(buffer, 1024);
+        IC_other_client_connections_[0]->socket_send(buffer, 1024);
 
         delete registerSer;
     }
