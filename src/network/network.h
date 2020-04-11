@@ -19,8 +19,7 @@
  * @param pfds List of pollfds to be added to.
  * @param pfds_list List of pollfd pointers needed to delete the structs, also needs to hold the new struct.
  */
-void create_new_pollfd(int fd_number, int index, struct pollfd *pfds,
-                       struct pollfd **pfds_list) {
+void create_new_pollfd(int fd_number, int index, struct pollfd *pfds, struct pollfd **pfds_list) {
 
     // Create the struct
     struct pollfd *new_fd = new struct pollfd;
@@ -194,31 +193,48 @@ public:
 
 };
 
+/**
+ * Object for wrapping a Server so that it can act like a client.
+ */
 class ServerWrapper : public Client {
 public:
 
-  Server* server_;
-  int sock_num_;
+    Server *server_; // The server object held inside (Does not gain ownership).
+    int sock_num_; // The sock number to use for the read and write functions.
 
-  ServerWrapper(Server* server, int sock_num) {
-    server_ = server;
-    sock_num_ = sock_num;
-  }
+    /**
+     * Constructor for a ServerWrapper.
+     * @param server The server object to be held inside.
+     * @param sock_num // The sock number to use for the read and write functions.
+     */
+    ServerWrapper(Server *server, int sock_num) {
+        server_ = server;
+        sock_num_ = sock_num;
+    }
 
-  ~ServerWrapper(){}
+    /**
+     * Destructor, nothing to delete because no ownership of Server*.
+     */
+    ~ServerWrapper() {}
 
-  virtual int socket_read(char *buffer, int buffer_size) {
-      return server_->socket_read(sock_num_, buffer, buffer_size);
-  }
+    /**
+     * Read a message from a client to the server held inside.
+     * @param buffer Buffer to read the message onto.
+     * @param buffer_size Size of the buffer to know much how to read in.
+     * @return
+     */
+    virtual int socket_read(char *buffer, int buffer_size) {
+        return server_->socket_read(sock_num_, buffer, buffer_size);
+    }
 
-  /**
-   * Send a message to a client from the server..
-   * @param message Message to send.
-   * @param size size of the message to send.
-   */
-  virtual void socket_send(char *message, size_t size) {
-      server_->socket_send(sock_num_, message, size);
-  }
+    /**
+     * Send a message to a client from the server.
+     * @param message Message to send.
+     * @param size size of the message to send.
+     */
+    virtual void socket_send(char *message, size_t size) {
+        server_->socket_send(sock_num_, message, size);
+    }
 
 };
 
@@ -491,10 +507,10 @@ public:
         delete[] client_ip_;
         for (int i = 0; i < IC_other_client_connections_count_; i++) {
             delete IC_other_client_connections_[i];
-            delete [] IC_other_client_connections_ips_[i];
+            delete[] IC_other_client_connections_ips_[i];
         }
-        delete [] IC_other_client_connections_;
-        delete [] IC_other_client_connections_ips_;
+        delete[] IC_other_client_connections_;
+        delete[] IC_other_client_connections_ips_;
 
         for (int i = 0; i < IC_other_total_client_count_; i++) {
             delete[] IC_ip_list_[i];
@@ -538,184 +554,7 @@ public:
 
     //--------------------------------------------------------------------------
 
-    // Put Handling Methods
-
-    /**
-     * Function for handling a put request coming in.
-     * @param socket_idx index of the socket to interact with
-     * @param target target node id.
-     */
-    void handle_put(int socket_idx, size_t target) {
-
-        ServerWrapper* sw = new ServerWrapper(internalServer_, IS_sockets_[socket_idx]);
-
-        Object* ob = handle_initial_response(sw, target);
-
-        DataFrame* df;
-
-        // Check if next message is a status.
-        if (dynamic_cast<Status *>(ob) != nullptr) {
-            Status *stat = dynamic_cast<Status *>(ob);
-            // Continue to read in the dataframe.
-            df = receive_dataframe(sw, target);
-        } else {
-            // Not a status then error out something went wrong.
-            exit(1);
-        }
-
-
-        Key *new_key = new Key(dynamic_cast<Status*>(ob)->msg_->c_str(), node_);
-        store_map_->put(new_key, df);
-        delete new_key;
-
-        printf("%s\n", "Put finished");
-
-        // Delete created objects
-        delete sw;
-        delete ob;
-    }
-
-
-    Object* handle_initial_response(Client* cur_client, int target) {
-
-      // Create a buffer for reading and writing messages.
-      char buffer[1024] = {0};
-
-      // Send an ack message to acknowledge that the put was received.
-      Serializer *ack_ser = get_ack_serializer(node_, target, 0);
-      char *serialized_ack = ack_ser->buffer_;
-      strcpy(buffer, serialized_ack);
-      cur_client->socket_send( buffer, 1024);
-
-      // Reset the buffer to then read in the next message.
-      memset(buffer, 0, 1024);
-      cur_client->socket_read( buffer, 1024);
-      Object *ob = deserialize_buffer(buffer);
-
-      delete ack_ser;
-
-      return ob;
-
-    }
-
-    /**
-     *  Handle a wait and get message being received.
-     * @param socket_idx Index of socket to iteract with.
-     * @param target Id of target node.
-     */
-    void handle_wait_and_get(int socket_idx, size_t target) {
-
-      char buffer[1024] = {0};
-
-      ServerWrapper* sw = new ServerWrapper(internalServer_, IS_sockets_[socket_idx]);
-
-      Object* ob = handle_initial_response(sw, target);
-
-        // If status received then it is the message we want with the information of the key.
-        if (dynamic_cast<Status *>(ob) != nullptr) {
-
-            Key *key = new Key(dynamic_cast<Status *>(ob)->msg_->c_str(), node_);
-
-                if (store_map_->contains_key(key)) {
-                    Object *ob = store_map_->get(key);
-                    DataFrame* desired_df = dynamic_cast<DataFrame *>(ob);
-
-                    //TODO Need to handle telling it how many columns
-                    // Currently works because only one
-
-                    for (int i = 0; i < desired_df->ncols(); i++) {
-                        Column *cur_col = desired_df->cols_[i];
-                        send_column(sw, cur_col, target, false);
-                    }
-                } else {
-                  // Nack that no dataframe was found yet.
-                  Serializer *strlen_ser = get_message_serializer(MsgKind::Nack, node_, target, 0);
-                  strcpy(buffer, strlen_ser->buffer_);
-                  internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-                }
-
-            delete key;
-
-        } else {
-            // Error if anything else received here. Should not happen.
-            delete ob;
-            delete sw;
-            exit(1);
-        }
-
-        delete sw;
-        delete ob;
-    }
-
-
-    /**
-     * Handles a client joining the network
-     * @param buffer A string buffer that is being passed around for handling most messages.
-     */
-    size_t accept_new_client() {
-        // Accept the socket or error if bad acception which is a return of -1
-        if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
-
-        int current_sock_idx = IS_total_socket_count_;
-
-        // Create a new pollfd for the socket that client connected on.
-        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
-        // the pfds list.
-        create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1,
-                          IS_pfds_, IS_pfds_list_);
-
-        // Increase the socket count.
-        IS_total_socket_count_++;
-
-        return current_sock_idx;
-    }
-
-    /**
-     * Handles a client joining the network
-     * @param buffer A string buffer that is being passed around for handling most messages.
-     */
-    void client_message_received( size_t current_sock_idx) {
-
-        char buffer[1024] = {0};
-
-        // Read in the message that should be the ip of the client.
-        internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
-
-        // Deserialize the string.
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
-
-        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Object *deserialized = ser->deserialize();
-
-        if (dynamic_cast<Message *>(deserialized) != nullptr) {
-            Message *mes = dynamic_cast<Message *>(deserialized);
-            if (mes->kind_ == MsgKind::WaitAndGet) {
-                handle_wait_and_get(current_sock_idx, mes->sender_);
-            } else if (mes->kind_ == MsgKind::Put) {
-                handle_put(current_sock_idx, mes->sender_);
-            }
-        }
-
-        delete deserialized;
-        delete ser;
-    }
-
-    /**
-     * Function for handling getting a message on the listener socket.
-     */
-    void message_on_listener() {
-
-        // Accept the new client that is sending a message to the listener.
-        int current_sock_idx = accept_new_client();
-
-        client_message_received(current_sock_idx);
-
-    }
-
+    // Internal Server Functions
 
     /**
      * Function for running the internal server implementation so that this node can
@@ -748,15 +587,194 @@ public:
                     // If the server listener is ready to read from then
                     // accept the new connection and handle adding the new socket.
                     if (IS_pfds_[i].fd == listener) {
-                        // Call function for handling a message on the listener of a client
-                        // trying to connect.
-                        message_on_listener();
+                        // Accept the new client and pass on the sock index to the function for
+                        // handling a client message.
+                        int current_sock_idx = accept_new_client();
+                        client_message_received(current_sock_idx);
                     } else {
+                        // Not a new client, so sock idx is the i - 1 since the i = 0 is the listener
+                        // causes all of the sock indices to be shifted by 1 with their poll indices.
                         client_message_received(i - 1);
                     }
                 }
             }
         }
+    }
+
+    /**
+    *  Handles a client joining the network.
+    * @return Returns the sock index of the newly accepted client.
+    */
+    size_t accept_new_client() {
+        // Accept the socket or error if bad acception which is a return of -1
+        if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+
+        // Current sock idx is the total socket count before incrementing it.
+        int current_sock_idx = IS_total_socket_count_;
+
+        // Create a new pollfd for the socket that client connected on.
+        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
+        // the pfds list.
+        create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1,
+                          IS_pfds_, IS_pfds_list_);
+
+        // Increase the socket count.
+        IS_total_socket_count_++;
+
+        // Return the socket index to be used.
+        return current_sock_idx;
+    }
+
+    /**
+     * Handles a client joining the network
+     * @param buffer A string buffer that is being passed around for handling most messages.
+     */
+    void client_message_received(size_t current_sock_idx) {
+
+        // Buffer for holding message data.
+        char buffer[1024] = {0};
+
+        // Read in the intial message with should be one of a put or wait_and_get.
+        internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
+        Object *deserialized = deserialize_buffer(buffer)
+
+        // Make sure the object is a message and then run the respective function based on its type.
+        if (dynamic_cast<Message *>(deserialized) != nullptr) {
+            Message *mes = dynamic_cast<Message *>(deserialized);
+            if (mes->kind_ == MsgKind::WaitAndGet) {
+                handle_wait_and_get(current_sock_idx, mes->sender_);
+            } else if (mes->kind_ == MsgKind::Put) {
+                handle_put(current_sock_idx, mes->sender_);
+            }
+        }
+
+        // Delete the message object.
+        delete deserialized;
+    }
+
+    /**
+     * Function for handling a put request coming in.
+     * @param socket_idx index of the socket to interact with.
+     * @param target target node id.
+     */
+    void handle_put(int socket_idx, size_t target) {
+
+        // Create a server wrapper for this client interaction.
+        ServerWrapper *sw = new ServerWrapper(internalServer_, IS_sockets_[socket_idx]);
+
+        // Get the initial object sent from the other client.
+        Object *ob = handle_initial_response(sw, target);
+
+        // Have a DataFrame pointer to set below.
+        DataFrame *df;
+
+        // Check if next message is a status.
+        if (dynamic_cast<Status *>(ob) != nullptr) {
+            Status *stat = dynamic_cast<Status *>(ob);
+            // Continue to read in the DataFrame.
+            df = receive_dataframe(sw, target);
+        } else {
+            // Not a status then error out something went wrong.
+            exit(1);
+        }
+
+        // Add DataFrame to the store.
+        Key *new_key = new Key(dynamic_cast<Status *>(ob)->msg_->c_str(), node_);
+        store_map_->put(new_key, df);
+        delete new_key;
+
+        printf("%s\n", "Put finished");
+
+        // Delete created objects
+        delete sw;
+        delete ob;
+    }
+
+    /**
+     *  Handle a wait and get message being received.
+     * @param socket_idx Index of socket to interact with.
+     * @param target Id of target node.
+     */
+    void handle_wait_and_get(int socket_idx, size_t target) {
+
+        // Buffer to read or write data onto for message sending/receiving.
+        char buffer[1024] = {0};
+
+        // Wrap the server-client interaction within this to use in helper functions.
+        ServerWrapper *sw = new ServerWrapper(internalServer_, IS_sockets_[socket_idx]);
+
+        // Get the initial object sent from the other client.
+        Object *ob = handle_initial_response(sw, target);
+
+        // If status received then it is the message we want with the information of the key.
+        if (dynamic_cast<Status *>(ob) != nullptr) {
+            // Create key to check if the store has the requested DataFrame.
+            Key *key = new Key(dynamic_cast<Status *>(ob)->msg_->c_str(), node_);
+
+            // If the DataFrame is there then proceed.
+            if (store_map_->contains_key(key)) {
+                Object *ob = store_map_->get(key);
+                DataFrame *desired_df = dynamic_cast<DataFrame *>(ob);
+
+                //TODO Need to handle telling it how many columns
+                // Currently works because only one
+
+                for (int i = 0; i < desired_df->ncols(); i++) {
+                    Column *cur_col = desired_df->cols_[i];
+                    send_column(sw, cur_col, target, false);
+                }
+            } else {
+                // Nack that no DataFrame was found yet.
+                Serializer *strlen_ser = get_message_serializer(MsgKind::Nack, node_, target, 0);
+                strcpy(buffer, strlen_ser->buffer_);
+                internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+            }
+
+            // delete key object created.
+            delete key;
+
+        } else {
+            // Error if anything else received here. Should not happen.
+            delete ob;
+            delete sw;
+            exit(1);
+        }
+
+        // Delete created objects.
+        delete sw;
+        delete ob;
+    }
+
+    /**
+     * Helper function of repeated code for initial interaction after receiving a put or wait and get message.
+     * @param cur_client ServerWrapper will be used for sending and receiving messages.
+     * @param target Target nodes id.
+     * @return Returns the message that should be a Status that holds more information to continue
+     * the interaction.
+     */
+    Object *handle_initial_response(ServerWrapper *cur_client, int target) {
+
+        // Create a buffer for reading and writing messages.
+        char buffer[1024] = {0};
+
+        // Send an ack message to acknowledge that the put was received.
+        Serializer *ack_ser = get_ack_serializer(node_, target, 0);
+        char *serialized_ack = ack_ser->buffer_;
+        strcpy(buffer, serialized_ack);
+        cur_client->socket_send(buffer, 1024);
+
+        // Reset the buffer to then read in the next message.
+        memset(buffer, 0, 1024);
+        cur_client->socket_read(buffer, 1024);
+        Object *ob = deserialize_buffer(buffer);
+
+        delete ack_ser;
+
+        return ob;
+
     }
 
     //------------------------------------------------------------------
@@ -977,9 +995,9 @@ public:
 
         MsgKind mes_kind;
         if (put) {
-          mes_kind = MsgKind::Put;
+            mes_kind = MsgKind::Put;
         } else {
-          mes_kind = MsgKind::WaitAndGet;
+            mes_kind = MsgKind::WaitAndGet;
         }
 
         Serializer *strlen_ser = get_message_serializer(mes_kind, node_, target, strlen(col_string));
@@ -1054,9 +1072,9 @@ public:
 
                 delete key_ser;
 
-                DataFrame* df =  receive_dataframe(cur_client, k.idx_);
+                DataFrame *df = receive_dataframe(cur_client, k.idx_);
                 if (df != nullptr) {
-                  return df;
+                    return df;
                 }
             }
         }
@@ -1094,8 +1112,8 @@ public:
             if (deserialized_mes->kind_ == MsgKind::WaitAndGet || deserialized_mes->kind_ == MsgKind::Put) {
                 receive_column(cur_client, target, deserialized_mes->id_, df);
                 end_reached = true;
-            } else  if (deserialized_mes->kind_ == MsgKind::Nack){
-              // Nack send meaning no df yet so return nullpr;
+            } else if (deserialized_mes->kind_ == MsgKind::Nack) {
+                // Nack send meaning no df yet so return nullpr;
                 delete df;
                 delete deserialized_mes;
                 return nullptr;
