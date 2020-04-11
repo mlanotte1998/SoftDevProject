@@ -475,14 +475,21 @@ public:
         strcpy(client_ip_copy, client_ip);
         client_ip_ = client_ip_copy;
         port_ = port;
-        IC_other_total_client_count_ = 0;
-        internalClient_ = new Client(client_ip_, port_, server_ip);
+        Client* internalClient = new Client(client_ip_, port_, server_ip);
         IC_other_client_connections_ = new Client *[max_clients_];
         IC_other_client_connections_ips_ = new char *[max_clients_];
-        IC_other_client_connections_count_ = 0;
+        IC_other_client_connections_[0] = internalClient;
+        IC_other_client_connections_ips_[0] = duplicate(server_ip);
+        IC_other_client_connections_count_ = 1;
+        
         IC_ip_list_ = new char *[max_clients_];
         IC_port_list_ = new size_t[max_clients_];
         IC_nodes_list_ = new size_t[max_clients_];
+        IC_ip_list_[0] = duplicate(server_ip);
+        IC_port_list_[0] = 8080;
+        IC_port_list_[0] = 0;
+        IC_other_total_client_count_ = 0;
+
 
         // Internal Server config
         internalServer_ = new Server(client_ip_, port_);
@@ -781,6 +788,49 @@ public:
     // Functions for communication with registrar.
 
     /**
+  * Function for running the implementation for the node communicating with the
+  * Rendezvous Server.
+  * @param kill_switch Int value for knowing when to gracefully kill the program.
+  */
+    void run_rendezvous_communication(char *kill_switch) {
+        // Create buffer for incoming and outgoing messages.
+        char buffer[1024] = {0};
+
+        // Start by sending a register message
+        send_register();
+
+        // Loop continuously while connected to the server.
+        while (kill_switch[0] != '1') {
+
+            // Reset buffer in the while loop so new messages dont have parts of old ones in them.
+            memset(buffer, 0, 1024);
+
+            // Read from server, if no response than close because that means the server went down.
+            if (internalClient_->socket_recv(buffer, 1024) == 0) {
+                // End when the server stops running.
+                kill_switch[0] = '1';
+                return;
+            }
+
+            // Deserialize the buffer
+            Object *deserialized = deserialize_buffer(buffer);
+
+            // If a Register is the incoming message then add the new nodes data.
+            if (dynamic_cast<Register *>(deserialized) != nullptr) {
+                Register *reg = dynamic_cast<Register *>(deserialized);
+                add_register(reg);
+            }
+                // Else if a directory is the incoming message then copy all of the data
+                // to the values of this node.
+            else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
+                Directory *dir = dynamic_cast<Directory *>(deserialized);
+                add_directory(dir);
+            }
+            delete deserialized;
+        }
+    }
+
+    /**
      * Function for sending a register message.
      */
     void send_register() {
@@ -828,49 +878,6 @@ public:
         }
 
         printf("Directory of size %d received \n", dir->ports_count_);
-    }
-
-    /**
-     * Function for running the implementation for the node communicating with the
-     * Rendezvous Server.
-     * @param kill_switch Int value for knowing when to gracefully kill the program.
-     */
-    void run_rendezvous_communication(char *kill_switch) {
-        // Create buffer for incoming and outgoing messages.
-        char buffer[1024] = {0};
-
-        // Start by sending a register message
-        send_register();
-
-        // Loop continuously while connected to the server.
-        while (kill_switch[0] != '1') {
-
-            // Reset buffer in the while loop so new messages dont have parts of old ones in them.
-            memset(buffer, 0, 1024);
-
-            // Read from server, if no response than close because that means the server went down.
-            if (internalClient_->socket_recv(buffer, 1024) == 0) {
-                // End when the server stops running.
-                kill_switch[0] = '1';
-                return;
-            }
-
-            // Deserialize the buffer
-            Object *deserialized = deserialize_buffer(buffer);
-
-            // If a Register is the incoming message then add the new nodes data.
-            if (dynamic_cast<Register *>(deserialized) != nullptr) {
-                Register *reg = dynamic_cast<Register *>(deserialized);
-                add_register(reg);
-            }
-                // Else if a directory is the incoming message then copy all of the data
-                // to the values of this node.
-            else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
-                Directory *dir = dynamic_cast<Directory *>(deserialized);
-                add_directory(dir);
-            }
-            delete deserialized;
-        }
     }
 
     //---------------------------------------------------------------
