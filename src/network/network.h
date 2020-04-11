@@ -652,7 +652,7 @@ public:
      * Handles a client joining the network
      * @param buffer A string buffer that is being passed around for handling most messages.
      */
-    void accept_new_client(char *buffer) {
+    size_t accept_new_client() {
         // Accept the socket or error if bad acception which is a return of -1
         if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
             perror("accept");
@@ -670,27 +670,7 @@ public:
         // Increase the socket count.
         IS_total_socket_count_++;
 
-        // Read in the message that should be the ip of the client.
-        internalServer_->socket_read(IS_sockets_[current_sock_idx], buffer, 1024);
-
-        // Deserialize the string.
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
-
-        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Object *deserialized = ser->deserialize();
-
-        if (dynamic_cast<Message *>(deserialized) != nullptr) {
-            Message *mes = dynamic_cast<Message *>(deserialized);
-            if (mes->kind_ == MsgKind::WaitAndGet) {
-                handle_wait_and_get(current_sock_idx, mes->sender_);
-            } else if (mes->kind_ == MsgKind::Put) {
-                handle_put(current_sock_idx, mes->sender_);
-            }
-        }
-
-        delete deserialized;
-        delete ser;
+        return current_sock_idx;
     }
 
     /**
@@ -729,11 +709,10 @@ public:
      */
     void message_on_listener() {
 
-        // Hold a buffer for incoming messages.
-        char buffer[1024] = {0};
-
         // Accept the new client that is sending a message to the listener.
-        accept_new_client(buffer);
+        int current_sock_idx = accept_new_client();
+
+        client_message_received(current_sock_idx);
 
     }
 
