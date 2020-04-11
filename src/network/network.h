@@ -168,17 +168,19 @@ public:
         }
     }
 
+    Client() {}
+
     /**
      * Read from a the server.
      * @param buffer Buffer to hold the incoming message.
      * @param buffer_size Size of the buffer.
      * @return Int that is positive for success and 0 if error reading.
      */
-    int socket_read(char *buffer, int buffer_size) {
+    virtual int socket_read(char *buffer, int buffer_size) {
         return read(sock_, buffer, buffer_size);
     }
 
-    int socket_recv(char *buffer, int buffer_size) {
+    virtual int socket_recv(char *buffer, int buffer_size) {
         return recv(sock_, buffer, buffer_size, MSG_DONTWAIT);
     }
 
@@ -186,9 +188,37 @@ public:
      * Send a message to the server.
      * @param message Message to send.
      */
-    void socket_send(char *message, size_t size) {
+    virtual void socket_send(char *message, size_t size) {
         send(sock_, message, size, 0);
     }
+
+};
+
+class ServerWrapper : public Client {
+public:
+
+  Server* server_;
+  int sock_num_;
+
+  ServerWrapper(Server* server, int sock_num) {
+    server_ = server;
+    sock_num_ = sock_num;
+  }
+
+  ~ServerWrapper(){}
+
+  virtual int socket_read(char *buffer, int buffer_size) {
+      return server_->socket_read(sock_num_, buffer, buffer_size);
+  }
+
+  /**
+   * Send a message to a client from the server..
+   * @param message Message to send.
+   * @param size size of the message to send.
+   */
+  virtual void socket_send(char *message, size_t size) {
+      server_->socket_send(sock_num_, message, size);
+  }
 
 };
 
@@ -531,148 +561,30 @@ public:
         internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
         Object *key = deserialize_buffer(buffer);
 
+        ServerWrapper* sw = new ServerWrapper(internalServer_, IS_sockets_[socket_idx]);
+        DataFrame* df;
+
         // Check if next message is a status.
         if (dynamic_cast<Status *>(key) != nullptr) {
             Status *stat = dynamic_cast<Status *>(key);
             // Continue to read in the dataframe.
-            handle_put_receive_dataframe(socket_idx, target, stat->msg_->c_str(), stat->id_);
+            df = receive_dataframe(sw, target);
         } else {
             // Not a status then error out something went wrong.
             exit(1);
         }
 
-        // Delete created object.s
+
+        Key *new_key = new Key(dynamic_cast<Status*>(key)->msg_->c_str(), node_);
+        store_map_->put(new_key, df);
+        delete new_key;
+
+        printf("%s\n", "Put finished");
+
+        // Delete created objects
+        delete sw;
         delete ackSer;
         delete key;
-    }
-
-    /**
-     * Function for handling needing to receive a DataFrame for a put.
-     * @param socket_idx index of socket to interact with.
-     * @param target target node id.
-     * @param key_name name of the key needed for the put.
-     * @param df_length
-     */
-    void handle_put_receive_dataframe(int socket_idx, size_t target, char *key_name, size_t df_length) {
-
-        // Buffer for reading in message,
-        char buffer[1024] = {0};
-
-        // Boolean for keeping track of whether more columns of the receiving dataframe need to be read.
-        bool end_reached = false;
-
-        // Create new dataframe
-        Schema s("");
-        DataFrame *df = new DataFrame(s);
-
-        // While the end of the dataframe messages are not reached.
-        while (!end_reached) {
-
-            // Read in message
-            memset(buffer, 0, 1024);
-            internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
-
-            // Deserialized message should be a Message. The kind is then what is important.
-            Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer));
-
-            // If put message then a column needs to be read
-            if (deserialized_mes->kind_ == MsgKind::Put) {
-                handle_put_receive_column(target, socket_idx, deserialized_mes->id_, df);
-                end_reached = true;
-            } else {
-                end_reached = true;
-            }
-
-            // Create a key and add it with the completed dataframe to the store.
-            Key *new_key = new Key(key_name, node_);
-            store_map_->put(new_key, df);
-            delete new_key;
-
-            printf("%s\n", "Finished Put" );
-
-            delete deserialized_mes;
-        }
-    }
-
-    /**
-     * Handle receiving a single column of a DataFrame.
-     * @param target Target node id.
-     * @param socket_idx Index of socket that is being interacted with.
-     * @param size_of_column_message Size of column char* that needs to be received.
-     * @param df DataFrame to add column to.
-     */
-    void handle_put_receive_column(size_t target, size_t socket_idx, size_t size_of_column_message, DataFrame *df) {
-
-        // Buffer for sending ack to start sequence.
-        char buffer[1024] = {0};
-
-        // Create a buffer for receiving the column based on the info
-        // from the received put message. Need size of at least 1024 to read in successfully.
-        size_t size_of_message = size_of_column_message;
-        if (size_of_message < 1024) {
-            size_of_message = 1024;
-        }
-        char *new_buffer = new char[size_of_message + 1];
-        memset(new_buffer, 0, size_of_message + 1);
-
-        // Create and send an ack message to then initiate the start of receiving the column.
-        Serializer *ack_ser = get_ack_serializer(node_, target, 0);
-        strcpy(buffer, ack_ser->buffer_);
-        internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-
-        // Keep a count of how many reads have been done for this column for use in helper function.
-        size_t recv_count = 0;
-        // Keep track of if the while loop should continue.
-        bool message_unfinished = true;
-
-        while (message_unfinished) {
-            // Read in the column message, if not a part of the column then that column is over.
-            message_unfinished = read_in_put_column(new_buffer, socket_idx, recv_count);
-            recv_count++;
-        }
-
-        // Create a serializer for the column and then add the deserialized column to the dataframe.
-        Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
-        df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
-
-        delete col_ser;
-        delete ack_ser;
-    }
-
-    /**
-     * Function for reading in a part of a column during a put.
-     * @param append_buffer Buffer to append incoming messages to to build DataFrame.
-     * @param socket_idx Index of socket to interact with.
-     * @param recv_count Count of read iterations.
-     * @return Returns a bool, true if continue reading, false to stop.
-     */
-    bool read_in_put_column(char *append_buffer, size_t socket_idx, size_t recv_count) {
-
-        // Create a buffer to read in the message.
-        char buffer[1024] = {0};
-        internalServer_->socket_read(IS_sockets_[socket_idx], buffer, 1024);
-
-        // If the recv_count > 0 then check if the end column full message is sent.
-        if (recv_count > 0) {
-            Object *deserialized_mes = deserialize_buffer(buffer);
-            // If deserialize works then the message received was the end column message.
-            if (deserialized_mes != nullptr) {
-                delete deserialized_mes;
-                // return false to stop the loop.
-                return false;
-            }
-            delete deserialized_mes;
-        }
-
-        // If first recv then copy, else concat onto end of the buffer used to form the whole column.
-        if (recv == 0) {
-            strncpy(append_buffer, buffer, 1024);
-        } else {
-            strncat(append_buffer, buffer, 1024);
-        }
-
-        // return true to continue loop.
-        return true;
     }
 
 
@@ -1212,7 +1124,7 @@ public:
 
                 delete key_ser;
 
-                DataFrame* df =  wait_and_get_receive_dataframe(cur_client, k.idx_);
+                DataFrame* df =  receive_dataframe(cur_client, k.idx_);
                 if (df != nullptr) {
                   return df;
                 }
@@ -1226,7 +1138,7 @@ public:
      * @param target Target node id.
      * @return Returns the DataFrame that is requested.
      */
-    DataFrame *wait_and_get_receive_dataframe(Client *cur_client, size_t target) {
+    DataFrame *receive_dataframe(Client *cur_client, size_t target) {
 
         // Buffer for receiving and sending messages.
         char buffer[1024] = {0};
@@ -1249,8 +1161,8 @@ public:
             Message *deserialized_mes = dynamic_cast<Message *>(deserialize_buffer(buffer));
 
             // If wait and get message then a column needs to be read
-            if (deserialized_mes->kind_ == MsgKind::WaitAndGet) {
-                wait_and_get_receive_column(cur_client, target, deserialized_mes->id_, df);
+            if (deserialized_mes->kind_ == MsgKind::WaitAndGet || deserialized_mes->kind_ == MsgKind::Put) {
+                receive_column(cur_client, target, deserialized_mes->id_, df);
                 end_reached = true;
             } else  if (deserialized_mes->kind_ == MsgKind::Nack){
               // Nack send meaning no df yet so return nullpr;
@@ -1266,22 +1178,15 @@ public:
         return df;
     }
 
-    /**
-     * Function for receiving a column during a wait and get.
-     * @param cur_client Client currently interacting with.
-     * @param target Target nodes id.
-     * @param size_of_column_message Size of the column serialized message that will be received.
-     * @param df DataFrame to append column to.
-     */
-    void wait_and_get_receive_column(Client *cur_client, size_t target,
-                                     size_t size_of_column_message, DataFrame *df) {
+
+    void receive_column(Client *cur_client, size_t target, size_t msg_sz, DataFrame *df) {
 
         // Buffer for sending ack to start sequence.
         char buffer[1024] = {0};
 
         // Create a buffer for receiving the column based on the info
         // from the received put message. Need size of at least 1024 to read in successfully.
-        size_t size_of_message = size_of_column_message;
+        size_t size_of_message = msg_sz;
         if (size_of_message < 1024) {
             size_of_message = 1024;
         }
@@ -1300,7 +1205,7 @@ public:
 
         while (message_unfinished) {
             // Read in the column message, if not a part of the column then that column is over.
-            message_unfinished = read_in_wait_and_get_column(cur_client, new_buffer, recv_count);
+            message_unfinished = read_in_column(cur_client, new_buffer, recv_count);
             recv_count++;
         }
 
@@ -1314,13 +1219,13 @@ public:
     }
 
     /**
-    * Function for reading in a part of a column during a wait and get.
+    * Function for reading in a part of a column.
     * @param cur_client Client currently interacting with.
     * @param append_buffer Buffer to append incoming messages to to build DataFrame.
     * @param recv_count Count of read iterations.
     * @return Returns a bool, true if continue reading, false to stop.
     */
-    bool read_in_wait_and_get_column(Client *cur_client, char *append_buffer, size_t recv_count) {
+    bool read_in_column(Client *cur_client, char *append_buffer, size_t recv_count) {
 
         // Create a buffer to read in the message.
         char buffer[1024] = {0};
