@@ -26,11 +26,14 @@ int main(int argc, char* argv[]) {
     kill_switch[0] = '0';
     kill_switch[1] = '\0';
 
+
     if (x == 3) {
+      Map* m = new Map();
       char rendezvous_ip[10] = {0};
       strcpy(rendezvous_ip, "127.0.0.1");
-      RendezvousServer r(rendezvous_ip, 8081, 5);
+      RendezvousServer r(rendezvous_ip, 8081, 5, m, 3);
       r.run(kill_switch);
+      delete m; 
     } else {
 
     KDStore* k = new KDStore(x);

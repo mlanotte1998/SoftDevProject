@@ -238,192 +238,6 @@ public:
 
 };
 
-//============================================================================
-
-/**
- * Rendezvous Server object that acts as the registrar server.
- * When the server dies the clients will no longer be able to read from it and
- * so they shut down.
- */
-class RendezvousServer : public Object {
-public:
-
-    Server *internalServer_; // The server acting as the registrar server.
-    int max_clients_; // The maximum clients that can join the server.
-    struct pollfd *pfds_; // Structs used for polling messages on the server.
-    struct pollfd **pfds_list_; // List of pointers to pfds created since the
-    // main pfds_ needs to be a list of structs instead of pointers.
-    // Need this to delete the created structs.
-    bool listener_added_; // boolean to keep track of if run happened to make
-    // sure the listener pfd is only deleted if it was created.
-    int *sockets_; // List of socket values for every client that has connected.
-
-    // Directory Values
-    String **ip_list_; // List of ip addresses for clients that have joined.
-    size_t *port_list_; // List of ports for clients that have joined.
-    size_t *nodes_list_; // List of node values for clients that have joined;
-    int total_socket_count_; // Count of clients that have connected on a socket.
-
-    /**
-     * Main constructor for the Rendezvous Server
-     * @param ip The ip that this server will be run on.
-     * @param port The port that this server will be run on.
-     * @param max_clients The maximum number of clients that can connect to this server.
-     */
-    RendezvousServer(char *ip, int port, int max_clients) {
-        // Create a server to be held in this class and bind it.
-        internalServer_ = new Server(ip, port);
-        internalServer_->socket_bind();
-        // Set the max clients up along with the poll file descriptor list,
-        // the list of ips of clients, the socket number list, and the total socket count
-        // should be 0 because there are no clients connected yet.
-        max_clients_ = max_clients;
-        pfds_ = new struct pollfd[max_clients_ + 1];
-        pfds_list_ = new struct pollfd *[max_clients_ + 1];
-        ip_list_ = new String *[max_clients_];
-        port_list_ = new size_t[max_clients_];
-        nodes_list_ = new size_t[max_clients_];
-        sockets_ = new int[max_clients_];
-        total_socket_count_ = 0;
-    }
-
-    /**
-     * Destructor for the RS, deletes the internal server and the three lists held inside.
-     */
-    ~RendezvousServer() {
-        delete internalServer_;
-        delete[] pfds_;
-        for (int i = 0; i < total_socket_count_; i++) {
-            delete ip_list_[i];
-            delete pfds_list_[i + 1];
-        }
-        if (listener_added_) {
-            delete pfds_list_[0];
-        }
-        delete[] pfds_list_;
-        delete[] ip_list_;
-        delete[] sockets_;
-        delete[] port_list_;
-        delete[] nodes_list_;
-    }
-
-
-    /**
-     * Function for handling getting a message on the listener socket.
-     */
-    void message_on_listener() {
-
-        // Hold a buffer for incoming messages.
-        char buffer[1024] = {0};
-
-        // Accept the new client that is sending a message to the listener.
-        accept_new_client(buffer);
-
-        // Create a new pollfd for the socket that client connected on.
-        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
-        // the pfds list.
-        create_new_pollfd(sockets_[total_socket_count_], total_socket_count_ + 1, pfds_, pfds_list_);
-
-        // Increase the socket count.
-        total_socket_count_++;
-
-        // Reset buffer so that new messages don't overlap.
-        memset(buffer, 0, 1024);
-    }
-
-    /**
-    * Handles a client joining the network
-    * @param s Server object.
-    * @param sockets List of sockets.
-    * @param total_socket_count Number of sockets not the listener.
-    * @param fd_count Count of all sockets including the listener.
-    * @param buffer A string buffer that is being passed around for handling most messages.
-    * @param ip_list List of ips that have connected to the server.
-    */
-    void accept_new_client(char *buffer) {
-        // Accept the socket or error if bad acception which is a return of -1
-        if ((sockets_[total_socket_count_] = internalServer_->socket_accept()) < 0) {
-            perror("accept");
-            exit(EXIT_FAILURE);
-        }
-
-
-        // Read in the message that should be the ip of the client.
-        internalServer_->socket_read(sockets_[total_socket_count_], buffer, 1024);
-
-        // Create a new string for this ip and store it.
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
-
-        // Create a serializer to then deserialize into a Register.
-        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Register *reg = dynamic_cast<Register *>(ser->deserialize());
-
-        // Print the ip of the newly accepted client
-        printf("Client accepted : %s\n", reg->client_ip_->c_str());
-
-        // Add register to lists for client information.
-        ip_list_[total_socket_count_] = reg->client_ip_->clone();
-        port_list_[total_socket_count_] = reg->port_;
-        nodes_list_[total_socket_count_] = reg->sender_;
-
-        delete ser;
-        delete reg;
-
-        // Send the register to all clients besides the new one.
-        for (int i = 0; i < total_socket_count_; i++) {
-            internalServer_->socket_send(sockets_[i], buffer, 1024);
-        }
-
-        Directory *dir = new Directory(3, 10, 9999, 3, total_socket_count_, port_list_,
-                                       total_socket_count_, ip_list_, total_socket_count_, nodes_list_);
-        Serializer *directorySer = new Serializer();
-        char *serialized_directory = directorySer->serialize(dir);
-
-        internalServer_->socket_send(sockets_[total_socket_count_], serialized_directory, 1024);
-
-        delete dir;
-        delete directorySer;
-    }
-
-    /**
-     * Function for running the rendezvous server.
-     */
-    void run(char *kill_switch) {
-
-        // Begin listening.
-        int listener = internalServer_->socket_listen();
-
-        // Create the pollfd struct for the listener socket.
-        create_new_pollfd(listener, 0, pfds_, pfds_list_);
-        listener_added_ = true;
-
-        // Loop on true to continuously run the server.
-        while (kill_switch[0] != '1') {
-
-            // Poll the server activity.
-            int poll_count = poll(pfds_, total_socket_count_ + 1, 0);
-            if (poll_count == -1) {
-                kill_switch[0] = '1';
-            }
-            // Run through the existing connections looking for data to read.
-            for (int i = 0; i < total_socket_count_ + 1; i++) {
-                // Check if a port is ready to be read from
-                if (pfds_[i].revents & POLLIN) {
-                    // If the server listener is ready to read from then handle the new
-                    // message on this listener socket.
-                    if (pfds_[i].fd == listener) {
-                        message_on_listener();
-                    } else {
-                        // Else if a message is not on the listener than this is unexpected as of now.
-                        printf("%s\n", "Received unexpected message from already connected client");
-                    }
-                }
-            }
-        }
-    }
-};
-
 //===========================================================================================
 
 /**
@@ -439,7 +253,7 @@ public:
 
     // Member variables for interacting as a client.
     int IC_other_total_client_count_; // Total other clients known to the network.
-    char **IC_ip_list_; // List of the total client ips known to the network.
+    String **IC_ip_list_; // List of the total client ips known to the network.
     size_t *IC_port_list_; // List of total ports for ips known to the network.
     size_t *IC_nodes_list_; // List of total nodes for nodes known to the network.
     Client **IC_client_connections_; // Client objects for connecting to other nodes.
@@ -485,18 +299,48 @@ public:
         IC_client_connections_ips_[0] = duplicate(server_ip);
         IC_client_connections_count_ = 1;
 
-        IC_ip_list_ = new char *[max_clients_];
+        IC_ip_list_ = new String *[max_clients_];
         IC_port_list_ = new size_t[max_clients_];
         IC_nodes_list_ = new size_t[max_clients_];
         // Add rendezvousServerClient values to the lists below.
-        IC_ip_list_[0] = duplicate(server_ip);
+        IC_ip_list_[0] = new String(server_ip);
         IC_port_list_[0] = 8080;
-        IC_port_list_[0] = 0;
+        IC_nodes_list_[0] = 3;
         IC_other_total_client_count_ = 1;
 
 
         // Internal Server config
         internalServer_ = new Server(client_ip_, port_);
+        internalServer_->socket_bind();
+        IS_pfds_ = new struct pollfd[max_clients_ + 1];
+        IS_pfds_list_ = new struct pollfd *[max_clients_ + 1];
+        IS_sockets_ = new int[max_clients_];
+        IS_total_socket_count_ = 0;
+
+        // Set given map and node
+        store_map_ = map;
+        node_ = node;
+    }
+
+    Node(char *server_ip, int port, int max_clients, Map *map, size_t node) {
+
+        max_clients_ = max_clients;
+
+        // Internal client config
+
+        port_ = port;
+        IC_client_connections_ = new Client *[max_clients_];
+        IC_client_connections_ips_ = new char *[max_clients_];
+        IC_client_connections_count_ = 0;
+
+        IC_ip_list_ = new String *[max_clients_];
+        IC_port_list_ = new size_t[max_clients_];
+        IC_nodes_list_ = new size_t[max_clients_];
+        IC_other_total_client_count_ = 0;
+
+
+        // Internal Server config
+        internalServer_ = new Server(server_ip, port_);
         internalServer_->socket_bind();
         IS_pfds_ = new struct pollfd[max_clients_ + 1];
         IS_pfds_list_ = new struct pollfd *[max_clients_ + 1];
@@ -523,7 +367,7 @@ public:
         delete[] IC_client_connections_ips_;
 
         for (int i = 0; i < IC_other_total_client_count_; i++) {
-            delete[] IC_ip_list_[i];
+            delete IC_ip_list_[i];
         }
         delete[] IC_ip_list_;
         delete[] IC_port_list_;
@@ -858,10 +702,10 @@ public:
      */
     void add_register(Register *reg) {
 
-        IC_ip_list_[IC_total_client_count_] = duplicate(reg->client_ip_->c_str());
-        IC_port_list_[IC_total_client_count_] = reg->port_;
-        IC_nodes_list_[IC_total_client_count_] = reg->sender_;
-        IC_total_client_count_++;
+        IC_ip_list_[IC_other_total_client_count_] = new String(reg->client_ip_->c_str());
+        IC_port_list_[IC_other_total_client_count_] = reg->port_;
+        IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
+        IC_other_total_client_count_++;
 
         // Print the ip of the newly accepted client
         printf("New Node joined : %s\n", reg->client_ip_->c_str());
@@ -908,7 +752,7 @@ public:
         // If node idx was changed
         if (node_idx != max_clients_) {
             // Looking for client with the ip at the index found.
-            char *target_ip = IC_ip_list_[node_idx];
+            char *target_ip = IC_ip_list_[node_idx]->cstr_;
             for (int i = 0; i < IC_client_connections_count_; i++) {
                 if (strcmp(target_ip, IC_client_connections_ips_[i]) == 0) {
                     // If ip is found then this i is where the client already made is.
@@ -918,10 +762,10 @@ public:
 
             // If no client for the ip has been made yet then create one.
             if (client == nullptr) {
-                client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
+                client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]->cstr_);
 
-                IC__client_connections_[IC_client_connections_count_] = client;
-                IC_client_connections_ips_[IC_client_connections_count_] = duplicate(IC_ip_list_[node_idx]);
+                IC_client_connections_[IC_client_connections_count_] = client;
+                IC_client_connections_ips_[IC_client_connections_count_] = duplicate(IC_ip_list_[node_idx]->cstr_);
                 IC_client_connections_count_++;
             }
         }
@@ -1210,5 +1054,136 @@ public:
 
         // return true to continue loop.
         return true;
+    }
+};
+
+//============================================================================
+
+/**
+ * Rendezvous Server object that acts as the registrar server.
+ * When the server dies the clients will no longer be able to read from it and
+ * so they shut down.
+ */
+class RendezvousServer : public Node {
+public:
+
+    RendezvousServer(char *ip, int port, int max_clients, Map* map, size_t node)
+    :  Node(ip, port, max_clients, map, node) {}
+
+
+    /**
+     * Function for handling getting a message on the listener socket.
+     */
+    void message_on_listener() {
+
+        // Hold a buffer for incoming messages.
+        char buffer[1024] = {0};
+
+        // Accept the new client that is sending a message to the listener.
+        accept_new_client(buffer);
+
+        // Create a new pollfd for the socket that client connected on.
+        // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
+        // the pfds list.
+        create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1, IS_pfds_, IS_pfds_list_);
+
+        // Increase the socket count.
+        IC_other_total_client_count_++; 
+        IS_total_socket_count_++;
+
+        // Reset buffer so that new messages don't overlap.
+        memset(buffer, 0, 1024);
+    }
+
+    /**
+    * Handles a client joining the network
+    * @param s Server object.
+    * @param sockets List of sockets.
+    * @param total_socket_count Number of sockets not the listener.
+    * @param fd_count Count of all sockets including the listener.
+    * @param buffer A string buffer that is being passed around for handling most messages.
+    * @param ip_list List of ips that have connected to the server.
+    */
+    void accept_new_client(char *buffer) {
+        // Accept the socket or error if bad acception which is a return of -1
+        if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+
+
+        // Read in the message that should be the ip of the client.
+        internalServer_->socket_read(IS_sockets_[IS_total_socket_count_], buffer, 1024);
+
+        // Create a new string for this ip and store it.
+        char *serial_string = new char[1024];
+        strcpy(serial_string, buffer);
+
+        // Create a serializer to then deserialize into a Register.
+        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
+        Register *reg = dynamic_cast<Register *>(ser->deserialize());
+
+        // Print the ip of the newly accepted client
+        printf("Client accepted : %s\n", reg->client_ip_->c_str());
+
+        // Add register to lists for client information.
+        IC_ip_list_[IS_total_socket_count_] = reg->client_ip_->clone();
+        IC_port_list_[IS_total_socket_count_] = reg->port_;
+        IC_nodes_list_[IS_total_socket_count_] = reg->sender_;
+
+        delete ser;
+        delete reg;
+
+        // Send the register to all clients besides the new one.
+        for (int i = 0; i < IS_total_socket_count_; i++) {
+            internalServer_->socket_send(IS_sockets_[i], buffer, 1024);
+        }
+
+        Directory *dir = new Directory(3, 10, 9999, 3, IS_total_socket_count_, IC_port_list_,
+                                       IS_total_socket_count_, IC_ip_list_, IS_total_socket_count_, IC_nodes_list_);
+        Serializer *directorySer = new Serializer();
+        char *serialized_directory = directorySer->serialize(dir);
+
+        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], serialized_directory, 1024);
+
+        delete dir;
+        delete directorySer;
+    }
+
+    /**
+     * Function for running the rendezvous server.
+     */
+    void run(char *kill_switch) {
+
+        // Begin listening.
+        int listener = internalServer_->socket_listen();
+
+        // Create the pollfd struct for the listener socket.
+        create_new_pollfd(listener, 0, IS_pfds_, IS_pfds_list_);
+        IS_listener_added_ = true;
+
+        // Loop on true to continuously run the server.
+        while (kill_switch[0] != '1') {
+
+            // Poll the server activity.
+            int poll_count = poll(IS_pfds_, IS_total_socket_count_ + 1, 0);
+            if (poll_count == -1) {
+                kill_switch[0] = '1';
+            }
+            // Run through the existing connections looking for data to read.
+            for (int i = 0; i < IS_total_socket_count_ + 1; i++) {
+                // Check if a port is ready to be read from
+                if (IS_pfds_[i].revents & POLLIN) {
+                    // If the server listener is ready to read from then handle the new
+                    // message on this listener socket.
+                    if (IS_pfds_[i].fd == listener) {
+                        message_on_listener();
+                    } else {
+                        // Else if a message is not on the listener than this is unexpected as of now.
+                        printf("%s\n", "Received unexpected message from already connected client");
+                    }
+                }
+            }
+        }
     }
 };
