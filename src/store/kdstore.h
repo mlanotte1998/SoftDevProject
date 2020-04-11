@@ -54,7 +54,7 @@ KDStore::~KDStore() {
     for (int i = 0; i < map_->get_size(); i++) {
       delete values[i];
     }
-    delete [] values; 
+    delete [] values;
     delete map_;
     if (n_ != nullptr) {
       delete n_;
@@ -76,8 +76,6 @@ DataFrame* KDStore::waitAndGet(Key key) {
         // do nothing but wait
       }
       return n_->waitAndGet(key);
-      //strcpy(node_ip, "127.0.0.2");
-      //n_->ask_other_node_for_dataframe(node_ip, "hello");
     }
 }
 
@@ -97,17 +95,16 @@ void KDStore::run_network(char* kill_switch) {
     strcpy(rendezvous_ip, "127.0.0.1");
     if (idx_ == 0) {
       char node_ip[10] = {0};
-      strcpy(node_ip, "127.0.0.2");
-      n_ = new Node(node_ip, 8081, rendezvous_ip, 5, map_, idx_);
+      n_ = new RendezvousServer(rendezvous_ip, 8081, 5, map_, idx_);
       n_->run(kill_switch);
     } else if (idx_ == 1) {
         char node_ip[10] = {0};
-        strcpy(node_ip, "127.0.0.3");
+        strcpy(node_ip, "127.0.0.2");
         n_ = new Node(node_ip, 8081, rendezvous_ip, 5, map_, idx_);
         n_->run(kill_switch);
     } else if (idx_ == 2) {
         char node_ip[10] = {0};
-        strcpy(node_ip, "127.0.0.4");
+        strcpy(node_ip, "127.0.0.3");
         n_ = new Node(node_ip, 8081, rendezvous_ip,  5, map_, idx_);
         n_->run(kill_switch);
     }

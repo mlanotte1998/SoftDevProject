@@ -35,7 +35,7 @@ public:
 
 
     void producer() {
-        size_t SZ = 100 *1000;
+        size_t SZ = 100 * 1000;
         double *vals = new double[SZ];
         double sum = 0;
         for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;

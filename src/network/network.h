@@ -118,8 +118,8 @@ public:
      * @param sock Socket to send to.
      * @param message Message to send.
      */
-    void socket_send(int sock, char *message, size_t size) {
-        send(sock, message, size, 0);
+    int socket_send(int sock, char *message, size_t size) {
+        return send(sock, message, size, 0);
     }
 
 };
@@ -187,8 +187,8 @@ public:
      * Send a message to the server.
      * @param message Message to send.
      */
-    virtual void socket_send(char *message, size_t size) {
-        send(sock_, message, size, 0);
+    virtual int socket_send(char *message, size_t size) {
+        return send(sock_, message, size, 0);
     }
 
 };
@@ -232,8 +232,8 @@ public:
      * @param message Message to send.
      * @param size size of the message to send.
      */
-    virtual void socket_send(char *message, size_t size) {
-        server_->socket_send(sock_num_, message, size);
+    virtual int socket_send(char *message, size_t size) {
+        return server_->socket_send(sock_num_, message, size);
     }
 
 };
@@ -273,6 +273,8 @@ public:
 
     Map *store_map_; // store map from application.
     size_t node_; // node number for the application
+    bool connected_to_rendezvous;
+    bool lock_rendezvous_connection;
 
 
     /**
@@ -304,8 +306,8 @@ public:
         IC_nodes_list_ = new size_t[max_clients_];
         // Add rendezvousServerClient values to the lists below.
         IC_ip_list_[0] = new String(server_ip);
-        IC_port_list_[0] = 8080;
-        IC_nodes_list_[0] = 3;
+        IC_port_list_[0] = 8081;
+        IC_nodes_list_[0] = 0;
         IC_other_total_client_count_ = 1;
 
 
@@ -320,6 +322,8 @@ public:
         // Set given map and node
         store_map_ = map;
         node_ = node;
+        lock_rendezvous_connection = false;
+        connected_to_rendezvous = false;
     }
 
     Node(char *server_ip, int port, int max_clients, Map *map, size_t node) {
@@ -350,6 +354,8 @@ public:
         // Set given map and node
         store_map_ = map;
         node_ = node;
+        connected_to_rendezvous = true;
+        lock_rendezvous_connection = false;
     }
 
     /**
@@ -392,7 +398,7 @@ public:
      * Function for running the node implementation.
      * @param kill_switch Int for being able to kill the program gracefully.
      */
-    void run(char *kill_switch) {
+    virtual void run(char *kill_switch) {
 
         // Start two threads, one for the internal server, and one for the
         // rendezvous server connection.
@@ -459,7 +465,7 @@ public:
     *  Handles a client joining the network.
     * @return Returns the sock index of the newly accepted client.
     */
-    size_t accept_new_client() {
+    virtual size_t accept_new_client() {
         // Accept the socket or error if bad acception which is a return of -1
         if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
             perror("accept");
@@ -649,6 +655,8 @@ public:
         // Loop continuously while connected to the server.
         while (kill_switch[0] != '1') {
 
+          if (!lock_rendezvous_connection ) {
+
             // Reset buffer in the while loop so new messages dont have parts of old ones in them.
             memset(buffer, 0, 1024);
 
@@ -666,15 +674,20 @@ public:
             if (dynamic_cast<Register *>(deserialized) != nullptr) {
                 Register *reg = dynamic_cast<Register *>(deserialized);
                 add_register(reg);
+                printf("%s\n", "Connected to Rendezvous" );
+                connected_to_rendezvous = true;
             }
                 // Else if a directory is the incoming message then copy all of the data
                 // to the values of this node.
             else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
                 Directory *dir = dynamic_cast<Directory *>(deserialized);
                 add_directory(dir);
+                printf("%s\n", "Connected to Rendezvous" );
+                connected_to_rendezvous = true;
             }
             delete deserialized;
         }
+      }
     }
 
     /**
@@ -788,10 +801,16 @@ public:
         // Run a loop until the process has finished.
         while (!message_sent) {
 
+          if (connected_to_rendezvous) {
+
             // Figure out which client object to use for interaction.
             Client *cur_client = get_client_of_key(k);
 
             if (cur_client != nullptr) {
+
+              if(k.idx_ == 0) {
+                lock_rendezvous_connection = true;
+              }
 
                 message_sent = true;
 
@@ -824,6 +843,8 @@ public:
                 }
             }
         }
+      }
+      lock_rendezvous_connection = false;
     }
 
     /**
@@ -869,9 +890,10 @@ public:
         // Send the column in chunks and increment the count to keep track of how much has been sent.
         while (count < strlen(col_string)) {
             memset(buffer, 0, 1024);
-            strncpy(buffer, col_string + count, 1023);
+            strncpy(buffer, col_string + count, 1022);
+            buffer[1023] = '\0';
             cur_client->socket_send(buffer, 1024);
-            count += 1023;
+            count += 1022;
         }
 
         // Send the same put message from earlier again to show that the column sending is done.
@@ -901,10 +923,13 @@ public:
         // Run a loop until the process has finished.
         while (true) {
 
+          if (connected_to_rendezvous) {
             // Figure out which client object to use for interaction.
             Client *cur_client = get_client_of_key(k);
 
             if (cur_client != nullptr) {
+
+              lock_rendezvous_connection = true;
 
                 // Send the starting wait and get message to start everything off.
                 Serializer *put_ser = get_message_serializer(MsgKind::WaitAndGet, node_, k.idx_, 0);
@@ -927,11 +952,15 @@ public:
                 delete key_ser;
 
                 DataFrame *df = receive_dataframe(cur_client, k.idx_);
+
+                lock_rendezvous_connection = false;
                 if (df != nullptr) {
+
                     return df;
                 }
             }
         }
+      }
     }
 
     /**
@@ -1011,6 +1040,7 @@ public:
             recv_count++;
         }
 
+
         // Create a serializer for the column and then add the deserialized column to the dataframe.
         Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
         df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
@@ -1029,9 +1059,10 @@ public:
     */
     bool read_in_column(Client *cur_client, char *append_buffer, size_t recv_count) {
 
-        // Create a buffer to read in the message.
         char buffer[1024] = {0};
         cur_client->socket_read(buffer, 1024);
+
+
 
         // If the recv_count > 0 then check if the end column full message is sent.
         if (recv_count > 0) {
@@ -1076,11 +1107,8 @@ public:
      */
     void message_on_listener() {
 
-        // Hold a buffer for incoming messages.
-        char buffer[1024] = {0};
-
         // Accept the new client that is sending a message to the listener.
-        accept_new_client(buffer);
+        accept_new_client();
 
         // Create a new pollfd for the socket that client connected on.
         // Pass in total_socket_count + 1 because the + 1 accounts for the listener also being in
@@ -1088,11 +1116,8 @@ public:
         create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1, IS_pfds_, IS_pfds_list_);
 
         // Increase the socket count.
-        IC_other_total_client_count_++; 
+        IC_other_total_client_count_++;
         IS_total_socket_count_++;
-
-        // Reset buffer so that new messages don't overlap.
-        memset(buffer, 0, 1024);
     }
 
     /**
@@ -1104,7 +1129,10 @@ public:
     * @param buffer A string buffer that is being passed around for handling most messages.
     * @param ip_list List of ips that have connected to the server.
     */
-    void accept_new_client(char *buffer) {
+    size_t accept_new_client() {
+
+        char buffer[1024] = {0};
+
         // Accept the socket or error if bad acception which is a return of -1
         if ((IS_sockets_[IS_total_socket_count_] = internalServer_->socket_accept()) < 0) {
             perror("accept");
@@ -1179,8 +1207,7 @@ public:
                     if (IS_pfds_[i].fd == listener) {
                         message_on_listener();
                     } else {
-                        // Else if a message is not on the listener than this is unexpected as of now.
-                        printf("%s\n", "Received unexpected message from already connected client");
+                        client_message_received(i - 1);
                     }
                 }
             }
