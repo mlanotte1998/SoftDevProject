@@ -436,13 +436,15 @@ public:
 
     char *client_ip_; // Ip of this node.
     int port_; // Port for this node.
+
+    // Member variables for interacting as a client.
     int IC_other_total_client_count_; // Total other clients known to the network.
     char **IC_ip_list_; // List of the total client ips known to the network.
     size_t *IC_port_list_; // List of total ports for ips known to the network.
     size_t *IC_nodes_list_; // List of total nodes for nodes known to the network.
-    Client **IC_other_client_connections_; // Client objects for connecting to other nodes.
-    int IC_other_client_connections_count_; // Count of client objects for connecting to other nodes.
-    char **IC_other_client_connections_ips_;
+    Client **IC_client_connections_; // Client objects for connecting to other nodes.
+    char **IC_client_connections_ips_; // Ips of client objects.
+    int IC_client_connections_count_; // Count of client objects for connecting to other nodes.
 
     // Member variables for the internal server.
     Server *internalServer_; // The internal server object for receiving messages from other clients.
@@ -475,20 +477,22 @@ public:
         strcpy(client_ip_copy, client_ip);
         client_ip_ = client_ip_copy;
         port_ = port;
-        Client* internalClient = new Client(client_ip_, port_, server_ip);
-        IC_other_client_connections_ = new Client *[max_clients_];
-        IC_other_client_connections_ips_ = new char *[max_clients_];
-        IC_other_client_connections_[0] = internalClient;
-        IC_other_client_connections_ips_[0] = duplicate(server_ip);
-        IC_other_client_connections_count_ = 1;
+        Client *rendezvousServerClient = new Client(client_ip_, port_, server_ip);
+        IC_client_connections_ = new Client *[max_clients_];
+        IC_client_connections_ips_ = new char *[max_clients_];
+        // Add rendezvousServerClient as the first client connection
+        IC_client_connections_[0] = rendezvousServerClient;
+        IC_client_connections_ips_[0] = duplicate(server_ip);
+        IC_client_connections_count_ = 1;
 
         IC_ip_list_ = new char *[max_clients_];
         IC_port_list_ = new size_t[max_clients_];
         IC_nodes_list_ = new size_t[max_clients_];
+        // Add rendezvousServerClient values to the lists below.
         IC_ip_list_[0] = duplicate(server_ip);
         IC_port_list_[0] = 8080;
         IC_port_list_[0] = 0;
-        IC_other_total_client_count_ = 0;
+        IC_other_total_client_count_ = 1;
 
 
         // Internal Server config
@@ -497,9 +501,9 @@ public:
         IS_pfds_ = new struct pollfd[max_clients_ + 1];
         IS_pfds_list_ = new struct pollfd *[max_clients_ + 1];
         IS_sockets_ = new int[max_clients_];
-
         IS_total_socket_count_ = 0;
 
+        // Set given map and node
         store_map_ = map;
         node_ = node;
     }
@@ -511,12 +515,12 @@ public:
 
         // Delete Internal Client members
         delete[] client_ip_;
-        for (int i = 0; i < IC_other_client_connections_count_; i++) {
-            delete IC_other_client_connections_[i];
-            delete[] IC_other_client_connections_ips_[i];
+        for (int i = 0; i < IC_client_connections_count_; i++) {
+            delete IC_client_connections_[i];
+            delete[] IC_client_connections_ips_[i];
         }
-        delete[] IC_other_client_connections_;
-        delete[] IC_other_client_connections_ips_;
+        delete[] IC_client_connections_;
+        delete[] IC_client_connections_ips_;
 
         for (int i = 0; i < IC_other_total_client_count_; i++) {
             delete[] IC_ip_list_[i];
@@ -805,7 +809,7 @@ public:
             memset(buffer, 0, 1024);
 
             // Read from server, if no response than close because that means the server went down.
-            if (IC_other_client_connections_[0]->socket_recv(buffer, 1024) == 0) {
+            if (IC_client_connections_[0]->socket_recv(buffer, 1024) == 0) {
                 // End when the server stops running.
                 kill_switch[0] = '1';
                 return;
@@ -842,7 +846,7 @@ public:
 
         // Copy the register message to the buffer and sent it.
         strcpy(buffer, registerSer->buffer_);
-        IC_other_client_connections_[0]->socket_send(buffer, 1024);
+        IC_client_connections_[0]->socket_send(buffer, 1024);
 
         delete registerSer;
     }
@@ -854,10 +858,10 @@ public:
      */
     void add_register(Register *reg) {
 
-        IC_ip_list_[IC_other_total_client_count_] = duplicate(reg->client_ip_->c_str());
-        IC_port_list_[IC_other_total_client_count_] = reg->port_;
-        IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
-        IC_other_total_client_count_++;
+        IC_ip_list_[IC_total_client_count_] = duplicate(reg->client_ip_->c_str());
+        IC_port_list_[IC_total_client_count_] = reg->port_;
+        IC_nodes_list_[IC_total_client_count_] = reg->sender_;
+        IC_total_client_count_++;
 
         // Print the ip of the newly accepted client
         printf("New Node joined : %s\n", reg->client_ip_->c_str());
@@ -905,10 +909,10 @@ public:
         if (node_idx != max_clients_) {
             // Looking for client with the ip at the index found.
             char *target_ip = IC_ip_list_[node_idx];
-            for (int i = 0; i < IC_other_client_connections_count_; i++) {
-                if (strcmp(target_ip, IC_other_client_connections_ips_[i]) == 0) {
+            for (int i = 0; i < IC_client_connections_count_; i++) {
+                if (strcmp(target_ip, IC_client_connections_ips_[i]) == 0) {
                     // If ip is found then this i is where the client already made is.
-                    client = IC_other_client_connections_[i];
+                    client = IC_client_connections_[i];
                 }
             }
 
@@ -916,9 +920,9 @@ public:
             if (client == nullptr) {
                 client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]);
 
-                IC_other_client_connections_[IC_other_client_connections_count_] = client;
-                IC_other_client_connections_ips_[IC_other_client_connections_count_] = duplicate(IC_ip_list_[node_idx]);
-                IC_other_client_connections_count_++;
+                IC__client_connections_[IC_client_connections_count_] = client;
+                IC_client_connections_ips_[IC_client_connections_count_] = duplicate(IC_ip_list_[node_idx]);
+                IC_client_connections_count_++;
             }
         }
 
