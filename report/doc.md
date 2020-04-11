@@ -235,11 +235,11 @@ for the other two to finish there back and forth because there is a problem with
 the cause is a node trying to read but with nothing to read) and then they all stall. 
 
 We have a TODO list of tasks to get the code in good shape before looking at MileStone 4 and 5 requirements. 
-1. Fix small memory leak issues that occur when running Demo Nodes (Rendezvous Server is fine). 
-2. Fix the blocking problem with the nodes. 
+1. Fix small memory leak issues that occur when running Demo Nodes (Rendezvous Server is fine).  Fixed on April 10th. 
+2. Fix the blocking problem with the nodes. Fixed April 10th. 
 3. Clean up Network code to have the same functions used for two pairs of situations : 
-    1. receiving a put and calling a wait and get
-    2. receiving a wait and get and calling a put
+    1. receiving a put and calling a wait and get. Fixed on April 11th. 
+    2. receiving a wait and get and calling a put. Fixed on April 11th. 
     
     The pairs are similar because for the first pair both are taking in a DataFrame and thus have similar function.
     The second pair both send a DataFrame. The problem right now is the use of a Server object when receiving 
@@ -254,12 +254,11 @@ information held for who has connected to each Node.
 5. Make Node 0 a Rendezvous server. Maybe make a Rendezvous Server a type of Node so then need to have Node have virtual
 function and in doing this hopefully we will not add a lot of repetition. 
 
+New Problems: 
+1. Occasional "Row Index out of bounds" error is occurring again from column not being sent completely correctly. 
+
 Once all of these are complete we will move onto the further milestones because we want our code to be safe
 moving forward incase things case more complicated.
 
-This week a lot of time was spent with running into memory issues trying to set up the put and wait functionality. 
-For the most part, the memory issues have been fixed. A big issue we had was trying to have the column serialization 
-be able to handle large columns but not always do that because the Nodes were running out of memory when
-all Columns were created with huge char*'s. 
 
 
