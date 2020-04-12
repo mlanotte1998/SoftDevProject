@@ -269,16 +269,17 @@ public:
     char *client_ip_; // Ip of this node.
     int port_; // Port for this node.
 
-    // Member variables for interacting as a client.
-    int IC_other_total_client_count_; // Total other clients known to the network.
-    String **IC_ip_list_; // List of the total client ips known to the network.
-    size_t *IC_port_list_; // List of total ports for ips known to the network.
-    size_t *IC_nodes_list_; // List of total nodes for nodes known to the network.
+    int nodes_count_; // Total other clients known to the network.
+    String **nodes_ip_list_; // List of the total client ips known to the network.
+    size_t *nodes_port_list; // List of total ports for ips known to the network.
+    size_t *nodes_id_list_; // List of total nodes for nodes known to the network.
+
+    // Member variables for the internal clients (IC)
     Client **IC_client_connections_; // Client objects for connecting to other nodes.
     char **IC_client_connections_ips_; // Ips of client objects.
     int IC_client_connections_count_; // Count of client objects for connecting to other nodes.
 
-    // Member variables for the internal server.
+    // Member variables for the internal server (IS)
     Server *internalServer_; // The internal server object for receiving messages from other clients.
     struct pollfd *IS_pfds_; // Structs used for polling messages on the server.
     struct pollfd **IS_pfds_list_; // List of pointers to pfds created since the
@@ -325,14 +326,14 @@ public:
         IC_client_connections_ips_[0] = duplicate(server_ip);
         IC_client_connections_count_ = 1;
 
-        IC_ip_list_ = new String *[max_clients_];
-        IC_port_list_ = new size_t[max_clients_];
-        IC_nodes_list_ = new size_t[max_clients_];
+        nodes_ip_list_ = new String *[max_clients_];
+        nodes_port_list = new size_t[max_clients_];
+        nodes_id_list_ = new size_t[max_clients_];
         // Add rendezvousServerClient values to the lists below.
-        IC_ip_list_[0] = new String(server_ip);
-        IC_port_list_[0] = 8081;
-        IC_nodes_list_[0] = 0;
-        IC_other_total_client_count_ = 1;
+        nodes_ip_list_[0] = new String(server_ip);
+        nodes_port_list[0] = 8081;
+        nodes_id_list_[0] = 0;
+        nodes_count_ = 1;
 
 
         // Internal Server config
@@ -369,10 +370,10 @@ public:
         IC_client_connections_ips_ = new char *[max_clients_];
         IC_client_connections_count_ = 0;
 
-        IC_ip_list_ = new String *[max_clients_];
-        IC_port_list_ = new size_t[max_clients_];
-        IC_nodes_list_ = new size_t[max_clients_];
-        IC_other_total_client_count_ = 0;
+        nodes_ip_list_ = new String *[max_clients_];
+        nodes_port_list_ = new size_t[max_clients_];
+        nodes_id_list_ = new size_t[max_clients_];
+        nodes_count_ = 0;
 
         // Internal Server config
         internalServer_ = new Server(server_ip, port_);
@@ -403,12 +404,12 @@ public:
         delete[] IC_client_connections_;
         delete[] IC_client_connections_ips_;
 
-        for (int i = 0; i < IC_other_total_client_count_; i++) {
-            delete IC_ip_list_[i];
+        for (int i = 0; i < nodes_count_; i++) {
+            delete nodes_ip_list_[i];
         }
-        delete[] IC_ip_list_;
-        delete[] IC_port_list_;
-        delete[] IC_nodes_list_;
+        delete[] nodes_ip_list_;
+        delete[] nodes_port_list_;
+        delete[] nodes_id_list_;
 
         // Delete Internal Server members
         delete internalServer_;
@@ -710,7 +711,6 @@ public:
                 if (dynamic_cast<Register *>(deserialized) != nullptr) {
                     Register *reg = dynamic_cast<Register *>(deserialized);
                     add_register(reg);
-                    printf("%s\n", "Connected to Rendezvous");
                     connected_to_rendezvous = true;
                 }
                     // Else if a directory is the incoming message then copy all of the data
@@ -751,10 +751,10 @@ public:
      */
     void add_register(Register *reg) {
 
-        IC_ip_list_[IC_other_total_client_count_] = reg->client_ip_->clone();;
-        IC_port_list_[IC_other_total_client_count_] = reg->port_;
-        IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
-        IC_other_total_client_count_++;
+        nodes_ip_list_[nodes_count_] = reg->client_ip_->clone();;
+        nodes_port_list_[nodes_count_] = reg->port_;
+        nodes_id_list_[nodes_count_] = reg->sender_;
+        nodes_count_++;
 
         // Print the ip of the newly accepted client
         printf("New Node joined : %s\n", reg->client_ip_->c_str());
@@ -915,8 +915,8 @@ public:
 
         // Look through known client for the node id wanted.
         size_t node_idx = max_clients_;
-        for (int i = 0; i < IC_other_total_client_count_; i++) {
-            if (IC_nodes_list_[i] == k.idx_) {
+        for (int i = 0; i < nodes_count_; i++) {
+            if (nodes_id_list_[i] == k.idx_) {
                 // if node id found then set the node idx variable.
                 node_idx = i;
                 break;
@@ -926,7 +926,7 @@ public:
         // If node idx was changed
         if (node_idx != max_clients_) {
             // Looking for client with the ip at the index found.
-            char *target_ip = IC_ip_list_[node_idx]->cstr_;
+            char *target_ip = nodes_ip_list_[node_idx]->cstr_;
             for (int i = 0; i < IC_client_connections_count_; i++) {
                 if (strcmp(target_ip, IC_client_connections_ips_[i]) == 0) {
                     // If ip is found then this i is where the client already made is.
@@ -936,10 +936,10 @@ public:
 
             // If no client for the ip has been made yet then create one.
             if (client == nullptr) {
-                client = new Client(client_ip_, IC_port_list_[node_idx], IC_ip_list_[node_idx]->cstr_);
+                client = new Client(client_ip_, nodes_port_list_[node_idx], nodes_ip_list_[node_idx]->cstr_);
 
                 IC_client_connections_[IC_client_connections_count_] = client;
-                IC_client_connections_ips_[IC_client_connections_count_] = duplicate(IC_ip_list_[node_idx]->cstr_);
+                IC_client_connections_ips_[IC_client_connections_count_] = duplicate(nodes_ip_list_[node_idx]->cstr_);
                 IC_client_connections_count_++;
             }
         }
@@ -1202,9 +1202,9 @@ public:
 
         // Create a directory to send to the new client.
         Serializer *directory_ser = get_directory_serializer(node_, target, 9999, node_, IS_total_socket_count_,
-                                                             IC_port_list_,
-                                                             IS_total_socket_count_, IC_ip_list_,
-                                                             IS_total_socket_count_, IC_nodes_list_);
+                                                             nodes_port_list_,
+                                                             IS_total_socket_count_, nodes_ip_list_,
+                                                             IS_total_socket_count_, nodes_id_list_);
         internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], directory_ser->buffer_, 1024);
         delete directory_ser;
     }
