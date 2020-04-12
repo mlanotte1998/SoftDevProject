@@ -51,6 +51,38 @@ Serializer *get_ack_serializer(size_t sender, size_t target, size_t id) {
 }
 
 /**
+ * Creates a serializer object for a Directory Message.
+ * @param sender Sender node.
+ * @param target Target node.
+ * @param id Message id.
+ * @param client Client (same as sender).
+ * @param ports_count Count of ports.
+ * @param ports List of other nodes ports.
+ * @param addresses_count Count of addresses.
+ * @param addresses List of other nodes addresses.
+ * @param nodes_count Count of nodes.
+ * @param nodes List of other node ids.
+ * @return Returns the serializer for the directory.
+ */
+Serializer *get_directory_serializer(size_t sender, size_t target, size_t id, size_t client,
+                                     size_t ports_count, size_t *ports, size_t addresses_count,
+                                     String **addresses, size_t nodes_count, size_t *nodes) {
+
+    // Create a directory to send to the new client.
+    Directory *dir = new Directory(node_, target, 9999, node_, IS_total_socket_count_, IC_port_list_,
+                                   IS_total_socket_count_, IC_ip_list_, IS_total_socket_count_, IC_nodes_list_);
+
+    // Add the directory to the serializer.
+    Serializer *directory_ser = new Serializer();
+    directory_ser->serialize(dir);
+
+    delete dir;
+
+    // Return the serializer.
+    return directory_ser;
+}
+
+/**
  * Creates a serializer object for an Ack message.
  * @param sender Sender node.
  * @param target Target node.

@@ -12,6 +12,8 @@
 #include "../seriazation_and_messages/message.h"
 #include "network-helper.h"
 
+// authors: welch.da@husky.neu.edu, lanotte.m@husky.neu.edu
+
 /**
  * Function for creating a new poll file descriptor struct with a given fd number and array index.
  * @param fd_number The poll fd number.
@@ -31,6 +33,8 @@ void create_new_pollfd(int fd_number, int index, struct pollfd *pfds, struct pol
     pfds[index] = *new_fd;
     pfds_list[index] = new_fd;
 }
+
+//====================================================================================================
 
 /**
  * Server object that encapsulates server/socket functionality.
@@ -83,7 +87,7 @@ public:
     /**
      * Has server start listening and returns the file descriptor to
      * be the listener int value that is used to tell where messages are coming from.
-     * @return
+     * @return returns the server file descriptor.
      */
     int socket_listen() {
         if (listen(server_fd_, 10) < 0) {
@@ -117,12 +121,16 @@ public:
      * Send a message to the given socket.
      * @param sock Socket to send to.
      * @param message Message to send.
+     * @param size Size of the message buffer to send.
+     * @return Returns the bytes sent, -1 if error.
      */
     int socket_send(int sock, char *message, size_t size) {
         return send(sock, message, size, 0);
     }
 
 };
+
+//===================================================================================================
 
 /**
  * Client object that connects to the known server.
@@ -167,18 +175,27 @@ public:
         }
     }
 
+    /**
+     * Constructor so that this class can be abstract.
+     */
     Client() {}
 
     /**
      * Read from a the server.
      * @param buffer Buffer to hold the incoming message.
      * @param buffer_size Size of the buffer.
-     * @return Int that is positive for success and 0 if error reading.
+     * @return Int that is positive for success and -1 if error reading.
      */
     virtual int socket_read(char *buffer, int buffer_size) {
         return read(sock_, buffer, buffer_size);
     }
 
+    /**
+     * Read from a server but with a dont wait flag so the program is not stuck.
+     * @param buffer Buffer to hold the incoming message.
+     * @param buffer_size Size of the buffer.
+     * @return Return int that is positive for success and -1 if error reading.
+     */
     virtual int socket_recv(char *buffer, int buffer_size) {
         return recv(sock_, buffer, buffer_size, MSG_DONTWAIT);
     }
@@ -223,7 +240,7 @@ public:
      * @param buffer_size Size of the buffer to know much how to read in.
      * @return
      */
-    virtual int socket_read(char *buffer, int buffer_size) {
+    int socket_read(char *buffer, int buffer_size) {
         return server_->socket_read(sock_num_, buffer, buffer_size);
     }
 
@@ -232,7 +249,7 @@ public:
      * @param message Message to send.
      * @param size size of the message to send.
      */
-    virtual int socket_send(char *message, size_t size) {
+    int socket_send(char *message, size_t size) {
         return server_->socket_send(sock_num_, message, size);
     }
 
@@ -242,6 +259,7 @@ public:
 
 /**
  * Node class
+ * Has ownership of all pointers except the map.
  */
 class Node : public Object {
 public:
@@ -271,10 +289,14 @@ public:
     int *IS_sockets_; // List of socket values for every client that has connected.
     int IS_total_socket_count_; // Count of clients that have connected on a socket.
 
-    Map *store_map_; // store map from application.
+    Map *store_map_; // store map from application. Does not have ownership.
     size_t node_; // node number for the application
-    bool connected_to_rendezvous;
-    bool lock_rendezvous_connection;
+    bool connected_to_rendezvous; // Boolean for knowing whether the rendezvous connection has finished.
+    // this is important because if a node tries to do a put/wait and get with node 0 before finishing the
+    // initial connection, then threading can cause the wrong message to go to node 0 first when it is expecting
+    // a Register.
+    bool lock_rendezvous_connection; // Boolean for locking the rendezvous connection while
+    // there is a put or wait_and_get with node 0.
 
 
     /**
@@ -283,6 +305,8 @@ public:
      * @param port The port for this node.
      * @param server_ip The ip of the rendezvous server.
      * @param max_clients The maximum number of clients that can be added.
+     * @param map The store map to be passed in.
+     * @param node The node index for the application.
      */
     Node(char *client_ip, int port, char *server_ip, int max_clients, Map *map, size_t node) {
 
@@ -319,19 +343,27 @@ public:
         IS_sockets_ = new int[max_clients_];
         IS_total_socket_count_ = 0;
 
-        // Set given map and node
+        // Set more application specific values.
         store_map_ = map;
         node_ = node;
         lock_rendezvous_connection = false;
         connected_to_rendezvous = false;
     }
 
+    /**
+    * Rendezvous Server Node Constructor
+    * No client ip needed because this is the rendezvous server so no need to start with that.
+    * @param server_ip The ip of the rendezvous server.
+    * @param port The port for this node.
+    * @param max_clients The maximum number of clients that can be added.
+    * @param map The store map to be passed in.
+    * @param node The node index for the application.
+    */
     Node(char *server_ip, int port, int max_clients, Map *map, size_t node) {
 
         max_clients_ = max_clients;
 
         // Internal client config
-
         port_ = port;
         IC_client_connections_ = new Client *[max_clients_];
         IC_client_connections_ips_ = new char *[max_clients_];
@@ -342,7 +374,6 @@ public:
         IC_nodes_list_ = new size_t[max_clients_];
         IC_other_total_client_count_ = 0;
 
-
         // Internal Server config
         internalServer_ = new Server(server_ip, port_);
         internalServer_->socket_bind();
@@ -351,10 +382,10 @@ public:
         IS_sockets_ = new int[max_clients_];
         IS_total_socket_count_ = 0;
 
-        // Set given map and node
+        // Set more application specific values.
         store_map_ = map;
         node_ = node;
-        connected_to_rendezvous = true;
+        connected_to_rendezvous = true; // this is the rendezvous server so this is true.
         lock_rendezvous_connection = false;
     }
 
@@ -414,7 +445,7 @@ public:
 
     //--------------------------------------------------------------------------
 
-    // Internal Server Functions
+    // Functions related to receiving messages on the internal server.
 
     /**
      * Function for running the internal server implementation so that this node can
@@ -462,7 +493,7 @@ public:
     }
 
     /**
-    *  Handles a client joining the network.
+    * Handles a client joining the network.
     * @return Returns the sock index of the newly accepted client.
     */
     virtual size_t accept_new_client() {
@@ -554,7 +585,7 @@ public:
     }
 
     /**
-     *  Handle a wait and get message being received.
+     * Handle a wait and get message being received.
      * @param socket_idx Index of socket to interact with.
      * @param target Id of target node.
      */
@@ -603,6 +634,8 @@ public:
             exit(1);
         }
 
+        printf("%s\n", "Wait and Get finished");
+
         // Delete created objects.
         delete sw;
         delete ob;
@@ -631,6 +664,7 @@ public:
         cur_client->socket_read(buffer, 1024);
         Object *ob = deserialize_buffer(buffer);
 
+        // delete created serializer.
         delete ack_ser;
 
         return ob;
@@ -641,11 +675,12 @@ public:
     // Functions for communication with registrar.
 
     /**
-  * Function for running the implementation for the node communicating with the
-  * Rendezvous Server.
-  * @param kill_switch Int value for knowing when to gracefully kill the program.
-  */
+     * Function for running the implementation for the node communicating with the
+     * Rendezvous Server.
+     * @param kill_switch Int value for knowing when to gracefully kill the program.
+     */
     void run_rendezvous_communication(char *kill_switch) {
+
         // Create buffer for incoming and outgoing messages.
         char buffer[1024] = {0};
 
@@ -655,39 +690,40 @@ public:
         // Loop continuously while connected to the server.
         while (kill_switch[0] != '1') {
 
-          if (!lock_rendezvous_connection ) {
+            // Make sure the rendezvous connection wasn't locked by a different thread that is interacting
+            // with node 0 for a put/wait and get.
+            if (!lock_rendezvous_connection) {
+                // Reset buffer in the while loop so new messages dont have parts of old ones in them.
+                memset(buffer, 0, 1024);
 
-            // Reset buffer in the while loop so new messages dont have parts of old ones in them.
-            memset(buffer, 0, 1024);
+                // Read from server, if no response than close because that means the server went down.
+                if (IC_client_connections_[0]->socket_recv(buffer, 1024) == 0) {
+                    // End when the server stops running.
+                    kill_switch[0] = '1';
+                    return;
+                }
 
-            // Read from server, if no response than close because that means the server went down.
-            if (IC_client_connections_[0]->socket_recv(buffer, 1024) == 0) {
-                // End when the server stops running.
-                kill_switch[0] = '1';
-                return;
+                // Deserialize the buffer
+                Object *deserialized = deserialize_buffer(buffer);
+
+                // If a Register is the incoming message then add the new nodes data.
+                if (dynamic_cast<Register *>(deserialized) != nullptr) {
+                    Register *reg = dynamic_cast<Register *>(deserialized);
+                    add_register(reg);
+                    printf("%s\n", "Connected to Rendezvous");
+                    connected_to_rendezvous = true;
+                }
+                    // Else if a directory is the incoming message then copy all of the data
+                    // to the values of this node.
+                else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
+                    Directory *dir = dynamic_cast<Directory *>(deserialized);
+                    add_directory(dir);
+                    printf("%s\n", "Connected to Rendezvous");
+                    connected_to_rendezvous = true;
+                }
+                delete deserialized;
             }
-
-            // Deserialize the buffer
-            Object *deserialized = deserialize_buffer(buffer);
-
-            // If a Register is the incoming message then add the new nodes data.
-            if (dynamic_cast<Register *>(deserialized) != nullptr) {
-                Register *reg = dynamic_cast<Register *>(deserialized);
-                add_register(reg);
-                printf("%s\n", "Connected to Rendezvous" );
-                connected_to_rendezvous = true;
-            }
-                // Else if a directory is the incoming message then copy all of the data
-                // to the values of this node.
-            else if (dynamic_cast<Directory *>(deserialized) != nullptr) {
-                Directory *dir = dynamic_cast<Directory *>(deserialized);
-                add_directory(dir);
-                printf("%s\n", "Connected to Rendezvous" );
-                connected_to_rendezvous = true;
-            }
-            delete deserialized;
         }
-      }
     }
 
     /**
@@ -715,7 +751,7 @@ public:
      */
     void add_register(Register *reg) {
 
-        IC_ip_list_[IC_other_total_client_count_] = new String(reg->client_ip_->c_str());
+        IC_ip_list_[IC_other_total_client_count_] = reg->client_ip_->clone();;
         IC_port_list_[IC_other_total_client_count_] = reg->port_;
         IC_nodes_list_[IC_other_total_client_count_] = reg->sender_;
         IC_other_total_client_count_++;
@@ -744,8 +780,133 @@ public:
     // Application Specific Functions
 
     /**
+     * Handle put functionality.
+     * @param k Key of the DataFrame to put.
+     * @param df The actual DataFrame to put.
+     */
+    void put(Key k, DataFrame *df) {
+
+        // Buffer for reading and sending messages
+        char buffer[1024] = {0};
+
+        // Boolean for keeping a while loop until the put has been finished.
+        // Could be waiting for the other node to have connected to the network.
+        bool message_sent = false;
+
+        // Run a loop until the process has finished.
+        while (!message_sent) {
+
+            // Make sure that the node has connected to the rendezvous server.
+            if (connected_to_rendezvous) {
+
+                // Figure out which client object to use for interaction.
+                Client *cur_client = get_client_of_key(k);
+
+                // Make sure a client was found.
+                if (cur_client != nullptr) {
+
+                    // If interacting with the rendezvous server then lock the other thread from
+                    // attempting to read messages from it.
+                    if (k.idx_ == 0) {
+                        lock_rendezvous_connection = true;
+                    }
+
+                    message_sent = true;
+
+                    // TODO can send df length here
+                    // Send the starting put message to start everything off.
+                    Serializer *put_ser = get_message_serializer(MsgKind::Put, node_, k.idx_, 0);
+                    strcpy(buffer, put_ser->buffer_);
+                    cur_client->socket_send(buffer, 1024);
+                    delete put_ser;
+
+                    // TODO Check if actually an ack.
+                    // Read in ack message.
+                    memset(buffer, 0, 1024);
+                    cur_client->socket_read(buffer, 1024);
+
+                    // Create a status message for sending the char identifier for the key.
+                    memset(buffer, 0, 1024);
+                    String *key_string = new String(k.name_);
+                    Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
+                    strcpy(buffer, key_ser->buffer_);
+                    cur_client->socket_send(buffer, 1024);
+                    delete key_ser;
+
+                    memset(buffer, 0, 1024);
+
+                    // Loop through columns sending one at a time.
+                    for (int i = 0; i < df->ncols(); i++) {
+                        Column *cur_col = df->cols_[i];
+                        send_column(cur_client, cur_col, k.idx_, true);
+                    }
+                }
+            }
+        }
+        // unlock rendezvous connection once finished just in case.
+        lock_rendezvous_connection = false;
+    }
+
+    /**
+     * Function for doing a wait and get request.
+     * @param k Key of requested DataFrame.
+     * @return Returns the Dataframe requested.
+     */
+    DataFrame *waitAndGet(Key k) {
+
+        // Buffer for reading and sending messages
+        char buffer[1024] = {0};
+
+        // Run a loop until the process has finished.
+        while (true) {
+
+            // Make sure this has connected to the rendezvous
+            if (connected_to_rendezvous) {
+                // Figure out which client object to use for interaction.
+                Client *cur_client = get_client_of_key(k);
+
+                if (cur_client != nullptr) {
+
+                    lock_rendezvous_connection = true;
+
+                    // Send the starting wait and get message to start everything off.
+                    Serializer *put_ser = get_message_serializer(MsgKind::WaitAndGet, node_, k.idx_, 0);
+                    strcpy(buffer, put_ser->buffer_);
+                    cur_client->socket_send(buffer, 1024);
+                    delete put_ser;
+
+                    // TODO Check if actually an ack.
+                    // Read in ack message.
+                    memset(buffer, 0, 1024);
+                    cur_client->socket_read(buffer, 1024);
+
+                    // Create a status message for sending the char identifier for the key.
+                    memset(buffer, 0, 1024);
+                    String *key_string = new String(k.name_);
+                    Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
+                    strcpy(buffer, key_ser->buffer_);
+                    cur_client->socket_send(buffer, 1024);
+                    delete key_ser;
+
+                    // Get the DataFrame
+                    DataFrame *df = receive_dataframe(cur_client, k.idx_);
+
+                    // Can unlock the rendezvous connection now that process has finished
+                    lock_rendezvous_connection = false;
+
+                    // If the DataFrame returned is nullptr than the other node doesn't have
+                    // it yet so don't return yet.
+                    if (df != nullptr) {
+                        return df;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Function for getting a client object to interact with
-     * @param k
+     * @param k Key with information on which node we are looking for.
      * @return Returns client or nullptr if the other node is not known to this one yet.
      */
     Client *get_client_of_key(Key k) {
@@ -788,75 +949,13 @@ public:
     }
 
     /**
-     * Handle put functionality.
-     * @param k Key of the DataFrame to put.
-     * @param df The actual DataFrame to put.
-     */
-    void put(Key k, DataFrame *df) {
-
-        char buffer[1024] = {0};
-
-        bool message_sent = false;
-
-        // Run a loop until the process has finished.
-        while (!message_sent) {
-
-          if (connected_to_rendezvous) {
-
-            // Figure out which client object to use for interaction.
-            Client *cur_client = get_client_of_key(k);
-
-            if (cur_client != nullptr) {
-
-              if(k.idx_ == 0) {
-                lock_rendezvous_connection = true;
-              }
-
-                message_sent = true;
-
-                // TODO can send df length here
-                // Send the starting put message to start everything off.
-                Serializer *put_ser = get_message_serializer(MsgKind::Put, node_, k.idx_, 0);
-                strcpy(buffer, put_ser->buffer_);
-                cur_client->socket_send(buffer, 1024);
-                delete put_ser;
-
-                // TODO Check if actually an ack.
-                // Read in ack message.
-                memset(buffer, 0, 1024);
-                cur_client->socket_read(buffer, 1024);
-
-                // Create a status message for sending the char identifier for the key.
-                memset(buffer, 0, 1024);
-                String *key_string = new String(k.name_);
-                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
-                strcpy(buffer, key_ser->buffer_);
-                cur_client->socket_send(buffer, 1024);
-                delete key_ser;
-
-                memset(buffer, 0, 1024);
-
-                // Loop through columns sending one at a time.
-                for (int i = 0; i < df->ncols(); i++) {
-                    Column *cur_col = df->cols_[i];
-                    send_column(cur_client, cur_col, k.idx_, true);
-                }
-            }
-        }
-      }
-      lock_rendezvous_connection = false;
-    }
-
-    /**
      * Handle sending one column of a DataFrame for the put functionality.
      * @param cur_client Client to use for sending messages.
      * @param cur_col Column to send.
      * @param target Target node id.
+     * @param put Bool showing whether a put called this or else this is for handling a wait and get.
      */
     void send_column(Client *cur_client, Column *cur_col, size_t target, bool put) {
-
-        // TODO find a way to have this be the same function as handle send column
-        // TODO because this is literally the same code just with different sending of messages.
 
         // Buffer for sending and receiving messages.
         char buffer[1024] = {0};
@@ -867,14 +966,8 @@ public:
 
         // Create Message with id of the length of the column message so that the
         // other node knows how big of a message it will be receiving in chunks.
-
-        MsgKind mes_kind;
-        if (put) {
-            mes_kind = MsgKind::Put;
-        } else {
-            mes_kind = MsgKind::WaitAndGet;
-        }
-
+        // Also set the kind of message to ensure this is the right behavior.
+        MsgKind mes_kind = put ? MsgKind::Put : MsgKind::WaitAndGet;
         Serializer *strlen_ser = get_message_serializer(mes_kind, node_, target, strlen(col_string));
         strcpy(buffer, strlen_ser->buffer_);
         cur_client->socket_send(buffer, 1024);
@@ -882,6 +975,29 @@ public:
         // TODO Maybe check that this is an ack.
         memset(buffer, 0, 1024);
         cur_client->socket_read(buffer, 1024);
+
+        // Send the column in chunks.
+        send_column_chunks(cur_client, cur_col, target, strlen(col_string));
+
+        // Send the same put message from earlier again to show that the column sending is done.
+        memset(buffer, 0, 1024);
+        strcpy(buffer, strlen_ser->buffer_);
+        cur_client->socket_send(buffer, 1024);
+
+        delete col_ser;
+        delete strlen_ser;
+    }
+
+    /**
+     * Function for sending a column chunk by chunk
+     * @param cur_client Client to use for sending messages.
+     * @param cur_col Column to send.
+     * @param target Target node id.
+     * @param col_string_len Length of the column string so that this knows when to stop.
+     */
+    void send_column_chunks(Client *cur_client, Column *cur_col, size_t target, size_t col_string_len) {
+        // Buffer for sending and receiving messages.
+        char buffer[1024] = {0};
 
         // Keep track of count of message that has been sent to ensure
         // the entire column is sent.
@@ -895,72 +1011,6 @@ public:
             cur_client->socket_send(buffer, 1024);
             count += 1022;
         }
-
-        // Send the same put message from earlier again to show that the column sending is done.
-        memset(buffer, 0, 1024);
-        strcpy(buffer, strlen_ser->buffer_);
-        cur_client->socket_send(buffer, 1024);
-
-        delete col_ser;
-        delete strlen_ser;
-    }
-
-
-    /**
-     * Function for doing a wait and get request.
-     * @param k Key of requested DataFrame.
-     * @return Returns the Dataframe requested.
-     */
-    DataFrame *waitAndGet(Key k) {
-
-        // Buffer for reading and sending messages
-        char buffer[1024] = {0};
-
-        bool message_sent = false;
-
-        int count = 0;
-
-        // Run a loop until the process has finished.
-        while (true) {
-
-          if (connected_to_rendezvous) {
-            // Figure out which client object to use for interaction.
-            Client *cur_client = get_client_of_key(k);
-
-            if (cur_client != nullptr) {
-
-              lock_rendezvous_connection = true;
-
-                // Send the starting wait and get message to start everything off.
-                Serializer *put_ser = get_message_serializer(MsgKind::WaitAndGet, node_, k.idx_, 0);
-                strcpy(buffer, put_ser->buffer_);
-                cur_client->socket_send(buffer, 1024);
-                delete put_ser;
-
-                // TODO Check if actually an ack.
-                // Read in ack message.
-                memset(buffer, 0, 1024);
-                cur_client->socket_read(buffer, 1024);
-
-                // Create a status message for sending the char identifier for the key.
-                memset(buffer, 0, 1024);
-                String *key_string = new String(k.name_);
-                Serializer *key_ser = get_status_serializer(node_, k.idx_, k.idx_, key_string);
-                strcpy(buffer, key_ser->buffer_);
-                cur_client->socket_send(buffer, 1024);
-
-                delete key_ser;
-
-                DataFrame *df = receive_dataframe(cur_client, k.idx_);
-
-                lock_rendezvous_connection = false;
-                if (df != nullptr) {
-
-                    return df;
-                }
-            }
-        }
-      }
     }
 
     /**
@@ -1010,6 +1060,13 @@ public:
     }
 
 
+    /**
+     * Receive a column from another node.
+     * @param cur_client Client we are interacting with.
+     * @param target Target node's id.
+     * @param msg_sz Size of the column message that will be received.
+     * @param df DataFrame to add the column to.
+     */
     void receive_column(Client *cur_client, size_t target, size_t msg_sz, DataFrame *df) {
 
         // Buffer for sending ack to start sequence.
@@ -1028,6 +1085,7 @@ public:
         Serializer *ack_ser = get_ack_serializer(node_, target, 0);
         strcpy(buffer, ack_ser->buffer_);
         cur_client->socket_send(buffer, 1024);
+        delete ack_ser;
 
         // Keep a count of how many reads have been done for this column for use in helper function.
         size_t recv_count = 0;
@@ -1040,14 +1098,12 @@ public:
             recv_count++;
         }
 
-
         // Create a serializer for the column and then add the deserialized column to the dataframe.
         Serializer *col_ser = new Serializer(reinterpret_cast<unsigned char *>(new_buffer));
         df->add_column(dynamic_cast<Column *>(col_ser->deserialize()));
 
+        // Delete serializers.
         delete col_ser;
-        delete ack_ser;
-
     }
 
     /**
@@ -1059,10 +1115,9 @@ public:
     */
     bool read_in_column(Client *cur_client, char *append_buffer, size_t recv_count) {
 
+        // Buffer for reading in this a chunk of a column.
         char buffer[1024] = {0};
         cur_client->socket_read(buffer, 1024);
-
-
 
         // If the recv_count > 0 then check if the end column full message is sent.
         if (recv_count > 0) {
@@ -1098,8 +1153,8 @@ public:
 class RendezvousServer : public Node {
 public:
 
-    RendezvousServer(char *ip, int port, int max_clients, Map* map, size_t node)
-    :  Node(ip, port, max_clients, map, node) {}
+    RendezvousServer(char *ip, int port, int max_clients, Map *map, size_t node)
+            : Node(ip, port, max_clients, map, node) {}
 
 
     /**
@@ -1116,21 +1171,15 @@ public:
         create_new_pollfd(IS_sockets_[IS_total_socket_count_], IS_total_socket_count_ + 1, IS_pfds_, IS_pfds_list_);
 
         // Increase the socket count.
-        IC_other_total_client_count_++;
         IS_total_socket_count_++;
     }
 
     /**
     * Handles a client joining the network
-    * @param s Server object.
-    * @param sockets List of sockets.
-    * @param total_socket_count Number of sockets not the listener.
-    * @param fd_count Count of all sockets including the listener.
-    * @param buffer A string buffer that is being passed around for handling most messages.
-    * @param ip_list List of ips that have connected to the server.
     */
     size_t accept_new_client() {
 
+        // Buffer for reading the register message from the client.
         char buffer[1024] = {0};
 
         // Accept the socket or error if bad acception which is a return of -1
@@ -1139,27 +1188,11 @@ public:
             exit(EXIT_FAILURE);
         }
 
-
         // Read in the message that should be the ip of the client.
         internalServer_->socket_read(IS_sockets_[IS_total_socket_count_], buffer, 1024);
-
-        // Create a new string for this ip and store it.
-        char *serial_string = new char[1024];
-        strcpy(serial_string, buffer);
-
-        // Create a serializer to then deserialize into a Register.
-        Serializer *ser = new Serializer(reinterpret_cast<unsigned char *>(serial_string));
-        Register *reg = dynamic_cast<Register *>(ser->deserialize());
-
-        // Print the ip of the newly accepted client
-        printf("Client accepted : %s\n", reg->client_ip_->c_str());
-
-        // Add register to lists for client information.
-        IC_ip_list_[IS_total_socket_count_] = reg->client_ip_->clone();
-        IC_port_list_[IS_total_socket_count_] = reg->port_;
-        IC_nodes_list_[IS_total_socket_count_] = reg->sender_;
-
-        delete ser;
+        Register *reg = dynamic_cast<Register *>(deserialize_buffer(buffer));
+        add_register(reg);
+        int target = reg->target_;
         delete reg;
 
         // Send the register to all clients besides the new one.
@@ -1167,15 +1200,13 @@ public:
             internalServer_->socket_send(IS_sockets_[i], buffer, 1024);
         }
 
-        Directory *dir = new Directory(3, 10, 9999, 3, IS_total_socket_count_, IC_port_list_,
-                                       IS_total_socket_count_, IC_ip_list_, IS_total_socket_count_, IC_nodes_list_);
-        Serializer *directorySer = new Serializer();
-        char *serialized_directory = directorySer->serialize(dir);
-
-        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], serialized_directory, 1024);
-
-        delete dir;
-        delete directorySer;
+        // Create a directory to send to the new client.
+        Serializer *directory_ser = get_directory_serializer(node_, target, 9999, node_, IS_total_socket_count_,
+                                                             IC_port_list_,
+                                                             IS_total_socket_count_, IC_ip_list_,
+                                                             IS_total_socket_count_, IC_nodes_list_);
+        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], directory_ser->buffer_, 1024);
+        delete directory_ser;
     }
 
     /**
