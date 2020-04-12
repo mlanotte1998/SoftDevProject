@@ -271,7 +271,7 @@ public:
 
     int nodes_count_; // Total other clients known to the network.
     String **nodes_ip_list_; // List of the total client ips known to the network.
-    size_t *nodes_port_list; // List of total ports for ips known to the network.
+    size_t *nodes_port_list_; // List of total ports for ips known to the network.
     size_t *nodes_id_list_; // List of total nodes for nodes known to the network.
 
     // Member variables for the internal clients (IC)
@@ -327,11 +327,11 @@ public:
         IC_client_connections_count_ = 1;
 
         nodes_ip_list_ = new String *[max_clients_];
-        nodes_port_list = new size_t[max_clients_];
+        nodes_port_list_ = new size_t[max_clients_];
         nodes_id_list_ = new size_t[max_clients_];
         // Add rendezvousServerClient values to the lists below.
         nodes_ip_list_[0] = new String(server_ip);
-        nodes_port_list[0] = 8081;
+        nodes_port_list_[0] = 8081;
         nodes_id_list_[0] = 0;
         nodes_count_ = 1;
 
@@ -623,6 +623,7 @@ public:
                 Serializer *strlen_ser = get_message_serializer(MsgKind::Nack, node_, target, 0);
                 strcpy(buffer, strlen_ser->buffer_);
                 internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
+                delete strlen_ser; 
             }
 
             // delete key object created.
@@ -977,7 +978,7 @@ public:
         cur_client->socket_read(buffer, 1024);
 
         // Send the column in chunks.
-        send_column_chunks(cur_client, cur_col, target, strlen(col_string));
+        send_column_chunks(cur_client, cur_col, target, col_string, strlen(col_string));
 
         // Send the same put message from earlier again to show that the column sending is done.
         memset(buffer, 0, 1024);
@@ -995,7 +996,8 @@ public:
      * @param target Target node id.
      * @param col_string_len Length of the column string so that this knows when to stop.
      */
-    void send_column_chunks(Client *cur_client, Column *cur_col, size_t target, size_t col_string_len) {
+    void send_column_chunks(Client *cur_client, Column *cur_col, size_t target,
+      char* col_string , size_t col_string_len) {
         // Buffer for sending and receiving messages.
         char buffer[1024] = {0};
 
@@ -1004,7 +1006,7 @@ public:
         size_t count = 0;
 
         // Send the column in chunks and increment the count to keep track of how much has been sent.
-        while (count < strlen(col_string)) {
+        while (count < col_string_len) {
             memset(buffer, 0, 1024);
             strncpy(buffer, col_string + count, 1022);
             buffer[1023] = '\0';
@@ -1205,7 +1207,8 @@ public:
                                                              nodes_port_list_,
                                                              IS_total_socket_count_, nodes_ip_list_,
                                                              IS_total_socket_count_, nodes_id_list_);
-        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], directory_ser->buffer_, 1024);
+        strcpy(buffer, directory_ser->buffer_);
+        internalServer_->socket_send(IS_sockets_[IS_total_socket_count_], buffer, 1024);
         delete directory_ser;
     }
 

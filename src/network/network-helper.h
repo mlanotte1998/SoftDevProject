@@ -69,8 +69,8 @@ Serializer *get_directory_serializer(size_t sender, size_t target, size_t id, si
                                      String **addresses, size_t nodes_count, size_t *nodes) {
 
     // Create a directory to send to the new client.
-    Directory *dir = new Directory(node_, target, 9999, node_, IS_total_socket_count_, IC_port_list_,
-                                   IS_total_socket_count_, IC_ip_list_, IS_total_socket_count_, IC_nodes_list_);
+    Directory *dir = new Directory(sender, target, id, client, ports_count, ports,
+                                   addresses_count, addresses, nodes_count, nodes);
 
     // Add the directory to the serializer.
     Serializer *directory_ser = new Serializer();
