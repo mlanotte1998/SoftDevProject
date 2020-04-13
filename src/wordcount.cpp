@@ -20,7 +20,7 @@ void handle_sigint(int sig)
 */
 int main(int argc, char* argv[]) {
 
-	int x = atoi(argv[2]);
+	int node = atoi(argv[2]);
 	char* filename = argv[4];
 
 	signal(SIGINT, handle_sigint);
@@ -28,18 +28,18 @@ int main(int argc, char* argv[]) {
 	kill_switch[1] = '\0';
 
 
-	KDStore* k = new KDStore(x);
+	KDStore* store = new KDStore(node);
 
-	WordCount w (x, k, filename, 0);
+	WordCount w (node, store, filename, 0);
 
-	std::thread network_thread(&KDStore::run_network, k, kill_switch);
+	std::thread network_thread(&KDStore::run_network, store, kill_switch);
 
 	std::thread wordcount_thread(&WordCount::run_, w);
 
 	network_thread.join();
 	wordcount_thread.join();
 
-	delete k;
+	delete store;
 
 	return 0;
 }

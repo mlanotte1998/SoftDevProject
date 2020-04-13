@@ -211,9 +211,26 @@ public:
 
 };
 ```
+  
+Run Distributed WordCount Application Usage (not currently working)  
+```c++
+int node = atoi(argv[2]);
+char* filename = argv[4];
 
-##TODO Maybe add in M4 usage code of some kind
+KDStore* store = new KDStore(node);
 
+WordCount w (node, store, filename, 0);
+
+std::thread network_thread(&KDStore::run_network, store, kill_switch);
+
+std::thread wordcount_thread(&WordCount::run_, w);
+
+network_thread.join();
+wordcount_thread.join();
+
+delete store;
+```
+  
 ## Open Questions
 Are they any huge problems or design decisions that you would recommend staying away from in our network code? 
 
@@ -246,7 +263,15 @@ to do that we would lower the size of each DataFrame to 100 instead of 100 * 100
 long time. Running valgrind without lowering the size was taking longer than 5 minutes so that seemed like not
 worth actually checking. 
 
-##TODO Add in Milestone 4 Stuff 
+The provided WordCount application from Milestone 4 has been implemented under application/wordcount and is run by  
+compiling wordcount.cpp and running it with `./wordcount -node [node-number] -f [filename]`. Example files to run  
+WordCount on are found at `data/10.txt` or `data/100k.txt`. `10.txt` is a small sample of 10 rows. Currently wordcount  
+compiles correctly, but segmentation faults on attempting to run it. Due to the fact that we spent much of this  
+milestone covering technical debt as described above, we were not able to implement a fully-functional wordcount  
+application. We will continue to debug wordcount as we approach the date of our final code walk so that we  
+have an example application that utilizes a distributed system to demonstrate. So far, we have been able to add  
+the necessary WordCount code we were provided without having to modify our existing code very much, but rather by  
+modifying wordcount.h to adjust to the APIs we created.  
 
 
 
