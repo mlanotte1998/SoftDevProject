@@ -1,9 +1,18 @@
 test:
 	@ make runDataStructure
-	@ make runDataframe
+	@ make runDataFrame
 	@ make runSerialize
-	@ make runStore
+	# cant run store tests now that network functionality is there
+	# @ make runStore
 	@ make runSorer
+
+test-valgrind:
+	@ make runDataStructureValgrind
+	@ make runDataFrameValgrind
+	@ make runSerializeValgrind
+	# cant run store tests now that network functionality is there
+    # @ make runStoreValgrind
+	@ make runSorerValgrind
 
 #===========================================================================================================
 #Data structure tests
@@ -16,28 +25,55 @@ runDataStructure:
 	@ make testAdditionalMap
 	@ make cleanMap
 
+runDataStructureValgrind:
+	@ make testArrayValgrind
+	@ make cleanArray
+	@ make testMapValgrind
+	@ make cleanMap
+	@ make testAdditionalMapValgrind
+	@ make cleanMap
+
+
 testArray:
 	@ g++ -w -std=c++11 -o array test-array.cpp
 	#----------------------Array Tests------------------------#
 	@ ./array
+	#--------------------End Array Valgrind Tests----------------------#
+	@ echo ""
+
+testArrayValgrind :
+	@ g++ -w -std=c++11 -o array test-array.cpp
+	#----------------------Array Valgrind Tests------------------------#
 	@ valgrind ./array
-	#--------------------End Array Tests----------------------#
+	#--------------------End Array Valgrind Tests----------------------#
 	@ echo ""
 
 testMap:
 	@ g++ -std=c++11 -o map test-map.cpp
 	#-----------------------Map Tests-------------------------#
 	@ ./map
-	@ valgrind ./map
 	#---------------------End Map Tests-----------------------#
+	@ echo ""
+
+testMapValgrind:
+	@ g++ -std=c++11 -o map test-map.cpp
+	#-----------------------Map Valgrind Tests-------------------------#
+	@ valgrind ./map
+	#---------------------End Map Valgrind Tests-----------------------#
 	@ echo ""
 
 testAdditionalMap:
 	@ g++ -std=c++11 -o map test-additional-map.cpp
 	#------------------Additional Map Tests-------------------#
 	@ ./map
-	@ valgrind ./map
 	#----------------End Additional Map Tests-----------------#
+	@ echo ""
+
+testAdditionalMapValgrind:
+	@ g++ -std=c++11 -o map test-additional-map.cpp
+	#------------------Additional Map Valgrind Tests-------------------#
+	@ valgrind ./map
+	#----------------End Additional Map Valgrind Tests-----------------#
 	@ echo ""
 
 cleanArray:
@@ -46,10 +82,16 @@ cleanArray:
 cleanMap:
 	@ rm map
 
+#=======================================================================================================
+
 # Dataframe Accuracy Tests
 
-runDataframe: buildDataframe
+runDataFrame: buildDataframe
 	@ make testDataframe
+	@ make cleanDataframe
+
+runDataFrameValgrind: buildDataframe
+	@ make testDataframeValgrind
 	@ make cleanDataframe
 
 buildDataframe:
@@ -58,8 +100,13 @@ buildDataframe:
 testDataframe:
 	#--------------------Dataframe Tests----------------------#
 	@ ./dataframe
-	@ valgrind ./dataframe
 	#------------------End Dataframe Tests--------------------#
+	@ echo ""
+
+testDataframeValgrind:
+	#--------------------Dataframe Valgrind Tests----------------------#
+	@ valgrind ./dataframe
+	#------------------End Dataframe Valgrind Tests--------------------#
 	@ echo ""
 
 cleanDataframe:
@@ -72,14 +119,23 @@ runSerialize: buildSerialize
 	@ make testSerialize
 	@ make cleanSerialize
 
+runSerializeValgrind: buildSerialize
+	@ make testSerializeValgrind
+	@ make cleanSerialize
+
 buildSerialize:
 	@ g++ -w serialize_tests.cpp -o serialize -std=c++11
 
 testSerialize:
 	#--------------------Serialize Tests----------------------#
 	@ ./serialize
-	@ valgrind ./serialize
 	#------------------End Serialize Tests--------------------#
+	@ echo ""
+
+testSerializeValgrind:
+	#--------------------Serialize Valgrind Tests----------------------#
+	@ valgrind ./serialize
+	#------------------End Serialize Valgrind Tests--------------------#
 	@ echo ""
 
 cleanSerialize:
@@ -92,14 +148,23 @@ runStore: buildStore
 	@ make testStore
 	@ make cleanStore
 
+runStoreValgrind: buildStore
+	@ make testStoreValgrind
+	@ make cleanStore
+
 buildStore:
 	@ g++ -w test-store.cpp -o store -std=c++11
 
 testStore:
 	#--------------------Store Tests----------------------#
 	@ ./store
-	@ valgrind ./store
 	#------------------End Store Tests--------------------#
+	@ echo ""
+
+testStoreValgrind:
+	#--------------------Store Valgrind Tests----------------------#
+	@ valgrind ./store
+	#------------------End Store Valgrind Tests--------------------#
 	@ echo ""
 
 cleanStore:
@@ -110,6 +175,10 @@ cleanStore:
 runSorer: buildSorer
 	@ make testSorer
 	@ make testSorerUnitTests
+	@ make cleanSorer
+
+runSorerValgrind: buildSorer
+	@ make testSorerUnitTestsValgrind
 	@ make cleanSorer
 
 buildSorer:
@@ -143,6 +212,13 @@ testSorerUnitTests:
 	#-----------------Additional Sorer Tests------------------#
 	@ ./test-sorer
 	#---------------End Additional Sorer Tests----------------#
+	@ echo ""
+
+testSorerUnitTestsValgrind :
+	@ g++ test-sorer.cpp -o test-sorer -std=c++11
+	#-----------------Additional Sorer Valgrind Tests------------------#
+	@ valgrind ./test-sorer
+	#---------------End Additional Sorer Valgrind Tests----------------#
 	@ echo ""
 
 cleanSorer:
