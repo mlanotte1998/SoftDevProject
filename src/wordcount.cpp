@@ -20,8 +20,8 @@ void handle_sigint(int sig)
 */
 int main(int argc, char* argv[]) {
 
-	char* filename = argv[2];
-	int x = atoi(argv[3]);
+	int x = atoi(argv[2]);
+	char* filename = argv[4];
 
 	signal(SIGINT, handle_sigint);
 	kill_switch[0] = '0';
