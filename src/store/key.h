@@ -20,6 +20,12 @@ class Key : public Object {
 			idx_ = idx;
 		}
 
+		/** Key constructor no index */
+		Key(const char* name) {
+			name_ = name;
+			idx_ = 0;
+		}
+
 		/** Method for calculating Key equality */
 		bool equals(Key other) {
 			return name_ == other.name_ && idx_ == other.idx_;

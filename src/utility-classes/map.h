@@ -105,6 +105,27 @@ public:
         return nullptr;
     }
 
+    /**
+     * Sets the value of which the specified key is mapped to, or does nothing if this map does not contain the given key
+     * @param key       the key whose associated value is to be replaced
+     * @param value     the value to replace the existing value with
+     */
+    void set(Object* key, Object* value) {
+        // find the index where this key would be stored based on its hash
+        size_t key_hash = key->hash();
+        int key_idx = key_hash % bucket_size_;
+        // if data exists at this index search for key hash in linked list
+        Map_Node* bucket_value = map_[key_idx];
+        if (bucket_value) {
+            Map_Node* iterator = bucket_value;
+            while (iterator != nullptr) {
+                // if hash is found return associated value
+                if (iterator->hash_ == key_hash) iterator->replace_value(value); return;
+                iterator = iterator->next_;
+            }
+        }
+    }
+
 
     /**
      * Returns true if this map contains the given key
