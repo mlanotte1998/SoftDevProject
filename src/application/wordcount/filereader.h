@@ -1,5 +1,12 @@
 #include "../../dataframe/writer.h"
 
+/***
+* FileReader::
+*
+* FileReader reads text from a file separated by whitespace, and adds
+* a read string into a row. It is a visitor class used to build a
+* dataframe with text from a file.
+*/
 /* author: jv */
 class FileReader : public Writer {
 public:

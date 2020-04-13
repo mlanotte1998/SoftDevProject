@@ -12,7 +12,9 @@
  *   1) read the data (single node)
  *   2) produce word counts per homed chunks, in parallel
  *   3) combine the results
- **********************************************************author: pmaj ****/
+ * author: pmaj
+ * modified by welch.da@husky.neu.edu and lanotte.m@husky.neu.edu
+ **************************************************************/
 class WordCount: public Application {
 public:
   static const size_t BUFSIZE = 1024;
@@ -22,6 +24,7 @@ public:
   const char* filename_;
   size_t num_nodes_;
  
+  // WordCount constructor
   WordCount(size_t idx, KDStore *kd, const char* filename, size_t num_nodes) : Application(idx, kd), in("data"), kbuf(new Key("wc-map-",0)) {
     filename_ = filename;
     num_nodes_ = num_nodes;
