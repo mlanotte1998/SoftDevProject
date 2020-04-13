@@ -117,9 +117,10 @@ public:
         Schema schm(schema);
         DataFrame *df = new DataFrame(schm);
         while(!visitor.done()) {
-            Row row(schm);
-            visitor.visit(row);
-            df->add_row(row);
+            Row* row = new Row(schm);
+            visitor.visit(*row);
+            df->add_row(*row);
+            delete row;
         }
         kdStore->put(*key, df);
         return df;
