@@ -38,9 +38,10 @@ The main application class. Running this class will handle launching the entire 
 other classes necessary to set up and run the application. The Trivial Application subclass was also added to the 
 code base as an example usage of how an application may run using the infrastructure. This Trivial subclass was
 provided in Project Milestone 2 as an example usage of the infrastructure that is in the process of being built. 
-The Demo code from Project Milestone 1 to be implemented in Milestone 3 was also added but not fully
-implemented yet. Applications take in a KDStore* to be used for the store functionality, and this is a pointer 
+The Demo code from Project Milestone 1 to be implemented in Milestone 3 was also added and is fully implemented. 
+Applications take in a KDStore* to be used for the store functionality, and this is a pointer 
 because the main file will handle starting the server functionality of the store. 
+##TOD0 Add Word Count Stuff 
   
 #### RendezvousServer and Node:  
 These two classes have the network code needed for the application. The Rendezvous Server is essentially a server meant
@@ -103,7 +104,7 @@ does not require casting of Values to DataFrames. The Application class includes
 The fromArray method on DataFrame can be used to create a new DataFrame and add it to the calling application's
 KDStore.  
 
-Currently, the plan to work in the network behavior is to have the KDStore hold a Node* and have that object
+Currently, the implementation for the network behavior is having the KDStore hold a Node* and have that object
 hold a pointer to the Map created for the store. That way when the Node is running it's network behavior in the 
 separate thread, it has access to the map in case another Node asks it for a value for a Key. 
 
@@ -113,7 +114,6 @@ class that is used to both deserialize and serialize eligible objects. The deser
 kind of Object the input is and calls on the deserialize constructor for that object. To serialize an object,
 there is a function that takes in the object and appends different words to a char* that is the serialized message
 which is then returned. 
-Currently, the Register and Directory are still unfinished so those need to be addressed. 
 
 ## Use Cases  
   
@@ -159,51 +159,60 @@ Demo Usage (Not currently working) of basic Distributed System Functionality
 ```c++
 class Demo : public Application {
 public:
-    Key main{"main",0};
-    Key verify{"verif",0};
-    Key check{"ck",0};
+    Key main{"main", 0};
+    Key verify{"verif", 0};
+    Key check{"ck", 0};
 
-    Demo(size_t idx, KDStore* kd ): Application(idx, kd) {}
+    Demo(size_t idx, KDStore *kd) : Application(idx, kd) {}
 
     void run_() override {
-        switch(this_node()) {
-            case 0:   producer();     break;
-            case 1:   counter();      break;
-            case 2:   summarizer();
-            case 3: break;
+        switch (this_node()) {
+            case 0:
+                producer();
+                break;
+            case 1:
+                counter();
+                break;
+            case 2:
+                summarizer();
+            case 3:
+                break;
         }
     }
 
+
     void producer() {
-        size_t SZ = 100*1000;
-        double* vals = new double[SZ];
+        size_t SZ = 100 * 1000;
+        double *vals = new double[SZ];
         double sum = 0;
         for (size_t i = 0; i < SZ; ++i) sum += vals[i] = i;
-        DataFrame* d1 = DataFrame::fromArray(&main, kv, SZ, vals);
-        DataFrame* d2 = DataFrame::fromScalar(&check, kv, sum);
-
-        delete d1;
-        delete d2;
-        delete [] vals;
+        DataFrame::fromArray(&main, kv, SZ, vals);
+        DataFrame::fromScalar(&check, kv, sum);
     }
 
-    void counter() {
 
+    void counter() {
         DataFrame *v = kv->waitAndGet(main);
         size_t sum = 0;
-        for (size_t i = 0; i < 100 * 1000; ++i) sum += v->get_double(0, i);
+        for (size_t i = 0; i < 100 *1000; ++i) sum += v->get_double(0, i);
         p("The sum is  ").pln(sum);
-        DataFrame::fromScalar(&verify, kv, sum);
+        DataFrame* s = DataFrame::fromScalar(&verify, kv, sum);
+        delete v;
+        delete s;
     }
 
     void summarizer() {
-        DataFrame* result = kv->waitAndGet(verify);
-        DataFrame* expected = kv->waitAndGet(check);
-        pln(expected->get_double(0,0)==result->get_double(0,0) ? "SUCCESS":"FAILURE");
+        DataFrame *result = kv->waitAndGet(verify);
+        DataFrame *expected = kv->waitAndGet(check);
+        pln(expected->get_double(0, 0) == result->get_double(0, 0) ? "SUCCESS" : "FAILURE");
+        delete result;
+        delete expected;
     }
 
 };
 ```
+
+##TODO Maybe add in M4 usage code of some kind
 
 ## Open Questions
 Are they any huge problems or design decisions that you would recommend staying away from in our network code? 
@@ -221,44 +230,24 @@ pertaining to the KVStore / KDStore. An application folder exists to hold the Ap
 of Application. Lastly there is a folder for sorer code that came from the 
 group 45000NE. There is one main.cpp file in the top level directory that is currently used to run the Demo
 application that was meant to be functional for the last assignment. 
-The tests have been run with valgrind 
-to ensure that any memory issues that were in the code for the previous assignments have been fixed.
+The tests have been run with valgrind to ensure that any memory issues that were in the code for the
+previous assignments have been fixed.
 
-This week a lot of unused code was removed including the classes related to the Modified DataFrame and the 
-multiple input Column constructors. 
+There was a large list of problems that needed to be cleaned up before moving on to the WordCount application 
+that were mentioned in the report from last week. All of those issues were fixed and they took up a large amount of time.
+We were able to finish making sure the Demo works smoothly now with only 3 nodes and the code was trimmed down
+to remove repetition. Currently, the Demo can be run using runDemo in the Makefile and after running that over
+20 times in a row there were no problems. There was an occasional issue where Node 1 was stuck and then after ending 
+the Rendezvous Server executable (node 0) it appeared that a DataFrame was not being sent correctly. This issue
+was happening around every 10 uses on average so it was not easy to isolate. After a small change to the network 
+code related to checking the type of acknowledgement received during a put request this issue has not occurred but
+we are not 100% certain that it was the issue. The Demo can be run with valgrind and has no memory leakage, but
+to do that we would lower the size of each DataFrame to 100 instead of 100 * 1000 so that the process would not take a 
+long time. Running valgrind without lowering the size was taking longer than 5 minutes so that seemed like not
+worth actually checking. 
 
-At the current state, the Demo application can be run successfully but it needs to be run in a more specific way
-then what we will want going forward. To currently run it, there needs to be a Node of index 3 that is started 
-with the main executable to run the Rendezvous Server. The other three nodes (0, 1, and 2) can then be run with
-their own usage of the executable. Also Nodes 0 and 1 can be run in any order, but to run Node 2, we need to wait 
-for the other two to finish there back and forth because there is a problem with things getting blocked (likely 
-the cause is a node trying to read but with nothing to read) and then they all stall. 
+##TODO Add in Milestone 4 Stuff 
 
-We have a TODO list of tasks to get the code in good shape before looking at MileStone 4 and 5 requirements. 
-1. Fix small memory leak issues that occur when running Demo Nodes (Rendezvous Server is fine).  Fixed on April 10th. 
-2. Fix the blocking problem with the nodes. Fixed April 10th. 
-3. Clean up Network code to have the same functions used for two pairs of situations : 
-    1. receiving a put and calling a wait and get. Fixed on April 11th. 
-    2. receiving a wait and get and calling a put. Fixed on April 11th. 
-    
-    The pairs are similar because for the first pair both are taking in a DataFrame and thus have similar function.
-    The second pair both send a DataFrame. The problem right now is the use of a Server object when receiving 
-    and a Client object when calling one of the two functions. 
-    So it might be best to have a Server be a type of Client or have some parent class so that the functions 
-    can be made more versatile to be able to handle using both. 
-    
-4. Clean up Node code to remove not needed members (most of the IS fields that are not really used for this
-but were added incase they would be). The idea was to be able to have less Clients be made by checking if one Node
-already connected to you to then send a message to but that is too complicated, so there does not need to be
-information held for who has connected to each Node. 
-5. Make Node 0 a Rendezvous server. Maybe make a Rendezvous Server a type of Node so then need to have Node have virtual
-function and in doing this hopefully we will not add a lot of repetition. 
-
-New Problems: 
-1. Occasional "Row Index out of bounds" error is occurring again from column not being sent completely correctly. 
-
-Once all of these are complete we will move onto the further milestones because we want our code to be safe
-moving forward incase things case more complicated.
 
 
 
