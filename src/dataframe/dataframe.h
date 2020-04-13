@@ -111,9 +111,8 @@ public:
     }
 
 
-    /** Create a data frame using a writer visitor
-    */
-    static DataFrame *fromVisitor(Key *key, KDStore *kdStore, const char* schema, Writer visitor) {
+    /** Create a data frame using a writer visitor */
+    static DataFrame *fromVisitor(Key *key, KDStore *kdStore, const char* schema, Writer& visitor) {
         Schema schm(schema);
         DataFrame *df = new DataFrame(schm);
         while(!visitor.done()) {
