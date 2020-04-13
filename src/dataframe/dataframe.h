@@ -310,11 +310,11 @@ public:
     }
 
     /** Map over local dataframe */
-    void local_map(Adder adder) {
+    void local_map(Reader reader) {
         for (size_t i = 0; i < nrows(); i++) {
             Row row(*schema_);
             fill_row(i, row);
-            adder.visit(row);
+            reader.visit(row);
         }
     }
 

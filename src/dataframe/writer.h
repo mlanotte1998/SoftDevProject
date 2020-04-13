@@ -1,4 +1,7 @@
+#pragma once
+
 #include "dataframe.h"
+#include "row.h"
 
 /***
  * Writer::
@@ -9,6 +12,8 @@ class Writer : public Object {
 public:
 	virtual void visit(Row & r) {};
 
-	virtual bool done() {};
+	virtual bool done() {
+		return false;
+	};
 
 };

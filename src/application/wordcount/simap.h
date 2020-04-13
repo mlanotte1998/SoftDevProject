@@ -1,10 +1,12 @@
-#include "map.h"
+#pragma once
+
+#include "wc_map.h"
 #include "num.h"
 
 /* author: jv */
-class SIMap : public Map {
+class SIMap : public WordCountMap {
 public:
-  SIMap () {}
+  SIMap(): WordCountMap() {}
   Num* get(String& key) { return dynamic_cast<Num*>(get_(key)); }
-  void set(String& k, Num* v) { assert(v); Map::set(k, v); }
+  void set(String& k, Num* v) { assert(v); WordCountMap::set(k, v); }
 }; // KVMap

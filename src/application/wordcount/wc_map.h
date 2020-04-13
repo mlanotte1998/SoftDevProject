@@ -1,22 +1,24 @@
+#pragma once
+
 #include "../../utility-classes/object.h"
 #include "items.h"
 
 /** A generic map class from Object to Object. Subclasses are responsibly of
  * making the types more specific.  author: jv */
-class Map : public Object {
+class WordCountMap : public Object {
 public:      
   size_t capacity_;
   // TODO this was not size of the map, but number of occupied item positions in the top level
   size_t size_ = 0;
   Items_* items_;  // owned
 
-  Map() : Map(10) {}
-  Map(size_t cap) {
+  WordCountMap() : WordCountMap(10) {}
+  WordCountMap(size_t cap) {
     capacity_ = cap;
     items_ = new Items_[capacity_];
   }
   
-  ~Map() { delete[] items_; }
+  ~WordCountMap() { delete[] items_; }
 
   /** True if the key is in the map. */
   bool contains(Object& key)  { return items_[off_(key)].contains_(key); }
@@ -48,7 +50,7 @@ public:
   /** Resize the map, keeping all Item_s. */
   void grow() {
 		//LOG("Growing map from capacity " << capacity_);
-		Map newm(capacity_ * 2);
+		WordCountMap newm(capacity_ * 2);
 		for (size_t i = 0; i < capacity_; i++) {
 			size_t sz = items_[i].keys_.size();
 			for (size_t j = 0; j < sz; j++) {

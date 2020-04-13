@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../utility-classes/object.h"
 
 /* author:jvitek */

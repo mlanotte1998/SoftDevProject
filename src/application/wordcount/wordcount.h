@@ -48,7 +48,7 @@ public:
   /** Compute word counts on the local node and build a data frame. */
   void local_count() {
     DataFrame* words = (kv->waitAndGet(in));
-    p("Node ").p(index).pln(": starting local count...");
+    p("Node ").p(this_node()).pln(": starting local count...");
     SIMap map;
     Adder add(map);
     words->local_map(add);
@@ -59,7 +59,7 @@ public:
  
   /** Merge the data frames of all nodes */
   void reduce() {
-    if (index != 0) return;
+    if (this_node() != 0) return;
     pln("Node 0: reducing counts...");
     SIMap map;
     Key* own = mk_key(0);

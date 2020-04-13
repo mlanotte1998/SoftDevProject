@@ -1,4 +1,7 @@
+#pragma once
+
 #include "dataframe.h"
+#include "row.h"
 
 /***
  * Reader::
@@ -7,8 +10,12 @@
  */
 class Reader : public Object {
 public:
-	virtual bool visit(Row & r) {};
+	virtual bool visit(Row & r) {
+		return false;
+	};
 
-	virtual bool done() {};
+	virtual bool done() {
+		return false;
+	};
 
 };

@@ -45,5 +45,5 @@ public:
 		next();
   }
  
-  bool done() {return seen == map_.size(); }
+  bool done() override {return seen == map_.size(); }
 };
