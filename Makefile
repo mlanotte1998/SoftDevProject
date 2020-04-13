@@ -1,11 +1,4 @@
-main:
-	# make valgrind
-	# make clean
-	- make test
-
-demo: build
-	- make runNode0
-	- make clean
+main: test
 
 # Right now we do not have a good way at running the Demo with one command.
 # The way it can be done is to run these commands:
@@ -17,8 +10,14 @@ demo: build
 # ./main -node 2
 # More details of this in the memo
 build:
-	docker build -t cs4500:0.1 .
-	docker run -ti -v `pwd`:/src cs4500:0.1 bash -c "cd /src ;  g++ -std=c++11 -pthread -o main src/main.cpp ;"
+	g++ -std=c++11 -pthread -o main src/main.cpp && g++ -std=c++11 -pthread -o server src/main.cpp
+
+runDemo: build
+	# can hit control c after seeing the 3 wait and get finished
+	# and the put finished. Then run pkill -f ./server to kill all processes
+	./server -node 0 &
+	(./main -node 1 &) > node1.txt
+	(./main -node 2 &) > node2.txt
 
 test:
 	cd tests && make test
@@ -28,5 +27,5 @@ test-valgrind:
 
 clean:
 	rm -rf main
-
-
+	rm -rf server
+	rm -rf *.txt

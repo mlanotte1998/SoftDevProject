@@ -618,12 +618,14 @@ public:
                     Column *cur_col = desired_df->cols_[i];
                     send_column(sw, cur_col, target, false);
                 }
+
+                printf("%s\n", "Wait and Get finished");
             } else {
                 // Nack that no DataFrame was found yet.
                 Serializer *strlen_ser = get_message_serializer(MsgKind::Nack, node_, target, 0);
                 strcpy(buffer, strlen_ser->buffer_);
                 internalServer_->socket_send(IS_sockets_[socket_idx], buffer, 1024);
-                delete strlen_ser; 
+                delete strlen_ser;
             }
 
             // delete key object created.
@@ -635,8 +637,6 @@ public:
             delete sw;
             exit(1);
         }
-
-        printf("%s\n", "Wait and Get finished");
 
         // Delete created objects.
         delete sw;
