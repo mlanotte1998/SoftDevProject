@@ -800,17 +800,13 @@ public:
             // Make sure that the node has connected to the rendezvous server.
             if (connected_to_rendezvous) {
 
+
+
                 // Figure out which client object to use for interaction.
                 Client *cur_client = get_client_of_key(k);
 
                 // Make sure a client was found.
                 if (cur_client != nullptr) {
-
-                    // If interacting with the rendezvous server then lock the other thread from
-                    // attempting to read messages from it.
-                    if (k.idx_ == 0) {
-                        lock_rendezvous_connection = true;
-                    }
 
                     message_sent = true;
 
@@ -821,10 +817,28 @@ public:
                     cur_client->socket_send(buffer, 1024);
                     delete put_ser;
 
-                    // TODO Check if actually an ack.
+                    // If interacting with the rendezvous server then lock the other thread from
+                    // attempting to read messages from it.
+                    if (k.idx_ == 0) {
+                        lock_rendezvous_connection = true;
+                    }
+
                     // Read in ack message.
                     memset(buffer, 0, 1024);
                     cur_client->socket_read(buffer, 1024);
+
+                    Object* ack = deserialize_buffer(buffer);
+                    if (dynamic_cast<Ack*>(ack) != nullptr) {
+                      // do nothing this is good
+                    } else if (dynamic_cast<Register*>(ack) != nullptr) {
+                      // a register could have been sent before responding to
+                      // our message so need to account for that.
+                      add_register(dynamic_cast<Register*>(ack));
+                      memset(buffer, 0, 1024);
+                      cur_client->socket_read(buffer, 1024);
+                    } else {
+                      exit(1);
+                    }
 
                     // Create a status message for sending the char identifier for the key.
                     memset(buffer, 0, 1024);
@@ -841,6 +855,8 @@ public:
                         Column *cur_col = df->cols_[i];
                         send_column(cur_client, cur_col, k.idx_, true);
                     }
+
+
                 }
             }
         }
