@@ -12,6 +12,9 @@ main: test
 build:
 	g++ -std=c++11 -pthread -o main src/main.cpp && g++ -std=c++11 -pthread -o server src/main.cpp
 
+buildWordCount:
+	g++ -std=c++11 -pthread -o wordcount src/wordcount.cpp && g++ -std=c++11 -pthread -o server src/wordcount.cpp
+
 runDemo: build
 	# can hit control c after seeing the 3 wait and get finished
 	# and the put finished. Then run pkill -f ./server to kill all processes
@@ -27,5 +30,6 @@ test-valgrind:
 
 clean:
 	rm -rf main
+	rm -rf wordcount
 	rm -rf server
 	rm -rf *.txt
