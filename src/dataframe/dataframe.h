@@ -8,8 +8,10 @@
 
 #include "constants.h"
 #include "schema.h"
+#include "reader.h"
 #include "row.h"
 #include "rower.h"
+#include "writer.h"
 #include "../store/kdstore.h"
 
 
@@ -105,6 +107,21 @@ public:
         delete row;
         kdStore->put(*key, df);
 
+        return df;
+    }
+
+
+    /** Create a data frame using a writer visitor
+    */
+    static DataFrame *fromVisitor(Key *key, KDStore *kdStore, const char* schema, Writer visitor) {
+        Schema schm(schema);
+        DataFrame *df = new DataFrame(schm);
+        while(!visitor.done()) {
+            Row row(schm);
+            visitor.visit(row);
+            df->add_row(row);
+        }
+        kdStore->put(*key, df);
         return df;
     }
 
@@ -290,6 +307,15 @@ public:
             r.accept(*iterator_row);
         }
         delete iterator_row;
+    }
+
+    /** Map over local dataframe */
+    void local_map(Adder adder) {
+        for (size_t i = 0; i < nrows(); i++) {
+            Row row(*schema_);
+            fill_row(i, row);
+            adder.visit(row);
+        }
     }
 
     /** Create a new dataframe, constructed from rows for which the given Rower

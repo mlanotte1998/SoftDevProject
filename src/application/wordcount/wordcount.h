@@ -19,15 +19,19 @@ public:
   Key in;
   KeyBuff kbuf;
   SIMap all;
+  const char* filename_;
+  size_t num_nodes_;
  
-  WordCount(size_t idx, NetworkIfc & net):
-    Application(idx, net), in("data"), kbuf(new Key("wc-map-",0)) { }
- 
+  WordCount(size_t idx, KDStore *kd, const char* filename, size_t num_nodes) : Application(idx, kd), in("data"), kbuf(new Key("wc-map-",0)) {
+    filename_ = filename;
+    num_nodes_ = num_nodes;
+  }
+
   /** The master nodes reads the input, then all of the nodes count. */
   void run_() override {
-    if (index == 0) {
-      FileReader fr(arg.file);
-      delete DataFrame::fromVisitor(&in, &kv, "S", fr);
+    if (this_node() == 0) {
+      FileReader fr(filename_);
+      delete DataFrame::fromVisitor(&in, kv, "S", fr);
     }
     local_count();
     reduce();
@@ -50,7 +54,7 @@ public:
     words->local_map(add);
     delete words;
     Summer cnt(map);
-    delete DataFrame::fromVisitor(mk_key(index), &kv, "SI", cnt);
+    delete DataFrame::fromVisitor(mk_key(this_node()), kv, "SI", cnt);
   }
  
   /** Merge the data frames of all nodes */
@@ -60,7 +64,7 @@ public:
     SIMap map;
     Key* own = mk_key(0);
     merge(kv->get(*own), map);
-    for (size_t i = 1; i < arg.num_nodes; ++i) { // merge other nodes
+    for (size_t i = 1; i < num_nodes_; ++i) { // merge other nodes
       Key* ok = mk_key(i);
       merge(kv->waitAndGet(*ok), map);
       delete ok;
@@ -71,7 +75,7 @@ public:
  
   void merge(DataFrame* df, SIMap& m) {
     Adder add(m);
-    df->map(add);
+    df->local_map(add);
     delete df;
   }
 }; // WordcountDemo
