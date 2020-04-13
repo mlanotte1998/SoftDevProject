@@ -1,6 +1,7 @@
 #include "../../dataframe/reader.h"
 #include "simap.h"
 
+/* author: jv */
 class Adder : public Reader {
 public:
   SIMap& map_;  // String to Num map;  Num holds an int
