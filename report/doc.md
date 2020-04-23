@@ -116,9 +116,12 @@ there is a function that takes in the object and appends different words to a ch
 which is then returned. 
 
 ## Use Cases  
+
+
   
-Creation of Dataframe:  
 ```c++
+
+// Creation of Dataframe:  
 Schema builder("IFFSB");  
 builder.add_row(nullptr);  
 builder.add_row(nullptr);  
@@ -140,10 +143,9 @@ r.set(3, new String("Hey"));
 r.set(4, false);  
 dframe.add_row(r);  
 
-```
+//===============================================================================
 
-Usage of KDStore and fromArray in Application layer:  
-```c++
+// Usage of KDStore and fromArray in Application layer:  
 size_t SZ = 10;  
 double* vals = new double[SZ];  
 for (size_t i = 0; i < SZ; ++i) vals[i] = i;  
@@ -153,10 +155,11 @@ DataFrame* df2 = kv.get(key);
 double second = df2->get_double(0,1);  
 delete df;  
 delete[] vals;  
-```
 
-Demo Usage (Not currently working) of basic Distributed System Functionality 
-```c++
+//===============================================================================
+
+// Demo Usage of basic Distributed System Functionality 
+
 class Demo : public Application {
 public:
     Key main{"main", 0};
@@ -208,12 +211,11 @@ public:
         delete result;
         delete expected;
     }
-
 };
-```
-  
-Run Distributed WordCount Application Usage (not currently working)  
-```c++
+
+//=======================================================================
+
+// Run Distributed WordCount Application Usage (not currently working)  
 int node = atoi(argv[2]);
 char* filename = argv[4];
 
@@ -273,6 +275,8 @@ have an example application that utilizes a distributed system to demonstrate. S
 the necessary WordCount code we were provided without having to modify our existing code very much, but rather by  
 modifying wordcount.h to adjust to the APIs we created.  
 
+UPDATE: We both underestimated the work we would have to do to prepare for our other finals so we never got
+to actually fixing the problems. Therefore we only have the Demo working. 
 
 
 
